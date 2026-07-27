@@ -1,6 +1,6 @@
 # Vertex Client
 
-Vertex Client is an advanced automation and utility mod for Minecraft (Hypixel Skyblock), designed specifically to run seamlessly on the Fabric loader.
+Vertex Client is an advanced automation and utility mod for Minecraft (Hypixel Skyblock), designed specifically to run on Fabric 1.21.11.
 
 ## Features
 
