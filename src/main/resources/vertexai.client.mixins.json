@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vertexai.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "KeyMappingAccessor",
+    "MixinTitleScreen",
+    "MixinCamera",
+    "MixinLocalPlayer",
+    "MixinMouse",
+    "MixinEntity",
+    "MinecraftAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --bg-dark: #0B0F19;
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --accent-cyan: #38BDF8;
+  --accent-blue: #0284C7;
+  --accent-purple: #818CF8;
+  --accent-emerald: #10B981;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --glass-blur: blur(16px);
+  --font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: transparent;
+  color: var(--text-main);
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Hide default white OS scrollbars in Chromium / CEF */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+

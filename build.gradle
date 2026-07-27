@@ -1,31 +1,36 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-	id 'maven-publish'
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    
+    id 'io.freefair.lombok' version '8.6'
+    id 'maven-publish'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.21'
 }
 
 version = project.mod_version
 group = project.maven_group
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+	maven {
+		url "https://maven.notenoughupdates.org/releases"
+	}
+	maven {
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+	}
+	flatDir {
+		dirs 'src/main/resources/libs', 'libs'
+	}
+	mavenCentral()
 }
 
 loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"modid" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
+    accessWidenerPath = file("src/main/resources/vertexai.accesswidener")
 }
 
 dependencies {
+	modImplementation "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"
+	include "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"
+
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
@@ -33,9 +38,39 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    
+	
+	modImplementation "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
+	include "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
+
+	modCompileOnly "maven.modrinth:modmenu:11.0.2"
+
+	modImplementation "org.notenoughupdates.moulconfig:modern:3.3.0"
+	include "org.notenoughupdates.moulconfig:modern:3.3.0"
+	
+	implementation "com.typesafe.akka:akka-actor_2.13:2.6.20"
+}
+
+task buildUi(type: Exec) {
+    workingDir 'ui'
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        commandLine 'cmd', '/c', 'npm', 'install', '&&', 'npm', 'run', 'build'
+    } else {
+        commandLine 'sh', '-c', 'npm install && npm run build'
+    }
+}
+
+task copyUi(type: Copy) {
+    dependsOn buildUi
+    from 'ui/dist'
+    into 'src/main/resources/assets/vertexai/gui/dist'
 }
 
 processResources {
+    dependsOn copyUi
 	def version = project.version
 	inputs.property "version", version
 
@@ -82,4 +117,14 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xskip-metadata-version-check"
+    }
+}
+
+tasks.named("sourcesJar") {
+    mustRunAfter(tasks.named("copyUi"))
 }
