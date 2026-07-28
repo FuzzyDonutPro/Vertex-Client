@@ -25,6 +25,8 @@ public class GraphCommand {
         item("/graph keys", "Show keybinds with plain-language actions.");
         item("/graph tutorial", "Beginner step-by-step quickstart.");
         item("/graph debug [show <name>|list|off]", "Render-only graph overlay.");
+        item("/rbpf start <name>", "Start recording a new or existing graph pathfinder route.");
+        item("/rbpf stop", "Stop recording the graph route.");
     }
 
     public void list() {
@@ -143,6 +145,34 @@ public class GraphCommand {
         }
         header("Graph");
         line("Created graph: " + key);
+    }
+
+    public void start(final String graphName) {
+        String key = normalizeName(graphName);
+        if (key.isEmpty()) {
+            Logger.sendError("Graph name cannot be empty.");
+            return;
+        }
+        
+        if (!GraphHandler.instance.hasGraph(key)) {
+            GraphHandler.instance.createGraph(key);
+            header("Graph");
+            line("Created graph: " + key);
+        }
+        
+        GraphHandler.instance.switchGraph(key);
+        
+        if (!GraphHandler.instance.isEditing()) {
+            GraphHandler.instance.toggleEdit(key);
+        }
+    }
+
+    public void stop() {
+        if (GraphHandler.instance.isEditing()) {
+            GraphHandler.instance.toggleEdit();
+        } else {
+            Logger.sendMessage("Graph Editor is not currently running.");
+        }
     }
 
     public void save() {

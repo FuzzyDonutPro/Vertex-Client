@@ -128,6 +128,33 @@ public class GraphCommandRegistrar {
                                 })
                         )
         );
+
+        dispatcher.register(
+                literal("rbpf")
+                        .executes(context -> {
+                            graphCommand.main();
+                            return 1;
+                        })
+                        .then(
+                                literal("start").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                            graphCommand.start(
+                                                    StringArgumentType.getString(context, "name")
+                                            );
+                                            return 1;
+                                        })
+                                )
+                        )
+                        .then(
+                                literal("stop").executes(context -> {
+                                    graphCommand.stop();
+                                    return 1;
+                                })
+                        )
+        );
     }
 
     private CompletableFuture<Suggestions> suggestGraphNames(SuggestionsBuilder builder) {
