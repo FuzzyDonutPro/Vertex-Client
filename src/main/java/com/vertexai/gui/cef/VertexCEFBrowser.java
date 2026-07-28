@@ -52,6 +52,9 @@ public class VertexCEFBrowser {
         if (browser != null) {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();
             browser.resize((int) (width * scale), (int) (height * scale));
+            
+            // Sync the Minecraft GUI Scale to the Svelte UI Slider
+            browser.executeJavaScript("if (window.setUiScale) window.setUiScale(" + scale + ");", url, 0);
         }
     }
 
