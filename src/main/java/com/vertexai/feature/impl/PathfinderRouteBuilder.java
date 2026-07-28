@@ -12,10 +12,14 @@ import com.vertexai.util.helper.route.WaypointType;
 import net.minecraft.client.Minecraft;
 
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PathfinderRouteBuilder extends AbstractFeature {
 
     private static PathfinderRouteBuilder instance;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public static PathfinderRouteBuilder getInstance() {
         if (instance == null) {
@@ -40,6 +44,11 @@ public class PathfinderRouteBuilder extends AbstractFeature {
     @Override
     public void start() {
         this.enabled = true;
+        scheduler.schedule(
+                RouteHandler.getInstance()::savePathfinderData,
+                0,
+                TimeUnit.MILLISECONDS
+        );
         send("Enabling Pathfinder RouteBuilder.");
     }
 

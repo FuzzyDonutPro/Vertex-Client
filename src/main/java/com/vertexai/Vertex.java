@@ -41,6 +41,7 @@ public class Vertex {
             .resolve("Vertex");
     public static final Path routesDirectory = CONFIG_DIRECTORY.resolve("graphs");
     public static final Path routesFile = CONFIG_DIRECTORY.resolve("routes.json");
+    public static final Path pathfinderRoutesFile = CONFIG_DIRECTORY.resolve("pathfinder_routes.json");
 
     private static final int EXECUTOR_MAX_THREADS = Math.min(
             8,

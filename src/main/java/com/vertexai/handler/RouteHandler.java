@@ -42,6 +42,8 @@ public class RouteHandler {
     private Route selectedPathfinderRoute = this.pathfinderRoutes.get("Default");
     private volatile boolean dirty = false;
     private long lastDirtyAtMs = 0L;
+    private volatile boolean pathfinderDirty = false;
+    private long lastPathfinderDirtyAtMs = 0L;
 
     public static RouteHandler getInstance() {
         if (instance == null) {
@@ -146,7 +148,7 @@ public class RouteHandler {
             this.createPathfinderRoute(targetKey);
         }
         this.selectedPathfinderRoute = pathfinderRoutes.get(targetKey);
-        this.markDirty();
+        this.markPathfinderDirty();
     }
 
     public boolean createPathfinderRoute(String routeName) {
@@ -154,7 +156,7 @@ public class RouteHandler {
         if (normalized.isEmpty()) return false;
         if (resolveExistingPathfinderRouteKey(normalized) != null) return false;
         this.pathfinderRoutes.put(normalized, new Route());
-        this.markDirty();
+        this.markPathfinderDirty();
         return true;
     }
 
@@ -175,18 +177,18 @@ public class RouteHandler {
         }
 
         this.selectedPathfinderRoute.insert(waypoint);
-        this.markDirty();
+        this.markPathfinderDirty();
         return true;
     }
 
     public void removeFromCurrentPathfinderRoute(final int index) {
         this.selectedPathfinderRoute.remove(index);
-        this.markDirty();
+        this.markPathfinderDirty();
     }
 
     public void replaceInCurrentPathfinderRoute(final int index, final RouteWaypoint waypoint) {
         this.selectedPathfinderRoute.replace(index, waypoint);
-        this.markDirty();
+        this.markPathfinderDirty();
     }
 
     public void deletePathfinderRoute(final String routeName) {
@@ -197,7 +199,7 @@ public class RouteHandler {
             this.selectedPathfinderRoute = this.pathfinderRoutes.get("Default");
         }
 
-        this.markDirty();
+        this.markPathfinderDirty();
     }
 
     private String resolveExistingRouteKey(String routeName) {
@@ -281,6 +283,14 @@ public class RouteHandler {
         }
     }
 
+    public void markPathfinderDirty() {
+        synchronized (saveLock) {
+            this.pathfinderDirty = true;
+            this.lastPathfinderDirtyAtMs = System.currentTimeMillis();
+            saveLock.notifyAll();
+        }
+    }
+
     public void loadData() {
         if (!Files.exists(Vertex.routesFile)) {
             ensureDefaultRoutePresent();
@@ -312,20 +322,32 @@ public class RouteHandler {
 
             routes.clear();
             routes.putAll(loadedRoutes);
-
-            if (jsonObject.has("pathfinderRoutes")) {
-                HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
-                        jsonObject.get("pathfinderRoutes"),
-                        new TypeToken<HashMap<String, Route>>() {}.getType()
-                );
-                if (loadedPf != null) {
-                    pathfinderRoutes.clear();
-                    pathfinderRoutes.putAll(loadedPf);
-                }
-            }
         } catch (Exception e) {
             Logger.sendWarning("Failed to load routes: " + Vertex.routesFile);
             Vertex.LOGGER.error("Failed to load routes: {}", Vertex.routesFile, e);
+        } 
+        
+        try (Reader reader = Files.newBufferedReader(Vertex.pathfinderRoutesFile)) {
+            JsonElement root = JsonParser.parseReader(reader);
+            if (root != null && root.isJsonObject()) {
+                JsonObject jsonObject = root.getAsJsonObject();
+                JsonElement routesElement = jsonObject.has("pathfinderRoutes")
+                        ? jsonObject.get("pathfinderRoutes")
+                        : jsonObject;
+                        
+                if (routesElement != null && !routesElement.isJsonNull()) {
+                    HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
+                            routesElement,
+                            new TypeToken<HashMap<String, Route>>() {}.getType()
+                    );
+                    if (loadedPf != null) {
+                        pathfinderRoutes.clear();
+                        pathfinderRoutes.putAll(loadedPf);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Vertex.LOGGER.warn("Failed to load pathfinder routes (might not exist yet): {}", Vertex.pathfinderRoutesFile);
         } finally {
             ensureDefaultRoutePresent();
             rebindSelectedRouteFromConfig();
@@ -357,12 +379,52 @@ public class RouteHandler {
                 if (!shouldSave) {
                     continue;
                 }
-
-                String data = Vertex.gson.toJson(instance);
-                Files.write(Vertex.routesFile, data.getBytes(StandardCharsets.UTF_8));
+                
+                JsonObject obj = new JsonObject();
+                obj.add("routes", Vertex.gson.toJsonTree(this.routes));
+                Files.write(Vertex.routesFile, Vertex.gson.toJson(obj).getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
                 Logger.sendWarning("Route save loop crashed; will retry");
                 Vertex.LOGGER.error("Route save loop crashed", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+
+    public synchronized void savePathfinderData() {
+        while (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning()) {
+            try {
+                boolean shouldSave;
+                synchronized (saveLock) {
+                    while (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning() && !this.pathfinderDirty) {
+                        saveLock.wait(500L);
+                    }
+                    if (!com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning()) {
+                        break;
+                    }
+
+                    long now = System.currentTimeMillis();
+                    long waitMs = SAVE_DEBOUNCE_MS - (now - lastPathfinderDirtyAtMs);
+                    if (waitMs > 0L) {
+                        saveLock.wait(Math.min(waitMs, 500L));
+                    }
+
+                    shouldSave = this.pathfinderDirty;
+                    this.pathfinderDirty = false;
+                }
+
+                if (!shouldSave) {
+                    continue;
+                }
+                
+                JsonObject obj = new JsonObject();
+                obj.add("pathfinderRoutes", Vertex.gson.toJsonTree(this.pathfinderRoutes));
+                Files.write(Vertex.pathfinderRoutesFile, Vertex.gson.toJson(obj).getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                Logger.sendWarning("Pathfinder route save loop crashed; will retry");
+                Vertex.LOGGER.error("Pathfinder route save loop crashed", e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
