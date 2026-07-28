@@ -13,6 +13,7 @@
     let selectedFont = 'Outfit';
     let uiSoundStyle = 1;
     let selectedTheme = 'cyber';
+    let uiScale = 1.0;
     const fontsList = ['Inter', 'Outfit', 'Roboto', 'JetBrains Mono', 'Minecraft'];
 
     const themesList = [
@@ -20,7 +21,8 @@
         { id: 'purple', name: 'Neon Purple', accent: 'purple', bgGradient: 'from-purple-500 to-violet-600', primaryColor: '#a855f7', desc: 'Vibrant dark synthwave layout with glowing violet highlights.' },
         { id: 'emerald', name: 'Emerald Garden', accent: 'emerald', bgGradient: 'from-emerald-400 to-teal-600', primaryColor: '#34d399', desc: 'Fresh green aesthetic tuned for Garden & Farming enthusiasts.' },
         { id: 'crimson', name: 'Crimson Peak', accent: 'rose', bgGradient: 'from-rose-500 to-red-600', primaryColor: '#f43f5e', desc: 'Aggressive high-contrast red & rose theme for Combat & Slayer.' },
-        { id: 'gold', name: 'Gold Luxe', accent: 'amber', bgGradient: 'from-amber-400 to-yellow-600', primaryColor: '#fbbf24', desc: 'Premium gold & amber styling for Economy & Bazaar flippers.' }
+        { id: 'gold', name: 'Gold Luxe', accent: 'amber', bgGradient: 'from-amber-400 to-yellow-600', primaryColor: '#fbbf24', desc: 'Premium gold & amber styling for Economy & Bazaar flippers.' },
+        { id: 'rainbow', name: 'Chroma RGB', accent: 'rainbow', bgGradient: 'bg-gradient-to-r from-red-500 via-yellow-400 via-green-500 via-blue-500 to-purple-500', primaryColor: '#a855f7', desc: 'Dynamic RGB gamer theme with vibrant colors across the spectrum.' }
     ];
 
     function applyTheme(themeId) {
@@ -36,6 +38,7 @@
         else if (theme.accent === 'emerald') { t400 = '#34d399'; t500 = '#10b981'; t600 = '#059669'; }
         else if (theme.accent === 'rose') { t400 = '#fb7185'; t500 = '#f43f5e'; t600 = '#e11d48'; }
         else if (theme.accent === 'amber') { t400 = '#fbbf24'; t500 = '#f59e0b'; t600 = '#d97706'; }
+        else if (theme.accent === 'rainbow') { t400 = '#38bdf8'; t500 = '#a855f7'; t600 = '#ec4899'; }
         
         if (typeof document !== 'undefined') {
             document.documentElement.style.setProperty('--theme-400', t400);
@@ -396,7 +399,7 @@
 </script>
 
 <div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-full h-full flex items-center justify-center bg-black/60 select-none overflow-hidden relative">
-    <div class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
+    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
     
     <!-- Sidebar Navigation -->
     <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-5 flex flex-col justify-between shrink-0 select-none">
@@ -652,7 +655,20 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mt-1">
+                <!-- UI Size Slider -->
+                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-3.5 mt-1 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-white">Dashboard Scale</span>
+                        <span class="text-[10px] text-sky-400 font-mono bg-sky-400/10 px-2 py-0.5 rounded border border-sky-400/20">{uiScale.toFixed(2)}x</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] text-slate-500 font-mono">0.5x</span>
+                        <input type="range" min="0.5" max="2.0" step="0.05" bind:value={uiScale} class="flex-1 accent-sky-400 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
+                        <span class="text-[10px] text-slate-500 font-mono">2.0x</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-2">
                     {#each themesList as theme}
                         <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
                         <div class="bg-slate-800/70 border rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-all duration-300 cursor-pointer relative group {selectedTheme === theme.id ? 'border-sky-400/80 bg-slate-800/95 shadow-[0_0_20px_rgba(56,189,248,0.25)]' : 'border-white/10 hover:border-white/20'}" on:click={() => applyTheme(theme.id)}>

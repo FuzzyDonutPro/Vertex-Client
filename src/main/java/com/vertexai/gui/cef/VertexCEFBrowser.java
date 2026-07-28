@@ -52,31 +52,6 @@ public class VertexCEFBrowser {
         if (browser != null) {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();
             browser.resize((int) (width * scale), (int) (height * scale));
-            injectScaleTransform(scale);
-        }
-    }
-
-    private void injectScaleTransform(double scale) {
-        if (browser != null) {
-            int guiWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-            int guiHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-            
-            // Lock the body to the EXACT logical GUI coordinates so w-full/h-full tailwind classes 
-            // do not expand to the massive physical viewport, preventing the layout from 
-            // getting offset to the bottom right.
-            String js = "document.documentElement.style.width = '" + guiWidth + "px';" +
-                        "document.documentElement.style.height = '" + guiHeight + "px';" +
-                        "document.documentElement.style.overflow = 'hidden';" +
-                        "document.body.style.width = '" + guiWidth + "px';" +
-                        "document.body.style.height = '" + guiHeight + "px';" +
-                        "document.body.style.margin = '0';" +
-                        "document.body.style.padding = '0';" +
-                        "document.body.style.position = 'absolute';" +
-                        "document.body.style.top = '0';" +
-                        "document.body.style.left = '0';" +
-                        "document.body.style.transform = 'scale(" + scale + ")';" +
-                        "document.body.style.transformOrigin = '0 0';";
-            browser.executeJavaScript(js, url, 0);
         }
     }
 
@@ -96,9 +71,6 @@ public class VertexCEFBrowser {
             int height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             
             try {
-                // Ensure the web body is scaled dynamically in case scale changes
-                injectScaleTransform(Minecraft.getInstance().getWindow().getGuiScale());
-
                 context.blit(texture, 0, 0, width, height, 0.0F, 1.0F, 0.0F, 1.0F);
                 return true;
             } catch (Throwable t) {
