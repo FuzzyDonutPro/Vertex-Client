@@ -701,7 +701,7 @@
             <div class="flex flex-col gap-3 pb-6">
                 <div class="flex justify-between items-center mb-1">
                     <div>
-                        <h2 class="text-sm font-bold text-white">🎨 Color Themes & Visual Presets</h2>
+                        <h2 class="text-sm font-bold text-white">Color Themes & Visual Presets</h2>
                         <p class="text-[10px] text-slate-400 mt-0.5">Customize dashboard styling, accent colors, and glow effects in real time.</p>
                     </div>
                 </div>
