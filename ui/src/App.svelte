@@ -28,6 +28,22 @@
         playUiSound();
     }
 
+    $: {
+        const theme = themesList.find(t => t.id === selectedTheme) || themesList[0];
+        let t400, t500, t600;
+        if (theme.accent === 'sky') { t400 = '#38bdf8'; t500 = '#0ea5e9'; t600 = '#0284c7'; }
+        else if (theme.accent === 'purple') { t400 = '#c084fc'; t500 = '#a855f7'; t600 = '#9333ea'; }
+        else if (theme.accent === 'emerald') { t400 = '#34d399'; t500 = '#10b981'; t600 = '#059669'; }
+        else if (theme.accent === 'rose') { t400 = '#fb7185'; t500 = '#f43f5e'; t600 = '#e11d48'; }
+        else if (theme.accent === 'amber') { t400 = '#fbbf24'; t500 = '#f59e0b'; t600 = '#d97706'; }
+        
+        if (typeof document !== 'undefined') {
+            document.documentElement.style.setProperty('--theme-400', t400);
+            document.documentElement.style.setProperty('--theme-500', t500);
+            document.documentElement.style.setProperty('--theme-600', t600);
+        }
+    }
+
     $: if (dynamicConfigSchema && dynamicConfigSchema.gui && dynamicConfigSchema.gui.settings) {
         const fontSetting = dynamicConfigSchema.gui.settings.find(s => s.id === 'guiFont');
         if (fontSetting && fontSetting.value !== undefined) {
