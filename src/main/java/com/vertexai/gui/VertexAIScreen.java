@@ -31,7 +31,10 @@ public class VertexAIScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        // Render a dark translucent background to prevent in-game rendering underneath from bleeding through too brightly,
+        // and avoid calling renderBackground() which applies a shader blur and crashes with "Can only blur once per frame"
+        context.fill(0, 0, this.width, this.height, 0x99000000); // 60% opacity black
+
 
         boolean rendered = false;
         if (cefBrowser != null) {
