@@ -8,9 +8,17 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.*;
 
+import java.util.*;
+
+import com.vertexai.handler.RouteHandler;
+import com.vertexai.util.helper.route.Route;
+import com.vertexai.util.helper.route.RouteWaypoint;
+
 public class PathFinder {
     public static List<BlockPos> findPath(Level world, BlockPos start, BlockPos end, int maxNodes) {
         if (start.equals(end)) return Collections.singletonList(end);
+
+        Map<BlockPos, List<NeighborResult>> highways = buildHighwayMap();
 
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.fScore));
         Map<BlockPos, Node> allNodes = new HashMap<>();
@@ -33,7 +41,7 @@ public class PathFinder {
                 return smoothPath(world, reconstructPath(current));
             }
             
-            for (NeighborResult neighborResult : getNeighbors(world, current.pos)) {
+            for (NeighborResult neighborResult : getNeighbors(world, current.pos, highways)) {
                 BlockPos neighborPos = neighborResult.pos;
                 if (closedSet.contains(neighborPos)) continue;
 
@@ -82,8 +90,39 @@ public class PathFinder {
         return false; // Deprecated by removing smoothPath
     }
 
-    private static List<NeighborResult> getNeighbors(Level world, BlockPos pos) {
+    private static Map<BlockPos, List<NeighborResult>> buildHighwayMap() {
+        Map<BlockPos, List<NeighborResult>> map = new HashMap<>();
+        if (RouteHandler.getInstance() == null || RouteHandler.getInstance().getPathfinderRoutes() == null) return map;
+        
+        for (Route route : RouteHandler.getInstance().getPathfinderRoutes().values()) {
+            if (route == null || route.isEmpty()) continue;
+            for (int i = 0; i < route.size(); i++) {
+                BlockPos current = route.get(i).toBlockPos();
+                List<NeighborResult> connections = map.computeIfAbsent(current, k -> new ArrayList<>());
+                
+                if (i > 0) {
+                    BlockPos prev = route.get(i - 1).toBlockPos();
+                    double dist = Math.sqrt(current.distSqr(prev));
+                    connections.add(new NeighborResult(prev, dist));
+                }
+                
+                if (i < route.size() - 1) {
+                    BlockPos next = route.get(i + 1).toBlockPos();
+                    double dist = Math.sqrt(current.distSqr(next));
+                    connections.add(new NeighborResult(next, dist));
+                }
+            }
+        }
+        return map;
+    }
+
+    private static List<NeighborResult> getNeighbors(Level world, BlockPos pos, Map<BlockPos, List<NeighborResult>> highways) {
         List<NeighborResult> neighbors = new ArrayList<>();
+        // Inject fast highway connections directly
+        if (highways.containsKey(pos)) {
+            neighbors.addAll(highways.get(pos));
+        }
+
         // 8-way directional movement
         int[][] directions = {
             {1,0}, {-1,0}, {0,1}, {0,-1},

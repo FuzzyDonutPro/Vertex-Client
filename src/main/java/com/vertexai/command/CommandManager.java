@@ -29,6 +29,8 @@ public class CommandManager {
     private final GraphCommandRegistrar graphCommandRegistrar = new GraphCommandRegistrar(graphCommand);
     private final RouteBuilderCommand routeBuilderCommand =
             new RouteBuilderCommand();
+    private final PathfinderRouteBuilderCommand pathfinderRouteBuilderCommand =
+            new PathfinderRouteBuilderCommand();
 
     public void registerAll() {
         ClientCommandRegistrationCallback.EVENT.register(
@@ -41,6 +43,7 @@ public class CommandManager {
                     registerDebugCommand(dispatcher);
                     graphCommandRegistrar.register(dispatcher);
                     registerRouteBuilderCommand(dispatcher);
+                    registerPathfinderRouteBuilderCommand(dispatcher);
                     new RouteAutoRecorderCommand().register(dispatcher);
                     registerReactionCommand(dispatcher);
                     // Primary mod command: /fuzzy, /fz
@@ -463,6 +466,147 @@ public class CommandManager {
                                                 ).suggests((context, builder) -> suggestRouteWaypointTypes(builder))
                                                         .executes(context -> {
                                                             routeBuilderCommand.replace(
+                                                                    IntegerArgumentType.getInteger(
+                                                                            context,
+                                                                            "index"
+                                                                    ),
+                                                                    StringArgumentType.getString(
+                                                                            context,
+                                                                            "type"
+                                                                    )
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                                )
+                        )
+        );
+    }
+
+    private void registerPathfinderRouteBuilderCommand(
+            CommandDispatcher<FabricClientCommandSource> dispatcher
+    ) {
+        dispatcher.register(
+                literal("rbpf")
+                        .executes(context -> {
+                            pathfinderRouteBuilderCommand.main();
+                            return 1;
+                        })
+                        .then(
+                                literal("list").executes(context -> {
+                                    pathfinderRouteBuilderCommand.list();
+                                    return 1;
+                                })
+                        )
+                        .then(
+                                literal("reload").executes(context -> {
+                                    pathfinderRouteBuilderCommand.reload();
+                                    return 1;
+                                })
+                        )
+                        .then(
+                                literal("keys").executes(context -> {
+                                    pathfinderRouteBuilderCommand.keys();
+                                    return 1;
+                                })
+                        )
+                        .then(
+                                literal("start").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                            pathfinderRouteBuilderCommand.start(
+                                                    StringArgumentType.getString(context, "name")
+                                            );
+                                            return 1;
+                                        })
+                                )
+                        )
+                        .then(
+                                literal("stop").executes(context -> {
+                                    pathfinderRouteBuilderCommand.stop();
+                                    return 1;
+                                })
+                        )
+                        .then(
+                                literal("new").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                            pathfinderRouteBuilderCommand.create(
+                                                    StringArgumentType.getString(context, "name")
+                                            );
+                                            return 1;
+                                        })
+                                )
+                        )
+                        .then(
+                                literal("select").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                                    pathfinderRouteBuilderCommand.select(
+                                                            StringArgumentType.getString(context, "name")
+                                                    );
+                                                    return 1;
+                                                })
+                                )
+                        )
+                        .then(
+                                literal("delete").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                                    pathfinderRouteBuilderCommand.delete(
+                                                            StringArgumentType.getString(context, "name")
+                                                    );
+                                                    return 1;
+                                                })
+                                )
+                        )
+                        .then(
+                                literal("add").then(
+                                        argument("type", StringArgumentType.word())
+                                                .suggests((context, builder) -> suggestRouteWaypointTypes(builder))
+                                                .executes(
+                                                        context -> {
+                                                            pathfinderRouteBuilderCommand.add(
+                                                                    StringArgumentType.getString(
+                                                                            context,
+                                                                            "type"
+                                                                    )
+                                                            );
+                                                            return 1;
+                                                        }
+                                                )
+                                )
+                        )
+                        .then(
+                                literal("remove").then(
+                                        argument(
+                                                "index",
+                                                IntegerArgumentType.integer()
+                                        ).executes(context -> {
+                                            pathfinderRouteBuilderCommand.remove(
+                                                    IntegerArgumentType.getInteger(context, "index")
+                                            );
+                                            return 1;
+                                        })
+                                )
+                        )
+                        .then(
+                                literal("replace").then(
+                                        argument("index", IntegerArgumentType.integer()).then(
+                                                argument(
+                                                        "type",
+                                                        StringArgumentType.word()
+                                                ).suggests((context, builder) -> suggestRouteWaypointTypes(builder))
+                                                        .executes(context -> {
+                                                            pathfinderRouteBuilderCommand.replace(
                                                                     IntegerArgumentType.getInteger(
                                                                             context,
                                                                             "index"

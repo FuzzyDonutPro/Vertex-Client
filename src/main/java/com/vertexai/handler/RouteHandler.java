@@ -32,7 +32,14 @@ public class RouteHandler {
     private final HashMap<String, Route> routes = new HashMap<String, Route>() {{
         put("Default", new Route());
     }};
+    
+    @Expose
+    private final HashMap<String, Route> pathfinderRoutes = new HashMap<String, Route>() {{
+        put("Default", new Route());
+    }};
+    
     private Route selectedRoute = this.routes.get("Default");
+    private Route selectedPathfinderRoute = this.pathfinderRoutes.get("Default");
     private volatile boolean dirty = false;
     private long lastDirtyAtMs = 0L;
 
@@ -129,6 +136,70 @@ public class RouteHandler {
         this.markDirty();
     }
 
+    public void selectPathfinderRoute(String routeName) {
+        String normalized = normalizeRouteName(routeName);
+        if (normalized.isEmpty()) return;
+
+        String resolved = resolveExistingPathfinderRouteKey(normalized);
+        String targetKey = resolved != null ? resolved : normalized;
+        if (!this.pathfinderRoutes.containsKey(targetKey)) {
+            this.createPathfinderRoute(targetKey);
+        }
+        this.selectedPathfinderRoute = pathfinderRoutes.get(targetKey);
+        this.markDirty();
+    }
+
+    public boolean createPathfinderRoute(String routeName) {
+        String normalized = normalizeRouteName(routeName);
+        if (normalized.isEmpty()) return false;
+        if (resolveExistingPathfinderRouteKey(normalized) != null) return false;
+        this.pathfinderRoutes.put(normalized, new Route());
+        this.markDirty();
+        return true;
+    }
+
+    public boolean addToCurrentPathfinderRoute(final BlockPos block, final WaypointType method) {
+        if (this.selectedPathfinderRoute == this.pathfinderRoutes.get("Default")) {
+            Logger.sendError("Cannot edit Default route. Use /rbpf start <name>.");
+            return false;
+        }
+
+        if (block == null) {
+            Logger.sendError("Cannot add waypoint because your standing block could not be resolved.");
+            return false;
+        }
+
+        final RouteWaypoint waypoint = new RouteWaypoint(block, method);
+        if (this.selectedPathfinderRoute.indexOf(waypoint) != -1) {
+            return false;
+        }
+
+        this.selectedPathfinderRoute.insert(waypoint);
+        this.markDirty();
+        return true;
+    }
+
+    public void removeFromCurrentPathfinderRoute(final int index) {
+        this.selectedPathfinderRoute.remove(index);
+        this.markDirty();
+    }
+
+    public void replaceInCurrentPathfinderRoute(final int index, final RouteWaypoint waypoint) {
+        this.selectedPathfinderRoute.replace(index, waypoint);
+        this.markDirty();
+    }
+
+    public void deletePathfinderRoute(final String routeName) {
+        String resolved = resolveExistingPathfinderRouteKey(routeName);
+        if (resolved == null) return;
+
+        if (this.selectedPathfinderRoute == this.pathfinderRoutes.remove(resolved)) {
+            this.selectedPathfinderRoute = this.pathfinderRoutes.get("Default");
+        }
+
+        this.markDirty();
+    }
+
     private String resolveExistingRouteKey(String routeName) {
         if (routeName == null) {
             return null;
@@ -162,6 +233,26 @@ public class RouteHandler {
         }
 
         Route route = this.routes.get(resolved);
+        return route == null ? 0 : route.size();
+    }
+
+    private String resolveExistingPathfinderRouteKey(String routeName) {
+        if (routeName == null) return null;
+        String normalized = normalizeRouteName(routeName);
+        if (normalized.isEmpty()) return null;
+
+        if (this.pathfinderRoutes.containsKey(normalized)) return normalized;
+
+        for (String key : this.pathfinderRoutes.keySet()) {
+            if (normalizeRouteName(key).equalsIgnoreCase(normalized)) return key;
+        }
+        return null;
+    }
+
+    public int getPathfinderRouteSize(String routeName) {
+        String resolved = resolveExistingPathfinderRouteKey(routeName);
+        if (resolved == null) return 0;
+        Route route = this.pathfinderRoutes.get(resolved);
         return route == null ? 0 : route.size();
     }
 
@@ -221,6 +312,17 @@ public class RouteHandler {
 
             routes.clear();
             routes.putAll(loadedRoutes);
+
+            if (jsonObject.has("pathfinderRoutes")) {
+                HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
+                        jsonObject.get("pathfinderRoutes"),
+                        new TypeToken<HashMap<String, Route>>() {}.getType()
+                );
+                if (loadedPf != null) {
+                    pathfinderRoutes.clear();
+                    pathfinderRoutes.putAll(loadedPf);
+                }
+            }
         } catch (Exception e) {
             Logger.sendWarning("Failed to load routes: " + Vertex.routesFile);
             Vertex.LOGGER.error("Failed to load routes: {}", Vertex.routesFile, e);
@@ -269,11 +371,13 @@ public class RouteHandler {
     }
 
     public void onRender(WorldRenderContextWrapper context) {
-        if (!isRouteRenderActive() || this.selectedRoute == null || this.selectedRoute.isEmpty()) {
-            return;
+        if (RouteBuilder.getInstance().isRunning() && this.selectedRoute != null && !this.selectedRoute.isEmpty()) {
+            this.selectedRoute.drawRoute();
         }
-
-        this.selectedRoute.drawRoute();
+        
+        if (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning() && this.selectedPathfinderRoute != null && !this.selectedPathfinderRoute.isEmpty()) {
+            this.selectedPathfinderRoute.drawRoute();
+        }
     }
 
     private boolean isRouteRenderActive() {
@@ -283,6 +387,9 @@ public class RouteHandler {
     private void ensureDefaultRoutePresent() {
         if (!this.routes.containsKey("Default")) {
             this.routes.put("Default", new Route());
+        }
+        if (!this.pathfinderRoutes.containsKey("Default")) {
+            this.pathfinderRoutes.put("Default", new Route());
         }
     }
 
