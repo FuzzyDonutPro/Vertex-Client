@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.*;
 
 import com.vertexai.handler.RouteHandler;
+import com.vertexai.handler.GameStateHandler;
+import com.vertexai.util.helper.location.Location;
 import com.vertexai.util.helper.route.Route;
 import com.vertexai.util.helper.route.RouteWaypoint;
 
@@ -92,6 +94,12 @@ public class PathFinder {
 
     private static Map<BlockPos, List<NeighborResult>> buildHighwayMap() {
         Map<BlockPos, List<NeighborResult>> map = new HashMap<>();
+        
+        // Restrict current highways to Dwarven Mines only
+        if (GameStateHandler.getInstance().getCurrentLocation() != Location.DWARVEN_MINES) {
+            return map;
+        }
+        
         if (RouteHandler.getInstance() == null || RouteHandler.getInstance().getPathfinderRoutes() == null) return map;
         
         for (Route route : RouteHandler.getInstance().getPathfinderRoutes().values()) {

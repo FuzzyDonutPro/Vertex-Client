@@ -1,0 +1,297 @@
+{
+  "pathfinderRoutes": {
+    "spawn2glacialwalkers": {
+      "waypoints": [
+        {
+          "x": -74,
+          "y": 199,
+          "z": -122,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -61,
+          "y": 199,
+          "z": -122,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 11,
+          "y": 199,
+          "z": -120,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 61,
+          "y": 199,
+          "z": -107,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 66,
+          "y": 199,
+          "z": -102,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 68,
+          "y": 198,
+          "z": -100,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 74,
+          "y": 197,
+          "z": -94,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 73,
+          "y": 194,
+          "z": -79,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 61,
+          "y": 189,
+          "z": -61,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 45,
+          "y": 189,
+          "z": -57,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 16,
+          "y": 176,
+          "z": -56,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -15,
+          "y": 176,
+          "z": -56,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -34,
+          "y": 171,
+          "z": -55,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -63,
+          "y": 161,
+          "z": -40,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -77,
+          "y": 156,
+          "z": -36,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -93,
+          "y": 152,
+          "z": -30,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -106,
+          "y": 148,
+          "z": -12,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -104,
+          "y": 147,
+          "z": -2,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -95,
+          "y": 146,
+          "z": 4,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -63,
+          "y": 138,
+          "z": 12,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -48,
+          "y": 135,
+          "z": 19,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -22,
+          "y": 127,
+          "z": 44,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -2,
+          "y": 127,
+          "z": 62,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 0,
+          "y": 127,
+          "z": 141,
+          "transportMethod": "WALK"
+        }
+      ]
+    },
+    "spawn2claim": {
+      "waypoints": [
+        {
+          "x": -70,
+          "y": 199,
+          "z": -123,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": -5,
+          "y": 199,
+          "z": -122,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 53,
+          "y": 199,
+          "z": -110,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 72,
+          "y": 197,
+          "z": -97,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 71,
+          "y": 189,
+          "z": -63,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 96,
+          "y": 193,
+          "z": -30,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 101,
+          "y": 193,
+          "z": -24,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 118,
+          "y": 186,
+          "z": -10,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 129,
+          "y": 186,
+          "z": 5,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 129,
+          "y": 186,
+          "z": 119,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 129,
+          "y": 189,
+          "z": 141,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 127,
+          "y": 189,
+          "z": 142,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 121,
+          "y": 191,
+          "z": 145,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 112,
+          "y": 195,
+          "z": 146,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 112,
+          "y": 195,
+          "z": 149,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 123,
+          "y": 195,
+          "z": 162,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 123,
+          "y": 194,
+          "z": 172,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 122,
+          "y": 194,
+          "z": 181,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 122,
+          "y": 195,
+          "z": 183,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 122,
+          "y": 195,
+          "z": 184,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 123,
+          "y": 196,
+          "z": 185,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 127,
+          "y": 196,
+          "z": 193,
+          "transportMethod": "WALK"
+        },
+        {
+          "x": 129,
+          "y": 196,
+          "z": 193,
+          "transportMethod": "WALK"
+        }
+      ]
+    },
+    "Default": {
+      "waypoints": []
+    }
+  }
+}
