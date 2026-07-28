@@ -666,7 +666,7 @@
 
     {#if activeMacroSettingsModal}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 z-50">
+    <div class="absolute inset-0 bg-slate-950/95 flex items-center justify-center p-6 z-50">
         <div class="w-[460px] bg-slate-900 border border-sky-500/30 rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] flex flex-col gap-4 relative z-50 text-white">
             <div class="flex justify-between items-start border-b border-white/10 pb-3">
                 <div>

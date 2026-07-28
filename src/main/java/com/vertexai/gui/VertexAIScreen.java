@@ -31,6 +31,8 @@ public class VertexAIScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context, mouseX, mouseY, delta);
+
         boolean rendered = false;
         if (cefBrowser != null) {
             rendered = cefBrowser.render(context, mouseX, mouseY, delta);
