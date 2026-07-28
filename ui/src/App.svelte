@@ -15,11 +15,26 @@
     let selectedTheme = 'cyber';
     let uiScale = 1.0;
     
-    // Allow Java to pass the native GUI scale so it defaults perfectly
+    // Allow Java to pass the native GUI scale so it defaults perfectly,
+    // but respect user's saved preferences if they adjusted the slider
     if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem('vertex_uiTheme');
+        if (savedTheme) selectedTheme = savedTheme;
+        
+        const savedScale = localStorage.getItem('vertex_uiScale');
+        if (savedScale) uiScale = parseFloat(savedScale);
+
         window.setUiScale = (scale) => {
-            uiScale = scale;
+            if (!localStorage.getItem('vertex_uiScale')) {
+                uiScale = scale;
+            }
         };
+    }
+    
+    // Save preferences automatically when they change
+    $: if (typeof window !== 'undefined') {
+        localStorage.setItem('vertex_uiTheme', selectedTheme);
+        localStorage.setItem('vertex_uiScale', uiScale.toString());
     }
     
     const fontsList = ['Inter', 'Outfit', 'Roboto', 'JetBrains Mono', 'Minecraft'];
