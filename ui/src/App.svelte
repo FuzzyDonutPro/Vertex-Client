@@ -15,6 +15,13 @@
     let selectedTheme = 'cyber';
     let uiScale = 1.0;
     
+    // Failsafe State Variables (UI Mockup)
+    let webhookUrl = '';
+    let adminDetection = true;
+    let autoDisconnect = true;
+    let captchaAlert = true;
+    let failsafeVolume = 80;
+    
     // Allow Java to pass the native GUI scale so it defaults perfectly,
     // but respect user's saved preferences if they adjusted the slider
     if (typeof window !== 'undefined') {
@@ -499,6 +506,10 @@
                     Settings & Config
                 </li>
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
+                <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'failsafes' ? 'bg-gradient-to-r from-red-500/15 to-transparent border-l-2 border-red-500 text-red-500' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'failsafes'; }}>
+                    🛡️ Security & Failsafes
+                </li>
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
                 <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'themes' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
                     🎨 Themes & Styling
                 </li>
@@ -694,6 +705,72 @@
                 {:else}
                     <div class="text-xs text-slate-400 text-center py-10">Loading configuration schema from Java...</div>
                 {/if}
+            </div>
+        {/if}
+
+        {#if currentTab === 'failsafes'}
+            <div class="flex flex-col gap-3 pb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <div>
+                        <h2 class="text-sm font-bold text-red-400">🛡️ Security & Failsafes Hub</h2>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Configure advanced macro protection, webhook alerts, and auto-disconnect parameters.</p>
+                    </div>
+                </div>
+
+                <!-- Webhooks -->
+                <div class="bg-slate-800/70 border border-red-500/20 rounded-xl p-3.5 mt-1 flex flex-col gap-2">
+                    <span class="text-xs font-bold text-white">Discord Webhook URL</span>
+                    <input type="text" bind:value={webhookUrl} placeholder="https://discord.com/api/webhooks/..." class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-red-500/50 transition-colors font-mono" />
+                    <p class="text-[9px] text-slate-400 leading-tight">If set, Vertex will send live screenshots and ping you if a staff member teleports to your island, or if you are warped into limbo.</p>
+                </div>
+
+                <!-- Toggles -->
+                <div class="grid grid-cols-2 gap-3 mt-2">
+                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
+                        <div>
+                            <h3 class="text-[12px] font-semibold text-white">Admin Detection</h3>
+                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Instantly halts all macros and pings webhook if a staff member enters render distance.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={adminDetection} class="w-4 h-4 accent-red-500 cursor-pointer" />
+                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{adminDetection ? 'Enabled' : 'Disabled'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
+                        <div>
+                            <h3 class="text-[12px] font-semibold text-white">Auto-Disconnect</h3>
+                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Automatically disconnects from the server immediately after an admin is detected.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={autoDisconnect} class="w-4 h-4 accent-red-500 cursor-pointer" />
+                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{autoDisconnect ? 'Enabled' : 'Disabled'}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
+                        <div>
+                            <h3 class="text-[12px] font-semibold text-white">Captcha Alert</h3>
+                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Plays a loud alarm sound and stops macroing if a Bedrock or map captcha appears.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={captchaAlert} class="w-4 h-4 accent-red-500 cursor-pointer" />
+                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{captchaAlert ? 'Enabled' : 'Disabled'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Volume Slider -->
+                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
+                        <div>
+                            <h3 class="text-[12px] font-semibold text-white">Alert Volume</h3>
+                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">The volume of the in-game alarm sound played during an emergency failsafe event.</p>
+                        </div>
+                        <div class="flex items-center gap-2 w-full">
+                            <input type="range" min="0" max="100" step="1" bind:value={failsafeVolume} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
+                            <span class="text-[10px] text-red-400 font-mono w-8 text-right bg-slate-900/80 px-1 py-0.5 rounded border border-red-500/20">{failsafeVolume}%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         {/if}
 
