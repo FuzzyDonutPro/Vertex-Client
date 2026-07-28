@@ -12,7 +12,21 @@
     let liveFps = 0;
     let selectedFont = 'Outfit';
     let uiSoundStyle = 1;
+    let selectedTheme = 'cyber';
     const fontsList = ['Inter', 'Outfit', 'Roboto', 'JetBrains Mono', 'Minecraft'];
+
+    const themesList = [
+        { id: 'cyber', name: 'Cyber Sky', accent: 'sky', bgGradient: 'from-sky-400 to-sky-600', primaryColor: '#38bdf8', desc: 'Futuristic slate dashboard with neon cyan & sky blue accents.' },
+        { id: 'purple', name: 'Neon Purple', accent: 'purple', bgGradient: 'from-purple-500 to-violet-600', primaryColor: '#a855f7', desc: 'Vibrant dark synthwave layout with glowing violet highlights.' },
+        { id: 'emerald', name: 'Emerald Garden', accent: 'emerald', bgGradient: 'from-emerald-400 to-teal-600', primaryColor: '#34d399', desc: 'Fresh green aesthetic tuned for Garden & Farming enthusiasts.' },
+        { id: 'crimson', name: 'Crimson Peak', accent: 'rose', bgGradient: 'from-rose-500 to-red-600', primaryColor: '#f43f5e', desc: 'Aggressive high-contrast red & rose theme for Combat & Slayer.' },
+        { id: 'gold', name: 'Gold Luxe', accent: 'amber', bgGradient: 'from-amber-400 to-yellow-600', primaryColor: '#fbbf24', desc: 'Premium gold & amber styling for Economy & Bazaar flippers.' }
+    ];
+
+    function applyTheme(themeId) {
+        selectedTheme = themeId;
+        playUiSound();
+    }
 
     $: if (dynamicConfigSchema && dynamicConfigSchema.gui && dynamicConfigSchema.gui.settings) {
         const fontSetting = dynamicConfigSchema.gui.settings.find(s => s.id === 'guiFont');
@@ -414,6 +428,10 @@
                 <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'settings' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'settings'; }}>
                     Settings & Config
                 </li>
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
+                <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'themes' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
+                    🎨 Themes & Styling
+                </li>
             </ul>
         </div>
 
@@ -606,6 +624,41 @@
                 {:else}
                     <div class="text-xs text-slate-400 text-center py-10">Loading configuration schema from Java...</div>
                 {/if}
+            </div>
+        {/if}
+
+        {#if currentTab === 'themes'}
+            <div class="flex flex-col gap-3 pb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">🎨 Color Themes & Visual Presets</h2>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Customize dashboard styling, accent colors, and glow effects in real time.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-1">
+                    {#each themesList as theme}
+                        <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+                        <div class="bg-slate-800/70 border rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-all duration-300 cursor-pointer relative group {selectedTheme === theme.id ? 'border-sky-400/80 bg-slate-800/95 shadow-[0_0_20px_rgba(56,189,248,0.25)]' : 'border-white/10 hover:border-white/20'}" on:click={() => applyTheme(theme.id)}>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3.5 h-3.5 rounded-full shadow-sm" style="background-color: {theme.primaryColor};"></div>
+                                        <h3 class="text-xs font-bold text-white">{theme.name}</h3>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 leading-snug">{theme.desc}</p>
+                                </div>
+                                {#if selectedTheme === theme.id}
+                                    <span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase bg-sky-500/20 text-sky-400 border border-sky-400/30 shrink-0">Active</span>
+                                {/if}
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                                <div class="w-full h-2 rounded-full bg-gradient-to-r {theme.bgGradient}"></div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
             </div>
         {/if}
 
