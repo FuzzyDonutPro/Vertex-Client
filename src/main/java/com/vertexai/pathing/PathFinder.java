@@ -95,15 +95,22 @@ public class PathFinder {
     private static Map<BlockPos, List<NeighborResult>> buildHighwayMap() {
         Map<BlockPos, List<NeighborResult>> map = new HashMap<>();
         
-        // Restrict current highways to Dwarven Mines only
-        if (GameStateHandler.getInstance().getCurrentLocation() != Location.DWARVEN_MINES) {
-            return map;
-        }
+        Location currentLocation = GameStateHandler.getInstance().getCurrentLocation();
+        if (currentLocation == null) return map;
+        
+        String locationPrefix = currentLocation.getName().split(" ")[0].toLowerCase();
         
         if (RouteHandler.getInstance() == null || RouteHandler.getInstance().getPathfinderRoutes() == null) return map;
         
-        for (Route route : RouteHandler.getInstance().getPathfinderRoutes().values()) {
+        for (Map.Entry<String, Route> entry : RouteHandler.getInstance().getPathfinderRoutes().entrySet()) {
+            String routeName = entry.getKey();
+            Route route = entry.getValue();
+            
             if (route == null || route.isEmpty()) continue;
+            
+            // Only inject routes that start with the location prefix (e.g. "Dwarven" for "Dwarven Mines")
+            if (!routeName.toLowerCase().startsWith(locationPrefix)) continue;
+            
             for (int i = 0; i < route.size(); i++) {
                 BlockPos current = route.get(i).toBlockPos();
                 List<NeighborResult> connections = map.computeIfAbsent(current, k -> new ArrayList<>());

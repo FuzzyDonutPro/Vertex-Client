@@ -1,6 +1,6 @@
 {
   "pathfinderRoutes": {
-    "spawn2glacialwalkers": {
+    "Dwarven spawn2glacialwalkers": {
       "waypoints": [
         {
           "x": -74,
@@ -148,7 +148,7 @@
         }
       ]
     },
-    "spawn2claim": {
+    "Dwarven spawn2claim": {
       "waypoints": [
         {
           "x": -70,
