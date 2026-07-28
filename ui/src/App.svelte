@@ -395,7 +395,7 @@
     }
 </script>
 
-<div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-screen h-screen flex items-center justify-center bg-black/60 select-none overflow-hidden relative">
+<div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-full h-full flex items-center justify-center bg-black/60 select-none overflow-hidden relative">
     <div class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
     
     <!-- Sidebar Navigation -->

@@ -58,12 +58,24 @@ public class VertexCEFBrowser {
 
     private void injectScaleTransform(double scale) {
         if (browser != null) {
-            // CSS zoom natively handles viewport scaling (device scale factor emulation)
-            // It automatically adjusts vw/vh and layout logic without offset bugs!
-            String js = "document.body.style.zoom = '" + scale + "';" +
-                        "document.body.style.transform = 'none';" +
-                        "document.body.style.width = '100vw';" +
-                        "document.body.style.height = '100vh';";
+            int guiWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+            int guiHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+            
+            // Lock the body to the EXACT logical GUI coordinates so w-full/h-full tailwind classes 
+            // do not expand to the massive physical viewport, preventing the layout from 
+            // getting offset to the bottom right.
+            String js = "document.documentElement.style.width = '" + guiWidth + "px';" +
+                        "document.documentElement.style.height = '" + guiHeight + "px';" +
+                        "document.documentElement.style.overflow = 'hidden';" +
+                        "document.body.style.width = '" + guiWidth + "px';" +
+                        "document.body.style.height = '" + guiHeight + "px';" +
+                        "document.body.style.margin = '0';" +
+                        "document.body.style.padding = '0';" +
+                        "document.body.style.position = 'absolute';" +
+                        "document.body.style.top = '0';" +
+                        "document.body.style.left = '0';" +
+                        "document.body.style.transform = 'scale(" + scale + ")';" +
+                        "document.body.style.transformOrigin = '0 0';";
             browser.executeJavaScript(js, url, 0);
         }
     }
