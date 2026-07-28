@@ -365,6 +365,25 @@ public class CommandManager {
                                 })
                         )
                         .then(
+                                literal("start").then(
+                                        argument(
+                                                "name",
+                                                StringArgumentType.greedyString()
+                                        ).executes(context -> {
+                                            routeBuilderCommand.start(
+                                                    StringArgumentType.getString(context, "name")
+                                            );
+                                            return 1;
+                                        })
+                                )
+                        )
+                        .then(
+                                literal("stop").executes(context -> {
+                                    routeBuilderCommand.stop();
+                                    return 1;
+                                })
+                        )
+                        .then(
                                 literal("new").then(
                                         argument(
                                                 "name",

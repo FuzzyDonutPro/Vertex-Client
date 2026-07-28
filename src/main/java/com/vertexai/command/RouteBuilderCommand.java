@@ -25,14 +25,14 @@ public class RouteBuilderCommand {
     public void main() {
         Logger.sendMessage("Use these commands to manage route waypoints.");
         info("   1. /rb list -> List all available routes.");
-        info("   2. /rb new <route-name> -> Create and select a new route.");
-        info("   3. /rb select <route-name> -> Select the specified route name. A new route will be created if none exist.");
+        info("   2. /rb start <route-name> -> Start recording a new or existing route.");
+        info("   3. /rb stop -> Stop recording the current route.");
         info("   4. /rb add <walk|etherwarp|mine> -> Add the block player is standing on to selected route.");
         info("   5. /rb remove <index> -> Remove the block player is standing on from selected route.");
         info("   6. /rb replace <index> <walk|etherwarp|mine> -> Replaces Specified Index from the route with block player is standing on.");
         info("   7. /rb delete <route-name> -> Deletes the route.");
         info("   8. /rb keys -> Show RouteBuilder keybinds and actions.");
-        info("   9. /rb toggle -> Toggle RouteBuilder on/off.");
+        info("   9. /rb select <route-name> -> Select the specified route name without starting recording.");
         info("   Note: Route Miner requires at least 1 waypoint. 'Default' is read-only.");
         keys();
     }
@@ -108,6 +108,29 @@ public class RouteBuilderCommand {
 
     public void toggle() {
         RouteBuilder.getInstance().toggle();
+    }
+
+    public void start(final String routeName) {
+        String normalized = normalizeRouteName(routeName);
+        if (normalized.isEmpty()) {
+            Logger.sendError("Route name cannot be empty.");
+            return;
+        }
+
+        boolean created = RouteHandler.getInstance().createRoute(normalized);
+        this.select(normalized);
+        
+        if (!RouteBuilder.getInstance().isRunning()) {
+            RouteBuilder.getInstance().start();
+        }
+    }
+
+    public void stop() {
+        if (RouteBuilder.getInstance().isRunning()) {
+            RouteBuilder.getInstance().stop();
+        } else {
+            Logger.sendMessage("RouteBuilder is not currently running.");
+        }
     }
 
     public void add(final String name) {
