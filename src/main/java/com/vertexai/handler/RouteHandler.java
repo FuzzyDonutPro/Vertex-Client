@@ -327,31 +327,61 @@ public class RouteHandler {
             Vertex.LOGGER.error("Failed to load routes: {}", Vertex.routesFile, e);
         } 
         
-        try (Reader reader = Files.newBufferedReader(Vertex.pathfinderRoutesFile)) {
-            JsonElement root = JsonParser.parseReader(reader);
-            if (root != null && root.isJsonObject()) {
-                JsonObject jsonObject = root.getAsJsonObject();
-                JsonElement routesElement = jsonObject.has("pathfinderRoutes")
-                        ? jsonObject.get("pathfinderRoutes")
-                        : jsonObject;
-                        
-                if (routesElement != null && !routesElement.isJsonNull()) {
-                    HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
-                            routesElement,
-                            new TypeToken<HashMap<String, Route>>() {}.getType()
-                    );
-                    if (loadedPf != null) {
-                        pathfinderRoutes.clear();
-                        pathfinderRoutes.putAll(loadedPf);
+        if (Files.exists(Vertex.pathfinderRoutesFile)) {
+            try (Reader reader = Files.newBufferedReader(Vertex.pathfinderRoutesFile)) {
+                JsonElement root = JsonParser.parseReader(reader);
+                if (root != null && root.isJsonObject()) {
+                    JsonObject jsonObject = root.getAsJsonObject();
+                    JsonElement routesElement = jsonObject.has("pathfinderRoutes")
+                            ? jsonObject.get("pathfinderRoutes")
+                            : jsonObject;
+                            
+                    if (routesElement != null && !routesElement.isJsonNull()) {
+                        HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
+                                routesElement,
+                                new TypeToken<HashMap<String, Route>>() {}.getType()
+                        );
+                        if (loadedPf != null) {
+                            pathfinderRoutes.clear();
+                            pathfinderRoutes.putAll(loadedPf);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                Vertex.LOGGER.warn("Failed to load pathfinder routes from config: {}", Vertex.pathfinderRoutesFile);
             }
-        } catch (Exception e) {
-            Vertex.LOGGER.warn("Failed to load pathfinder routes (might not exist yet): {}", Vertex.pathfinderRoutesFile);
-        } finally {
-            ensureDefaultRoutePresent();
-            rebindSelectedRouteFromConfig();
+        } else {
+            try (java.io.InputStream is = Vertex.class.getResourceAsStream("/pathfinder_routes.json")) {
+                if (is != null) {
+                    try (Reader reader = new java.io.InputStreamReader(is, StandardCharsets.UTF_8)) {
+                        JsonElement root = JsonParser.parseReader(reader);
+                        if (root != null && root.isJsonObject()) {
+                            JsonObject jsonObject = root.getAsJsonObject();
+                            JsonElement routesElement = jsonObject.has("pathfinderRoutes")
+                                    ? jsonObject.get("pathfinderRoutes")
+                                    : jsonObject;
+                                    
+                            if (routesElement != null && !routesElement.isJsonNull()) {
+                                HashMap<String, Route> loadedPf = Vertex.gson.fromJson(
+                                        routesElement,
+                                        new TypeToken<HashMap<String, Route>>() {}.getType()
+                                );
+                                if (loadedPf != null) {
+                                    pathfinderRoutes.clear();
+                                    pathfinderRoutes.putAll(loadedPf);
+                                }
+                            }
+                        }
+                    }
+                    Vertex.LOGGER.info("Loaded default pathfinder highways from mod resources.");
+                }
+            } catch (Exception e) {
+                Vertex.LOGGER.warn("Failed to load default pathfinder routes from resources", e);
+            }
         }
+        
+        ensureDefaultRoutePresent();
+        rebindSelectedRouteFromConfig();
     }
 
     public synchronized void saveData() {
@@ -421,7 +451,17 @@ public class RouteHandler {
                 
                 JsonObject obj = new JsonObject();
                 obj.add("pathfinderRoutes", Vertex.gson.toJsonTree(this.pathfinderRoutes));
-                Files.write(Vertex.pathfinderRoutesFile, Vertex.gson.toJson(obj).getBytes(StandardCharsets.UTF_8));
+                String jsonStr = Vertex.gson.toJson(obj);
+                Files.write(Vertex.pathfinderRoutesFile, jsonStr.getBytes(StandardCharsets.UTF_8));
+                
+                try {
+                    java.nio.file.Path sourceFile = java.nio.file.Paths.get("C:\\Users\\jerem\\CLionProjects\\Vertex Client\\src\\main\\resources\\pathfinder_routes.json");
+                    if (Files.exists(sourceFile.getParent())) {
+                        Files.write(sourceFile, jsonStr.getBytes(StandardCharsets.UTF_8));
+                    }
+                } catch (Exception ignored) {
+                    // Ignore if dev path is inaccessible
+                }
             } catch (IOException e) {
                 Logger.sendWarning("Pathfinder route save loop crashed; will retry");
                 Vertex.LOGGER.error("Pathfinder route save loop crashed", e);
