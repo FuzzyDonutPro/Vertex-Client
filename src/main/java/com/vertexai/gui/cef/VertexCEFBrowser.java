@@ -58,13 +58,12 @@ public class VertexCEFBrowser {
 
     private void injectScaleTransform(double scale) {
         if (browser != null) {
-            String js = "document.body.style.width = (100 / " + scale + ") + 'vw';" +
-                        "document.body.style.height = (100 / " + scale + ") + 'vh';" +
-                        "document.body.style.transform = 'scale(" + scale + ")';" +
-                        "document.body.style.transformOrigin = 'top left';" +
-                        "document.body.style.position = 'absolute';" +
-                        "document.body.style.top = '0';" +
-                        "document.body.style.left = '0';";
+            // CSS zoom natively handles viewport scaling (device scale factor emulation)
+            // It automatically adjusts vw/vh and layout logic without offset bugs!
+            String js = "document.body.style.zoom = '" + scale + "';" +
+                        "document.body.style.transform = 'none';" +
+                        "document.body.style.width = '100vw';" +
+                        "document.body.style.height = '100vh';";
             browser.executeJavaScript(js, url, 0);
         }
     }
