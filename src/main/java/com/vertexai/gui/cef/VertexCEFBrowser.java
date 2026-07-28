@@ -52,7 +52,20 @@ public class VertexCEFBrowser {
         if (browser != null) {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();
             browser.resize((int) (width * scale), (int) (height * scale));
-            browser.executeJavaScript("document.body.style.zoom = '" + scale + "';", url, 0);
+            injectScaleTransform(scale);
+        }
+    }
+
+    private void injectScaleTransform(double scale) {
+        if (browser != null) {
+            String js = "document.body.style.width = (100 / " + scale + ") + 'vw';" +
+                        "document.body.style.height = (100 / " + scale + ") + 'vh';" +
+                        "document.body.style.transform = 'scale(" + scale + ")';" +
+                        "document.body.style.transformOrigin = 'top left';" +
+                        "document.body.style.position = 'absolute';" +
+                        "document.body.style.top = '0';" +
+                        "document.body.style.left = '0';";
+            browser.executeJavaScript(js, url, 0);
         }
     }
 
@@ -72,9 +85,8 @@ public class VertexCEFBrowser {
             int height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             
             try {
-                // Ensure the web body is zoomed dynamically in case scale changes
-                double scale = Minecraft.getInstance().getWindow().getGuiScale();
-                browser.executeJavaScript("document.body.style.zoom = '" + scale + "';", url, 0);
+                // Ensure the web body is scaled dynamically in case scale changes
+                injectScaleTransform(Minecraft.getInstance().getWindow().getGuiScale());
 
                 context.blit(texture, 0, 0, width, height, 0.0F, 1.0F, 0.0F, 1.0F);
                 return true;
