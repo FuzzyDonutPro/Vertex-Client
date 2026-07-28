@@ -13,6 +13,11 @@ public class PerspectiveMod extends AbstractFeature {
     private boolean active = false;
     private boolean wasKeyDown = false;
 
+    public PerspectiveMod() {
+        super();
+        this.enabled = true; // Always tick to listen for keybind
+    }
+
     // perspektive state
     public float freeLookYaw = 0.0f;
     public float freeLookPitch = 0.0f;

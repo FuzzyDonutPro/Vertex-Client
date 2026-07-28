@@ -7,6 +7,8 @@ import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.vertexai.util.Logger;
 
+import java.io.InputStream;
+
 public class VertexCEFBrowser {
 
     private static VertexCEFBrowser instance;
@@ -121,4 +123,3 @@ public class VertexCEFBrowser {
         return browser;
     }
 }
-

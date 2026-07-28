@@ -137,7 +137,7 @@ public class MCEFBridge {
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {
                 net.minecraft.client.Minecraft.getInstance().execute(() -> {
-                    com.vertexai.config.ConfigGuiManager.openConfigGui(null);
+                    com.vertexai.config.ConfigGuiManager.openNativeConfigGui();
                 });
                 return "{\"status\":\"ok\"}";
             } else if ("get_config_schema".equals(action)) {

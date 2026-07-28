@@ -8,10 +8,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class ModernRenderContextMixin {
     /**
      * @author Antigravity
-     * @reason Fix MoulConfig crash due to DefaultVertexFormat.POSITION_COLOR being removed/renamed in 1.21.11
+     * @reason Fix MoulConfig crash due to DefaultVertexFormat fields being renamed/removed in 1.21.11
      */
-    @Redirect(method = "<clinit>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/DefaultVertexFormat;field_1592:Lnet/minecraft/class_293;"))
+    @Redirect(method = "<clinit>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/DefaultVertexFormat;field_1592:Lcom/mojang/blaze3d/vertex/VertexFormat;"))
     private static com.mojang.blaze3d.vertex.VertexFormat redirectPositionColor() {
+        return com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR;
+    }
+
+    @Redirect(method = "<clinit>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/DefaultVertexFormat;field_1576:Lcom/mojang/blaze3d/vertex/VertexFormat;"))
+    private static com.mojang.blaze3d.vertex.VertexFormat redirectPositionColorTexture() {
         return com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR;
     }
 }

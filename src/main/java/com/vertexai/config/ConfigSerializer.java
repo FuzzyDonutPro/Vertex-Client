@@ -66,6 +66,9 @@ public class ConfigSerializer {
                         }
                         settingJson.add("options", opts);
                         settingJson.addProperty("value", field.getInt(categoryObj));
+                    } else if (field.isAnnotationPresent(io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind.class)) {
+                        settingJson.addProperty("type", "keybind");
+                        settingJson.addProperty("value", field.getInt(categoryObj));
                     } else {
                         continue;
                     }

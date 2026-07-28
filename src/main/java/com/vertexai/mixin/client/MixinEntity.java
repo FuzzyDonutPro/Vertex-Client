@@ -23,4 +23,24 @@ public abstract class MixinEntity {
             }
         }
     }
+
+    @Inject(method = "getViewYRot", at = @At("HEAD"), cancellable = true)
+    private void onGetViewYRot(float partialTicks, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
+        if ((Object) this instanceof LocalPlayer) {
+            PerspectiveMod mod = PerspectiveMod.getInstance();
+            if (mod.isRunning()) {
+                cir.setReturnValue(mod.freeLookYaw);
+            }
+        }
+    }
+
+    @Inject(method = "getViewXRot", at = @At("HEAD"), cancellable = true)
+    private void onGetViewXRot(float partialTicks, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
+        if ((Object) this instanceof LocalPlayer) {
+            PerspectiveMod mod = PerspectiveMod.getInstance();
+            if (mod.isRunning()) {
+                cir.setReturnValue(mod.freeLookPitch);
+            }
+        }
+    }
 }

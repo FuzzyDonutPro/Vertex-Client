@@ -1,5 +1,6 @@
 package com.vertexai.config;
 
+import com.vertexai.gui.KeybindCaptureScreen;
 import com.vertexai.gui.web.WebDashboardScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,5 +20,10 @@ public class ConfigGuiManager {
     public static Screen createConfigScreen(Screen parent, String search) {
         System.out.println("[vertexai/DEBUG] ConfigGuiManager.createConfigScreen() creating WebDashboardScreen...");
         return new WebDashboardScreen();
+    }
+
+    public static void openNativeConfigGui() {
+        Minecraft client = Minecraft.getInstance();
+        client.setScreen(new KeybindCaptureScreen(client.screen, "Free Look Keybind", null));
     }
 }

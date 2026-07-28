@@ -28,7 +28,7 @@ public class GuiConfig {
             desc = "Choose which sound pack to use for the GUI"
     )
     @ConfigEditorDropdown(
-            values = {"Default", "1", "2", "3"}
+            values = {"Muted", "Mechanical Click", "Bubbly Pop", "Subtle Chime"}
     )
     public int uiSoundStyle = 1;
 
