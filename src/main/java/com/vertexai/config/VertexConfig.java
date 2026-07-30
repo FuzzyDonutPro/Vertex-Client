@@ -46,8 +46,10 @@ public class VertexConfig extends Config {
     public HUD hud = new HUD();
     @Category(name = "Render", desc = "Render Settings")
     public Render render = new Render();
-    @Category(name = "Settings", desc = "Settings")
+    @Category(name = "Themes & Styling", desc = "Themes and Styling Settings")
     public GuiConfig gui = new GuiConfig();
+    @Category(name = "Animations", desc = "Animation Settings")
+    public Animations animations = new Animations();
     @Category(name = "Bazaar Flipper", desc = "Bazaar Order Flipper Settings")
     public BazaarFlipper bazaarFlipper = new BazaarFlipper();
     @Category(name = "Other", desc = "Other Settings")

@@ -7,14 +7,14 @@ import org.lwjgl.glfw.GLFW;
 public class General {
 
     @ConfigOption(
-            name = "▶ ENABLE MACRO",
+            name = "ENABLE MACRO",
             desc = "Start or Stop the currently selected macro instantly!"
     )
     @ConfigEditorButton(buttonText = "Toggle Macro")
     public transient Runnable enableMacroButton = ConfigActions::toggleMacro;
 
     @ConfigOption(
-            name = "✎ OPEN HUD EDITOR",
+            name = "OPEN HUD EDITOR",
             desc = "Customize the layout and position of all overlay elements (Macro Status, Commission Tracker, etc.)"
     )
     @ConfigEditorButton(buttonText = "Edit HUD")

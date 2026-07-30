@@ -18,7 +18,7 @@ public class MixinItemInHandRenderer {
     private void onApplyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float swingProgress, CallbackInfo ci) {
         if (Vertex.config() == null || Vertex.config().gui == null) return;
 
-        int anim = Vertex.config().gui.swingAnimation; // 0=Normal, 1=1.8, 2=Slow, 3=1.8 Slow, 4=Pitch
+        int anim = Vertex.config().animations.swingAnimation; // 0=Normal, 1=1.8, 2=Slow, 3=1.8 Slow, 4=Pitch
 
         if (anim == 1 || anim == 3) { // 1.8 or 1.8 Slow
             int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
@@ -68,7 +68,7 @@ public class MixinItemInHandRenderer {
     private void onApplyItemArmTransformReturn(PoseStack poseStack, HumanoidArm humanoidArm, float swingProgress, CallbackInfo ci) {
         if (Vertex.config() == null || Vertex.config().gui == null) return;
 
-        int anim = Vertex.config().gui.swingAnimation;
+        int anim = Vertex.config().animations.swingAnimation;
         // For Normal (0) and Slow (2), we don't cancel HEAD, so apply transforms at RETURN
         if (anim == 0 || anim == 2) {
             applyCustomTransforms(poseStack);
@@ -76,10 +76,10 @@ public class MixinItemInHandRenderer {
     }
 
     private void applyCustomTransforms(PoseStack poseStack) {
-        float scale = Vertex.config().gui.itemScale;
-        float posX = Vertex.config().gui.itemPosX;
-        float posY = Vertex.config().gui.itemPosY;
-        float posZ = Vertex.config().gui.itemPosZ;
+        float scale = Vertex.config().animations.itemScale;
+        float posX = Vertex.config().animations.itemPosX;
+        float posY = Vertex.config().animations.itemPosY;
+        float posZ = Vertex.config().animations.itemPosZ;
 
         if (posX != 0.0f || posY != 0.0f || posZ != 0.0f) {
             poseStack.translate(posX, posY, posZ);

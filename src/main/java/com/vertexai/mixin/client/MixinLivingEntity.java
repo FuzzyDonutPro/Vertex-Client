@@ -54,8 +54,8 @@ public abstract class MixinLivingEntity {
     @Inject(method = "getAttackAnim", at = @At("RETURN"), cancellable = true)
     private void onGetAttackAnim(float partialTick, CallbackInfoReturnable<Float> cir) {
         if ((Object) this instanceof LocalPlayer) {
-            if (com.vertexai.Vertex.config() != null && com.vertexai.Vertex.config().gui != null) {
-                float speed = com.vertexai.Vertex.config().gui.swingSpeed;
+            if (com.vertexai.Vertex.config() != null && com.vertexai.Vertex.config().animations != null) {
+                float speed = com.vertexai.Vertex.config().animations.swingSpeed;
                 if (speed != 1.0f) {
                     cir.setReturnValue(Math.min(cir.getReturnValue() * speed, 1.0f));
                 }
