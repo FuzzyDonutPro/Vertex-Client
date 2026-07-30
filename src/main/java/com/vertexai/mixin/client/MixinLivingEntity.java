@@ -9,11 +9,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 /**
  * Mixin for LivingEntity to override yaw during movement for strafe and swing animation speed.
  */
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity {
+
+    @org.spongepowered.asm.mixin.Shadow
+    public abstract float getYRot();
+
+    @org.spongepowered.asm.mixin.Shadow
+    public abstract void setYRot(float yRot);
+
+    private float previousStrafeYaw;
 
     /**
      * Override yaw during jump for strafe.
@@ -27,14 +37,21 @@ public abstract class MixinLivingEntity {
     }
 
     /**
-     * Override yaw during travel for strafe.
+     * Override yaw during travel for strafe by temporarily setting the entity yaw.
      */
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F", ordinal = 0))
-    private float overrideTravelYaw(LivingEntity self) {
-        if (self instanceof LocalPlayer && StrafeUtil.shouldEnable()) {
-            return StrafeUtil.yaw;
+    @Inject(method = "travel", at = @At("HEAD"))
+    private void onTravelHead(net.minecraft.world.phys.Vec3 travelVector, CallbackInfo ci) {
+        if ((Object) this instanceof LocalPlayer && StrafeUtil.shouldEnable()) {
+            this.previousStrafeYaw = this.getYRot();
+            this.setYRot(StrafeUtil.yaw);
         }
-        return self.getYRot();
+    }
+
+    @Inject(method = "travel", at = @At("RETURN"))
+    private void onTravelReturn(net.minecraft.world.phys.Vec3 travelVector, CallbackInfo ci) {
+        if ((Object) this instanceof LocalPlayer && StrafeUtil.shouldEnable()) {
+            this.setYRot(this.previousStrafeYaw);
+        }
     }
 
     /**
