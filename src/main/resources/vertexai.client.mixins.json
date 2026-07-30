@@ -10,7 +10,9 @@
     "MixinLocalPlayer",
     "MixinMouse",
     "MixinEntity",
-    "MinecraftAccessor"
+    "MinecraftAccessor",
+    "MixinItemInHandRenderer",
+    "MixinLivingEntity"
   ],
   "injectors": {
     "defaultRequire": 1
