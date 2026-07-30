@@ -55,6 +55,13 @@ public class GuiConfig {
     public int swingAnimation = 1;
 
     @ConfigOption(
+            name = "Swing Speed",
+            desc = "Speed multiplier for the swing animation"
+    )
+    @ConfigEditorSlider(minValue = 0.1f, maxValue = 5.0f, minStep = 0.1f)
+    public float swingSpeed = 1.0f;
+
+    @ConfigOption(
             name = "Item Scale",
             desc = "Scale of the held item in first person"
     )
