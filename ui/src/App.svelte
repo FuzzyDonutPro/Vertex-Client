@@ -507,11 +507,11 @@
                 </li>
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
                 <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'failsafes' ? 'bg-gradient-to-r from-red-500/15 to-transparent border-l-2 border-red-500 text-red-500' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'failsafes'; }}>
-                    🛡️ Security & Failsafes
+                    Security & Failsafes
                 </li>
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
                 <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'themes' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
-                    🎨 Themes & Styling
+                    Themes & Styling
                 </li>
             </ul>
         </div>
@@ -528,7 +528,7 @@
     <!-- Main Workspace View -->
     <main class="flex-1 p-5 overflow-y-auto custom-scrollbar flex flex-col gap-4 select-none">
         
-        {#if currentTab !== 'settings'}
+        {#if currentTab !== 'settings' && currentTab !== 'themes' && currentTab !== 'failsafes'}
             <!-- Header Stats Banner -->
             <div class="grid grid-cols-4 gap-3">
                 <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col gap-1 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:right-0 after:w-1 after:h-full after:bg-sky-400 after:rounded-r-xl">
@@ -712,7 +712,7 @@
             <div class="flex flex-col gap-3 pb-6">
                 <div class="flex justify-between items-center mb-1">
                     <div>
-                        <h2 class="text-sm font-bold text-red-400">🛡️ Security & Failsafes Hub</h2>
+                        <h2 class="text-sm font-bold text-red-400">Security & Failsafes Hub</h2>
                         <p class="text-[10px] text-slate-400 mt-0.5">Configure advanced macro protection, webhook alerts, and auto-disconnect parameters.</p>
                     </div>
                 </div>
@@ -819,6 +819,47 @@
                         </div>
                     {/each}
                 </div>
+
+                <div class="flex justify-between items-center mt-4 mb-1">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Animations</h2>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Customize swing animations, item positioning, and speed.</p>
+                    </div>
+                </div>
+
+                {#if dynamicConfigSchema && dynamicConfigSchema['animations']}
+                    <div class="grid grid-cols-2 gap-3 mt-1">
+                    {#each dynamicConfigSchema['animations'].settings as setting}
+                        <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
+                            <div>
+                                <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                            </div>
+                            <div class="flex justify-start">
+                                {#if setting.type === 'boolean'}
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                    </div>
+                                {:else if setting.type === 'slider'}
+                                    <div class="flex items-center gap-3 w-full">
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
+                                    </div>
+                                {:else if setting.type === 'dropdown'}
+                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                        {#each setting.options as opt, i}
+                                            <option value={i}>{opt}</option>
+                                        {/each}
+                                    </select>
+                                {/if}
+                            </div>
+                        </div>
+                    {/each}
+                    </div>
+                {:else}
+                    <div class="text-xs text-slate-400 text-center py-6">Loading animation settings from Java...</div>
+                {/if}
             </div>
         {/if}
 
