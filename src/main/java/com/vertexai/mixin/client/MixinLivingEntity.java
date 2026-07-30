@@ -17,12 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity {
 
-    @org.spongepowered.asm.mixin.Shadow
-    public abstract float getYRot();
-
-    @org.spongepowered.asm.mixin.Shadow
-    public abstract void setYRot(float yRot);
-
     private float previousStrafeYaw;
 
     /**
@@ -42,15 +36,15 @@ public abstract class MixinLivingEntity {
     @Inject(method = "travel", at = @At("HEAD"))
     private void onTravelHead(net.minecraft.world.phys.Vec3 travelVector, CallbackInfo ci) {
         if ((Object) this instanceof LocalPlayer && StrafeUtil.shouldEnable()) {
-            this.previousStrafeYaw = this.getYRot();
-            this.setYRot(StrafeUtil.yaw);
+            this.previousStrafeYaw = ((LivingEntity)(Object)this).getYRot();
+            ((LivingEntity)(Object)this).setYRot(StrafeUtil.yaw);
         }
     }
 
     @Inject(method = "travel", at = @At("RETURN"))
     private void onTravelReturn(net.minecraft.world.phys.Vec3 travelVector, CallbackInfo ci) {
         if ((Object) this instanceof LocalPlayer && StrafeUtil.shouldEnable()) {
-            this.setYRot(this.previousStrafeYaw);
+            ((LivingEntity)(Object)this).setYRot(this.previousStrafeYaw);
         }
     }
 
