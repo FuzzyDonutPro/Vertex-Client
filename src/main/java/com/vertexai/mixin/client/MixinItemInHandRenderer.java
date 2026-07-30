@@ -70,11 +70,10 @@ public class MixinItemInHandRenderer {
             poseStack.mulPose(Axis.YP.rotationDegrees(i * 13.365f));
             poseStack.mulPose(Axis.ZP.rotationDegrees(i * 78.05f));
 
-            // Smooth pitch interpolation applied on the vanilla swing axes
+            // Smooth pitch interpolation applied around the X axis to pivot from the handle
             float eased = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
-            poseStack.mulPose(Axis.YP.rotationDegrees(i * -(60.0F * eased)));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(i * (20.0F * eased)));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-(100.0F * eased)));
+            float pitchDegrees = Mth.lerp(eased, 0.0F, -100.0F); 
+            poseStack.mulPose(Axis.XP.rotationDegrees(pitchDegrees));
 
             ci.cancel();
         }
