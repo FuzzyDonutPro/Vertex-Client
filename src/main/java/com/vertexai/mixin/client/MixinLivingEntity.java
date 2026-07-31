@@ -49,7 +49,7 @@ public abstract class MixinLivingEntity {
     }
 
     /**
-     * Slow down the swing animation for LocalPlayer if Slow or 1.8 Slow is selected.
+     * Scale the swing animation speed for LocalPlayer based on the speed slider.
      */
     @Inject(method = "getAttackAnim", at = @At("RETURN"), cancellable = true)
     private void onGetAttackAnim(float partialTick, CallbackInfoReturnable<Float> cir) {
