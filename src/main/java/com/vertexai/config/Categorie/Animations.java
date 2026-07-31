@@ -13,7 +13,19 @@ public class Animations {
     @ConfigEditorDropdown(values = {"Normal", "Slow", "Pitch"})
     public int swingAnimation = 0;
 
+    @ConfigOption(
+            name = "Pitch Axis",
+            desc = "Which axis the Pitch animation rotates around (X, Y, Z)"
+    )
+    @ConfigEditorDropdown(values = {"X", "Y", "Z"})
+    public int pitchAxis = 0;
 
+    @ConfigOption(
+            name = "Pitch Direction",
+            desc = "Direction of the Pitch animation"
+    )
+    @ConfigEditorDropdown(values = {"Normal", "Reversed"})
+    public int pitchDirection = 0;
 
     @ConfigOption(
             name = "Swing Speed",

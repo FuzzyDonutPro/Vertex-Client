@@ -47,10 +47,22 @@ public class MixinItemInHandRenderer {
             poseStack.mulPose(Axis.YP.rotationDegrees(i * 13.365f));
             poseStack.mulPose(Axis.ZP.rotationDegrees(i * 78.05f));
 
-            // Smooth pitch interpolation applied around the X axis
+            // Smooth pitch interpolation applied around the configured axis
             float eased = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
             float pitchDegrees = Mth.lerp(eased, 0.0F, -100.0F); 
-            poseStack.mulPose(Axis.XP.rotationDegrees(pitchDegrees));
+            
+            if (Vertex.config().animations.pitchDirection == 1) {
+                pitchDegrees = -pitchDegrees;
+            }
+            
+            int axis = Vertex.config().animations.pitchAxis; // 0=X, 1=Y, 2=Z
+            if (axis == 0) {
+                poseStack.mulPose(Axis.XP.rotationDegrees(pitchDegrees));
+            } else if (axis == 1) {
+                poseStack.mulPose(Axis.YP.rotationDegrees(pitchDegrees));
+            } else {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(pitchDegrees));
+            }
 
             ci.cancel();
         }
