@@ -48,16 +48,13 @@ public abstract class MixinLivingEntity {
         }
     }
 
-    /**
-     * Scale the swing animation speed for LocalPlayer based on the speed slider.
-     */
-    @Inject(method = "getAttackAnim", at = @At("RETURN"), cancellable = true)
-    private void onGetAttackAnim(float partialTick, CallbackInfoReturnable<Float> cir) {
+    @Inject(method = "getCurrentSwingDuration", at = @At("RETURN"), cancellable = true)
+    private void onGetCurrentSwingDuration(CallbackInfoReturnable<Integer> cir) {
         if ((Object) this instanceof LocalPlayer) {
             if (com.vertexai.Vertex.config() != null && com.vertexai.Vertex.config().animations != null) {
                 float speed = com.vertexai.Vertex.config().animations.swingSpeed;
                 if (speed != 1.0f) {
-                    cir.setReturnValue(Math.min(cir.getReturnValue() * speed, 1.0f));
+                    cir.setReturnValue(Math.round(cir.getReturnValue() / speed));
                 }
             }
         }
