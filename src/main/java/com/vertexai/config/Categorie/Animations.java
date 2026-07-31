@@ -10,7 +10,7 @@ public class Animations {
             name = "Swing Animation",
             desc = "Customize your first-person swinging style"
     )
-    @ConfigEditorDropdown(values = {"Normal", "Slow", "Pitch"})
+    @ConfigEditorDropdown(values = {"Normal", "Slow", "Block Hit"})
     public int swingAnimation = 0;
 
     @ConfigOption(

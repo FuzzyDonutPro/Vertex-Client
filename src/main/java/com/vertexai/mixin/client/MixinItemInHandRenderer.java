@@ -18,7 +18,7 @@ public class MixinItemInHandRenderer {
     private void onApplyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float swingProgress, CallbackInfo ci) {
         if (Vertex.config() == null || Vertex.config().animations == null) return;
 
-        int anim = Vertex.config().animations.swingAnimation; // 0=Normal, 1=Slow, 2=Pitch
+        int anim = Vertex.config().animations.swingAnimation; // 0=Normal, 1=Slow, 2=Block Hit
 
         // Apply custom scale and translations FIRST so they are in global (screen) space
         float scale = Vertex.config().animations.itemScale;
@@ -33,7 +33,7 @@ public class MixinItemInHandRenderer {
             poseStack.scale(scale, scale, scale);
         }
 
-        if (anim == 2) { // Pitch
+        if (anim == 2) { // Block Hit
             int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
 
             poseStack.translate(i * 0.56F, -0.52F, -0.71999997F);
@@ -47,10 +47,12 @@ public class MixinItemInHandRenderer {
             poseStack.mulPose(Axis.YP.rotationDegrees(i * 13.365f));
             poseStack.mulPose(Axis.ZP.rotationDegrees(i * 78.05f));
 
-            // Smooth pitch interpolation applied around the -Z axis to pivot from the handle
+            // Smoothly move into the 1.8 block position during the swing
             float eased = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
-            float pitchDegrees = Mth.lerp(eased, 0.0F, -100.0F); 
-            poseStack.mulPose(Axis.ZP.rotationDegrees(-pitchDegrees));
+            poseStack.translate(i * -0.5F * eased, 0.2F * eased, 0.0F);
+            poseStack.mulPose(Axis.YP.rotationDegrees(i * 30.0F * eased));
+            poseStack.mulPose(Axis.XP.rotationDegrees(-80.0F * eased));
+            poseStack.mulPose(Axis.YP.rotationDegrees(i * 60.0F * eased));
 
             ci.cancel();
         }
