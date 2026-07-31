@@ -18,9 +18,9 @@ public class MixinItemInHandRenderer {
     private void onApplyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float swingProgress, CallbackInfo ci) {
         if (Vertex.config() == null || Vertex.config().animations == null) return;
 
-        int anim = Vertex.config().animations.swingAnimation; // 0=Normal, 1=Slow, 2=Pitch
-
-        // Apply custom scale and translations FIRST so they are in global (screen) space
+        // Apply custom global rotations, scale, and translations FIRST so they affect the entire arm
+        float pitch = Vertex.config().animations.itemPitch;
+        float yaw = Vertex.config().animations.itemYaw;
         float scale = Vertex.config().animations.itemScale;
         float posX = Vertex.config().animations.itemPosX;
         float posY = Vertex.config().animations.itemPosY;
@@ -32,41 +32,12 @@ public class MixinItemInHandRenderer {
         if (scale != 1.0f) {
             poseStack.scale(scale, scale, scale);
         }
-
-        if (anim == 2) { // Pitch
-            int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
-
-            poseStack.translate(i * 0.56F, -0.52F, -0.71999997F);
-            if (humanoidArm == HumanoidArm.LEFT) {
-                poseStack.translate(0.0F, 0.0F, -0.15F);
-            }
-            poseStack.translate(i * -0.14142136f, 0.08f, 0.14142136f);
-
-            // Static rest orientation
-            poseStack.mulPose(Axis.XP.rotationDegrees(-102.25f));
-            poseStack.mulPose(Axis.YP.rotationDegrees(i * 13.365f));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(i * 78.05f));
-
-            // Smooth pitch interpolation applied around the configured axis
-            float eased = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
-            float pitchDegrees = Mth.lerp(eased, 0.0F, -100.0F); 
-            
-            if (Vertex.config().animations.pitchDirection == 1) {
-                pitchDegrees = -pitchDegrees;
-            }
-            
-            int axis = Vertex.config().animations.pitchAxis; // 0=X, 1=Y, 2=Z
-            if (axis == 0) {
-                poseStack.mulPose(Axis.XP.rotationDegrees(pitchDegrees));
-            } else if (axis == 1) {
-                poseStack.mulPose(Axis.YP.rotationDegrees(pitchDegrees));
-            } else {
-                poseStack.mulPose(Axis.ZP.rotationDegrees(pitchDegrees));
-            }
-
-            ci.cancel();
+        if (pitch != 0.0f) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
         }
-        // For Normal (0) and Slow (1), we don't cancel, so vanilla does the rest.
-        // We already applied the global translations/scales above.
+        if (yaw != 0.0f) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        }
+        // Vanilla does the rest!
     }
 }

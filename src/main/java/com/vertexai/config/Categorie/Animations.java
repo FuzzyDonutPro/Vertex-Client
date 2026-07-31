@@ -7,25 +7,18 @@ import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 public class Animations {
 
     @ConfigOption(
-            name = "Swing Animation",
-            desc = "Customize your first-person swinging style"
+            name = "Item Pitch",
+            desc = "Adjust the vertical angle (pitch) of the held item"
     )
-    @ConfigEditorDropdown(values = {"Normal", "Slow", "Pitch"})
-    public int swingAnimation = 0;
+    @ConfigEditorSlider(minValue = -180.0f, maxValue = 180.0f, minStep = 1.0f)
+    public float itemPitch = 0.0f;
 
     @ConfigOption(
-            name = "Pitch Axis",
-            desc = "Which axis the Pitch animation rotates around (X, Y, Z)"
+            name = "Item Yaw",
+            desc = "Adjust the horizontal angle (yaw) of the held item"
     )
-    @ConfigEditorDropdown(values = {"X", "Y", "Z"})
-    public int pitchAxis = 0;
-
-    @ConfigOption(
-            name = "Pitch Direction",
-            desc = "Direction of the Pitch animation"
-    )
-    @ConfigEditorDropdown(values = {"Normal", "Reversed"})
-    public int pitchDirection = 0;
+    @ConfigEditorSlider(minValue = -180.0f, maxValue = 180.0f, minStep = 1.0f)
+    public float itemYaw = 0.0f;
 
     @ConfigOption(
             name = "Swing Speed",
