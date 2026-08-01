@@ -18,8 +18,8 @@ import java.util.stream.StreamSupport;
 // TODO: Check if it causes excessive lag before re-implementing!
 public class PlayerFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final PlayerFailsafe instance = new PlayerFailsafe();
+    public static final PlayerFailsafe instance = new PlayerFailsafe();
+    public static PlayerFailsafe getInstance() { return instance; }
     private final Minecraft mc = Minecraft.getInstance();
     private final Map<Entity, Long> playerStaringTimes = new HashMap<>();
 

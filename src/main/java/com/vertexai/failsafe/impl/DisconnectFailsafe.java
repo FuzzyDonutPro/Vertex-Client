@@ -9,8 +9,8 @@ import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 
 public class DisconnectFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final DisconnectFailsafe instance = new DisconnectFailsafe();
+    public static final DisconnectFailsafe instance = new DisconnectFailsafe();
+    public static DisconnectFailsafe getInstance() { return instance; }
 
     @Override
     public String getName() {

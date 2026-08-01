@@ -28,23 +28,24 @@ public class PowderMacro extends AbstractMacro {
     private static final long CHEST_RETRY_COOLDOWN_MS = 20_000L;
     private static final long ENVIRONMENT_INVALID_GRACE_MS = 7_000L;
 
-    @Getter
     private static final PowderMacro instance = new PowderMacro();
     private final BlockMiner blockMiner = BlockMiner.getInstance();
     private final AutoChestUnlocker chestUnlocker = AutoChestUnlocker.instance;
     private final Map<BlockPos, Long> chestCooldowns = new HashMap<>();
 
-    @Getter
-    @Setter
     private PowderMacroState currentState;
     private MiningSpeedRetrievalTask miningSpeedRetrievalTask;
     private PickaxeAbilityRetrievalTask pickaxeAbilityRetrievalTask;
-    @Getter
-    @Setter
     private int miningSpeed = 0;
-    @Getter
-    @Setter
     private BlockMiner.PickaxeAbility pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
+
+    public static PowderMacro getInstance() { return instance; }
+    public PowderMacroState getCurrentState() { return currentState; }
+    public void setCurrentState(PowderMacroState currentState) { this.currentState = currentState; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public BlockMiner.PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(BlockMiner.PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
     private long nextChestScanMs = 0L;
     private long environmentInvalidSinceMs = -1L;
     private String lastEnvironmentReason = "";

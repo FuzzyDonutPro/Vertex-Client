@@ -43,8 +43,8 @@ public class AutoCommissionClaim extends AbstractFeature {
     private State state = State.STARTING;
     private ClaimError claimError = ClaimError.NONE;
     private Optional<Player> emissary = Optional.empty();
-    @Getter
     private List<Commission> nextComm = new ArrayList<>();
+    public List<Commission> getNextComm() { return nextComm; }
     private int emptyClaimChecks = 0;
     private int retry = 0;
     private int commClaimMethod = 0;

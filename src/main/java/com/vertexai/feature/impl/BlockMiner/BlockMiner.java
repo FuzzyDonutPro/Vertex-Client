@@ -42,67 +42,44 @@ public class BlockMiner extends AbstractFeature {
     /**
      * The map of the state ID of the block -> its priority
      */
-    @Getter
     private final Map<Block, Integer> blockPriority = new HashMap<>();
     private BlockMinerState currentState;
-    @Getter
-    @Setter
     private long lastAbilityUse = System.currentTimeMillis();
-    @Getter
-    @Setter
     private BlockMinerError error = BlockMinerError.NONE;
-    /**
-     * For every pattern (Starting -> Speed) OR (Speed -> Starting), noSpeedBoostFlag adds 1
-     * <p> If it detects the pattern Starting -> Speed -> Starting -> Speed (i.e., noSpeedBoostFlag == 4)
-     * then NO_SPEED_BOOST is thrown
-     */
     private int retryActivatePickaxeAbility;
-    /**
-     * The BlockPos of current block being mined
-     */
-    @Getter
-    @Setter
     private BlockPos targetBlockPos;
-    /**
-     * Type of current block being mined
-     */
-    @Getter
-    @Setter
     private Block targetBlockType;
-    /**
-     * Target particle position (for precision miner)
-     */
-    @Getter
-    @Setter
     private Vec3 targetParticlePos;
-    /**
-     * Mining speed modifier (affects block breaking time)
-     */
-    @Getter
-    @Setter
     private int miningSpeed;
-    /**
-     * Pickaxe ability to be used
-     */
-    @Getter
-    @Setter
     private PickaxeAbility pickaxeAbility;
-    /**
-     * Stop the macro automatically if it cannot find blocks within the time limit (in ms)
-     */
-    @Getter
-    @Setter
     private int waitThreshold;
-    @Getter
-    @Setter
     private PickaxeAbilityState pickaxeAbilityState = PickaxeAbilityState.AVAILABLE;
-    @Getter
-    @Setter
     private long pickaxeAbilityCooldownEndMs;
-
-    @Getter
-    @Setter
     private boolean blockChanged;
+
+    public Map<Block, Integer> getBlockPriority() { return blockPriority; }
+    public long getLastAbilityUse() { return lastAbilityUse; }
+    public void setLastAbilityUse(long lastAbilityUse) { this.lastAbilityUse = lastAbilityUse; }
+    public BlockMinerError getError() { return error; }
+    public void setError(BlockMinerError error) { this.error = error; }
+    public BlockPos getTargetBlockPos() { return targetBlockPos; }
+    public void setTargetBlockPos(BlockPos targetBlockPos) { this.targetBlockPos = targetBlockPos; }
+    public Block getTargetBlockType() { return targetBlockType; }
+    public void setTargetBlockType(Block targetBlockType) { this.targetBlockType = targetBlockType; }
+    public Vec3 getTargetParticlePos() { return targetParticlePos; }
+    public void setTargetParticlePos(Vec3 targetParticlePos) { this.targetParticlePos = targetParticlePos; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
+    public int getWaitThreshold() { return waitThreshold; }
+    public void setWaitThreshold(int waitThreshold) { this.waitThreshold = waitThreshold; }
+    public PickaxeAbilityState getPickaxeAbilityState() { return pickaxeAbilityState; }
+    public void setPickaxeAbilityState(PickaxeAbilityState pickaxeAbilityState) { this.pickaxeAbilityState = pickaxeAbilityState; }
+    public long getPickaxeAbilityCooldownEndMs() { return pickaxeAbilityCooldownEndMs; }
+    public void setPickaxeAbilityCooldownEndMs(long pickaxeAbilityCooldownEndMs) { this.pickaxeAbilityCooldownEndMs = pickaxeAbilityCooldownEndMs; }
+    public boolean isBlockChanged() { return blockChanged; }
+    public void setBlockChanged(boolean blockChanged) { this.blockChanged = blockChanged; }
 
     public static BlockMiner getInstance() {
         if (instance == null) {

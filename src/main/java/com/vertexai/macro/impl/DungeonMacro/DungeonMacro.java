@@ -7,11 +7,8 @@ import net.minecraft.client.Minecraft;
 
 public class DungeonMacro extends AbstractMacro {
 
-    private static final DungeonMacro instance = new DungeonMacro();
-
-    public static DungeonMacro getInstance() {
-        return instance;
-    }
+    public static final DungeonMacro instance = new DungeonMacro();
+    public static DungeonMacro getInstance() { return instance; }
 
     private DungeonMacroState currentState;
 

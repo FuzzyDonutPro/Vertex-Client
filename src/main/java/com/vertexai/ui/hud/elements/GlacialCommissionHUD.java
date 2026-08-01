@@ -15,7 +15,6 @@ import java.util.Map;
 
 public class GlacialCommissionHUD extends TextHud {
 
-   @Getter
    private static final GlacialCommissionHUD instance = new GlacialCommissionHUD();
     private final transient GlacialMacro glacialMacro = GlacialMacro.getInstance();
 

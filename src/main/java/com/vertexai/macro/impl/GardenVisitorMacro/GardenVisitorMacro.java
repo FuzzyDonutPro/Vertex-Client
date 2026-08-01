@@ -20,8 +20,8 @@ import java.util.List;
  */
 public class GardenVisitorMacro extends AbstractMacro {
 
-    @Getter
-    private static final GardenVisitorMacro instance = new GardenVisitorMacro();
+    public static final GardenVisitorMacro instance = new GardenVisitorMacro();
+    public static GardenVisitorMacro getInstance() { return instance; }
 
     private final Clock interactionClock = new Clock();
     private Entity targetVisitor = null;

@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class FlipMacro extends AbstractMacro {
 
-    @Getter
     public static final FlipMacro instance = new FlipMacro();
+    public static FlipMacro getInstance() { return instance; }
 
     private final Clock flipClock = new Clock();
     private int step = 0;

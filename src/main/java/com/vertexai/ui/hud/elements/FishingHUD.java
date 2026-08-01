@@ -14,7 +14,6 @@ import java.util.Locale;
 
 public class FishingHUD extends TextHud {
 
-   @Getter
    private static final FishingHUD instance = new FishingHUD();
 
    private FishingHUD() {

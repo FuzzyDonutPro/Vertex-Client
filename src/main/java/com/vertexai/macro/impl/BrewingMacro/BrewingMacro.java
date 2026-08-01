@@ -18,8 +18,8 @@ import java.util.List;
  */
 public class BrewingMacro extends AbstractMacro {
 
-    @Getter
-    private static final BrewingMacro instance = new BrewingMacro();
+    public static final BrewingMacro instance = new BrewingMacro();
+    public static BrewingMacro getInstance() { return instance; }
 
     private final Clock delayClock = new Clock();
     private int state = 0; // 0 = Idle/Opening, 1 = Inserting Bottles, 2 = Inserting Ingredient, 3 = Collecting

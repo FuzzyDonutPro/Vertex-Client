@@ -11,8 +11,8 @@ import java.util.List;
 
 public class SlayerMacro extends AbstractMacro {
 
-    @Getter
     private static final SlayerMacro instance = new SlayerMacro();
+    public static SlayerMacro getInstance() { return instance; }
 
     private SlayerMacroState currentState;
     private final List<String> necessaryItems = new ArrayList<>();

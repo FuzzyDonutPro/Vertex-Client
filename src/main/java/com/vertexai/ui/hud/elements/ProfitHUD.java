@@ -11,7 +11,6 @@ import java.util.List;
  */
 public class ProfitHUD extends TextHud {
 
-    @Getter
     private static final ProfitHUD instance = new ProfitHUD();
 
     private long sessionStartTime = -1;

@@ -7,24 +7,23 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class AbstractHUDElement {
 
-    @Getter
-    @Setter
     protected float x = 5;
-    @Getter
-    @Setter
     protected float y = 5;
-    @Getter
-    @Setter
     protected boolean enabled = true;
-    @Getter
-    @Setter
     protected float scale = 1.0f;
-
-    // 0: Top-Left, 1: Top-Right, 2: Bottom-Left, 3: Bottom-Right
-    @Getter
-    @Setter
     protected int anchor = 0;
     protected Minecraft mc = Minecraft.getInstance();
+
+    public float getX() { return x; }
+    public void setX(float x) { this.x = x; }
+    public float getY() { return y; }
+    public void setY(float y) { this.y = y; }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public float getScale() { return scale; }
+    public void setScale(float scale) { this.scale = scale; }
+    public int getAnchor() { return anchor; }
+    public void setAnchor(int anchor) { this.anchor = anchor; }
 
     public abstract void render(GuiGraphics context, float tickDelta);
 

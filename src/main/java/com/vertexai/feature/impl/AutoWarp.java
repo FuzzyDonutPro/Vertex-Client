@@ -65,8 +65,9 @@ public class AutoWarp extends AbstractFeature {
         put(SubLocation.GALATEA, "galatea");
     }};
 
-    @Getter
     private Error failReason = Error.NONE;
+
+    public Error getFailReason() { return failReason; }
     private int attempts = 0;
     private boolean nosbError = false; // Not On SkyBlock Error
     private Location targetLocation = null;

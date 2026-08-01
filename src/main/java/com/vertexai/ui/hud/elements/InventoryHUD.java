@@ -11,7 +11,6 @@ import net.minecraft.world.item.Items;
  */
 public class InventoryHUD extends AbstractHUDElement {
 
-    @Getter
     private static final InventoryHUD instance = new InventoryHUD();
 
     private static final int SLOT_SIZE = 18;

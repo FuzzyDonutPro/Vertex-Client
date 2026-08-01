@@ -10,13 +10,12 @@ import java.util.regex.Pattern;
 
 public class NameMentionFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final NameMentionFailsafe instance = new NameMentionFailsafe();
-
-    private static final Pattern SENDER_NAME_PATTERN = Pattern.compile("^.*?(?<senderName>[a-zA-Z0-9_]+)§?f?:");
-
-    @Getter
+    public static final NameMentionFailsafe instance = new NameMentionFailsafe();
+    private static final Pattern SENDER_NAME_PATTERN = Pattern.compile("^(?:\\[[^\\]]+\\]\\s*)?(?<senderName>[A-Za-z0-9_]{3,16}):");
     private boolean lobbyChangeRequested = false;
+
+    public static NameMentionFailsafe getInstance() { return instance; }
+    public boolean isLobbyChangeRequested() { return lobbyChangeRequested; }
 
     @Override
     public int getPriority() {

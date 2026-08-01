@@ -17,11 +17,11 @@ public abstract class AbstractMacro {
     protected final Minecraft mc = Minecraft.getInstance();
     public Clock timer = new Clock();
     public Clock uptime = new Clock();
-    @Getter
     private boolean enabled = false;
-    
-    @Getter
     protected final MacroStateMachine stateMachine = new MacroStateMachine(this);
+
+    public boolean isEnabled() { return enabled; }
+    public MacroStateMachine getStateMachine() { return stateMachine; }
 
     public abstract String getName();
 

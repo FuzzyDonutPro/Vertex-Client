@@ -23,27 +23,27 @@ import java.util.*;
  */
 public class GlacialMacro extends AbstractMacro {
 
-    @Getter
     private static final GlacialMacro instance = new GlacialMacro();
-    @Getter
     private final ArrayList<GlaciteVeins> typeToMine = new ArrayList<>();
-    @Getter
     private final Map<Pair<GlaciteVeins, RouteWaypoint>, Long> previousVeins = new HashMap<>();
-    @Setter
-    @Getter
     private GlacialMacroState currentState;
-    // Shared data for states
-    @Getter
-    @Setter
     private int miningSpeed = 0;
-    @Setter
-    @Getter
     private Pair<GlaciteVeins, RouteWaypoint> currentVein = null;
-    @Getter
-    @Setter
     private BlockMiner.PickaxeAbility pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
-    @Getter
     private int commissionCounter = 0;
+
+    public static GlacialMacro getInstance() { return instance; }
+    public ArrayList<GlaciteVeins> getTypeToMine() { return typeToMine; }
+    public Map<Pair<GlaciteVeins, RouteWaypoint>, Long> getPreviousVeins() { return previousVeins; }
+    public GlacialMacroState getCurrentState() { return currentState; }
+    public void setCurrentState(GlacialMacroState currentState) { this.currentState = currentState; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public Pair<GlaciteVeins, RouteWaypoint> getCurrentVein() { return currentVein; }
+    public void setCurrentVein(Pair<GlaciteVeins, RouteWaypoint> currentVein) { this.currentVein = currentVein; }
+    public BlockMiner.PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(BlockMiner.PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
+    public int getCommissionCounter() { return commissionCounter; }
 
     @Override
     public String getName() {

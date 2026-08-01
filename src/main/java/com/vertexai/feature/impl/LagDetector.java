@@ -6,8 +6,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class LagDetector extends AbstractFeature {
 
-    @Getter
     public static final LagDetector instance = new LagDetector();
+    public static LagDetector getInstance() { return instance; }
 
     private long lastPacketTime = System.currentTimeMillis();
     private Vec3 lastPacketPosition = new Vec3(0, 0, 0);

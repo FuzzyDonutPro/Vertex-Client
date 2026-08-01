@@ -10,8 +10,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class BedrockCheckFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final BedrockCheckFailsafe instance = new BedrockCheckFailsafe();
+    public static final BedrockCheckFailsafe instance = new BedrockCheckFailsafe();
+    public static BedrockCheckFailsafe getInstance() { return instance; }
     private static final int CHECK_RADIUS = 5;
     private static final int BEDROCK_THRESHOLD = 10;
 

@@ -20,8 +20,8 @@ import java.util.List;
  */
 public class ZealotMacro extends AbstractMacro {
 
-    @Getter
-    private static final ZealotMacro instance = new ZealotMacro();
+    public static final ZealotMacro instance = new ZealotMacro();
+    public static ZealotMacro getInstance() { return instance; }
 
     private final Clock attackClock = new Clock();
     private Entity targetZealot = null;

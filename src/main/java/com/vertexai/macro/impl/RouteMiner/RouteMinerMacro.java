@@ -24,24 +24,21 @@ import java.util.Optional;
 
 public class RouteMinerMacro extends AbstractMacro {
 
-    @Getter
     private static final RouteMinerMacro instance = new RouteMinerMacro();
-
-    @Setter
-    @Getter
     private RouteMinerMacroState currentState;
-
-    @Getter
-    @Setter
     private int miningSpeed = 0;
-
-    @Getter
-    @Setter
     private BlockMiner.PickaxeAbility pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
-
-    @Getter
-    @Setter
     private int routeIndex = 0;
+
+    public static RouteMinerMacro getInstance() { return instance; }
+    public RouteMinerMacroState getCurrentState() { return currentState; }
+    public void setCurrentState(RouteMinerMacroState currentState) { this.currentState = currentState; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public BlockMiner.PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(BlockMiner.PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
+    public int getRouteIndex() { return routeIndex; }
+    public void setRouteIndex(int routeIndex) { this.routeIndex = routeIndex; }
 
     @Override
     public void onEnable() {

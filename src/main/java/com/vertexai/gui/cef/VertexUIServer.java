@@ -147,6 +147,10 @@ public class VertexUIServer {
                 }
 
                 exchange.getResponseHeaders().set("Content-Type", contentType);
+                exchange.getResponseHeaders().set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+                exchange.getResponseHeaders().set("Pragma", "no-cache");
+                exchange.getResponseHeaders().set("Expires", "0");
+                
                 byte[] content = is.readAllBytes();
                 is.close();
 

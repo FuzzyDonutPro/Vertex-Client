@@ -6,7 +6,7 @@ import com.vertexai.macro.impl.FarmBuilderMacro.states.InitState;
 
 public class FarmBuilderMacro extends AbstractMacro {
 
-    private static final FarmBuilderMacro instance = new FarmBuilderMacro();
+    public static final FarmBuilderMacro instance = new FarmBuilderMacro();
     public static FarmBuilderMacro getInstance() { return instance; }
 
     public FarmBuilderMacro() {}

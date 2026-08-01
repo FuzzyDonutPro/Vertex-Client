@@ -10,8 +10,8 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 
 public class KnockbackFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final KnockbackFailsafe instance = new KnockbackFailsafe();
+    public static final KnockbackFailsafe instance = new KnockbackFailsafe();
+    public static KnockbackFailsafe getInstance() { return instance; }
 
     public int getPriority() {
         return 8;

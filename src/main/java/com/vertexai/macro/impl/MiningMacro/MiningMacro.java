@@ -23,8 +23,8 @@ import java.util.List;
  */
 public class MiningMacro extends AbstractMacro {
 
-    @Getter
     private static final MiningMacro instance = new MiningMacro();
+    public static MiningMacro getInstance() { return instance; }
     private static final int LOW_FUEL_THRESHOLD = 100;
 
     private final BlockMiner miner = BlockMiner.getInstance();

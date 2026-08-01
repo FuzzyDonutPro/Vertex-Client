@@ -11,8 +11,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 
 public class RotationFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final RotationFailsafe instance = new RotationFailsafe();
+    public static final RotationFailsafe instance = new RotationFailsafe();
+    public static RotationFailsafe getInstance() { return instance; }
     private final Clock triggerCheck = new Clock();
     private Angle rotationBeforeReacting = null;
 

@@ -15,8 +15,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class TeleportFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final TeleportFailsafe instance = new TeleportFailsafe();
+    public static final TeleportFailsafe instance = new TeleportFailsafe();
+    public static TeleportFailsafe getInstance() { return instance; }
     private final LagDetector lagDetector = LagDetector.getInstance();
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock triggerCheck = new Clock();

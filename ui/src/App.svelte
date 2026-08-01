@@ -273,6 +273,7 @@
     ];
 
     const defaultConfigSchema = {
+        gui: { id: 'gui', name: 'Themes & Styling', settings: [{ id: 'handChams', name: 'Hand Chams', desc: 'Render the held item with a solid, opaque glowing effect', type: 'boolean', value: false }, { id: 'chamsGlowAmount', name: 'Glow Amount', desc: 'Intensity of the hand chams glow', type: 'slider', min: 0.0, max: 2.0, step: 0.1, value: 1.0 }, { id: 'chamsGlowColor', name: 'Glow Color', desc: 'Hex color for the hand chams (e.g. #00FFFF)', type: 'text', value: '#00FFFF' }] },
         farming: { id: 'farming', name: 'Farming Settings', settings: [{ id: 'farmingCrop', name: 'Target Crop', desc: 'Select target crop', type: 'dropdown', options: ['Wheat', 'Carrot', 'Potato', 'Nether Wart', 'Sugar Cane', 'Cactus', 'Melon', 'Pumpkin'], value: 0 }, { id: 'laneSpeed', name: 'Walk Speed (BPS)', desc: 'Movement speed during farming', type: 'slider', min: 1, max: 400, step: 1, value: 250 }, { id: 'autoTeleport', name: 'Auto Spawn Teleport', desc: 'Warp back to plot start when lane ends', type: 'boolean', value: true }] },
         miningMacro: { id: 'miningMacro', name: 'Mining Settings', settings: [{ id: 'mineTarget', name: 'Target Ore', desc: 'Select ore type to prioritize', type: 'dropdown', options: ['Mithril', 'Titanium', 'Gemstones', 'Glacite'], value: 0 }, { id: 'rotationSpeed', name: 'Head Rotation Speed', desc: 'Camera movement speed (ms)', type: 'slider', min: 50, max: 500, step: 10, value: 150 }, { id: 'autoPickaxeAbility', name: 'Auto Speed Boost', desc: 'Use pickaxe ability on cooldown', type: 'boolean', value: true }] },
         combat: { id: 'combat', name: 'Combat & Slayer Settings', settings: [{ id: 'bossTarget', name: 'Slayer Target', desc: 'Select Slayer Boss tier', type: 'dropdown', options: ['Revenant T4', 'Revenant T5', 'Tarantula T4', 'Sven T4', 'Voidgloom T4'], value: 0 }, { id: 'autoWeaponSwap', name: 'Auto Weapon Swap', desc: 'Swap weapon when boss spawns', type: 'boolean', value: true }, { id: 'killAuraRange', name: 'Combat Range', desc: 'Maximum hit range in blocks', type: 'slider', min: 3, max: 6, step: 0.1, value: 4.5 }] },
@@ -657,7 +658,7 @@
                 </div>
                 
                 {#if dynamicConfigSchema}
-                    {#each ['gui', 'general', 'delays'] as catId}
+                    {#each ['delays'] as catId}
                         {#if dynamicConfigSchema[catId]}
                             <div class="mt-3 mb-1 pl-1">
                                 <h4 class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">{dynamicConfigSchema[catId].name}</h4>
@@ -819,6 +820,49 @@
                         </div>
                     {/each}
                 </div>
+
+                <div class="flex justify-between items-center mt-4 mb-1">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Advanced Cosmetics</h2>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Customize hand chams and other visual settings.</p>
+                    </div>
+                </div>
+
+                {#if dynamicConfigSchema && dynamicConfigSchema['gui'] && dynamicConfigSchema['gui'].settings}
+                    <div class="grid grid-cols-2 gap-3 mt-1">
+                    {#each dynamicConfigSchema['gui'].settings.filter(s => ['handChams', 'chamsGlowAmount', 'chamsGlowColor'].includes(s.id)) as setting}
+                        <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
+                            <div>
+                                <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                            </div>
+                            <div class="flex justify-start">
+                                {#if setting.type === 'boolean'}
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                    </div>
+                                {:else if setting.type === 'slider'}
+                                    <div class="flex items-center gap-3 w-full">
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
+                                    </div>
+                                {:else if setting.type === 'dropdown'}
+                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                        {#each setting.options as opt, i}
+                                            <option value={i}>{opt}</option>
+                                        {/each}
+                                    </select>
+                                {:else if setting.type === 'text'}
+                                    <input type="text" bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
+                                {/if}
+                            </div>
+                        </div>
+                    {/each}
+                    </div>
+                {:else}
+                    <div class="text-xs text-slate-400 text-center py-6">Loading hand chams settings from Java...</div>
+                {/if}
 
                 <div class="flex justify-between items-center mt-4 mb-1">
                     <div>

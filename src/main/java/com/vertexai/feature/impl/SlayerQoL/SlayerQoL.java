@@ -16,8 +16,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public class SlayerQoL extends AbstractFeature {
 
-    @Getter
     private static final SlayerQoL instance = new SlayerQoL();
+    public static SlayerQoL getInstance() { return instance; }
 
     private final Clock delayClock = new Clock();
     private boolean awaitingClaim = false;

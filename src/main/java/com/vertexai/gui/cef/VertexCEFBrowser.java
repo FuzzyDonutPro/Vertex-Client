@@ -13,7 +13,7 @@ public class VertexCEFBrowser {
 
     private static VertexCEFBrowser instance;
     private MCEFBrowser browser;
-    private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html";
+    private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html?v=" + System.currentTimeMillis();
 
     public static synchronized VertexCEFBrowser getInstance() {
         if (instance == null) {

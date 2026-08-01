@@ -38,11 +38,9 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	
 	compileOnly 'org.projectlombok:lombok:1.18.30'
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    
-	
+	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	modImplementation "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
 	include "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
 
@@ -128,3 +126,17 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 tasks.named("sourcesJar") {
     mustRunAfter(tasks.named("copyUi"))
 }
+
+task copyToModrinth(type: Copy) {
+    dependsOn remapJar
+    doFirst {
+        delete "C:/Users/jerem/AppData/Roaming/ModrinthApp/profiles/vertex/mods/modid-1.0.0.jar"
+    }
+    from remapJar.archiveFile
+    into "C:/Users/jerem/AppData/Roaming/ModrinthApp/profiles/vertex/mods"
+    rename { "VertexClient-1.0.0.jar" }
+}
+
+build.finalizedBy(copyToModrinth)
+
+

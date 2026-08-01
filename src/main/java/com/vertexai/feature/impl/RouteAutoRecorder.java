@@ -17,8 +17,8 @@ import net.minecraft.core.BlockPos;
  */
 public class RouteAutoRecorder extends AbstractFeature {
 
-    @Getter
     private static final RouteAutoRecorder instance = new RouteAutoRecorder();
+    public static RouteAutoRecorder getInstance() { return instance; }
 
     @Getter @Setter
     private boolean autoMiningMode = true; // Auto-detects gemstone mining vs walking

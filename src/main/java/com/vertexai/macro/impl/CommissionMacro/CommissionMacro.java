@@ -20,35 +20,34 @@ public class CommissionMacro extends AbstractMacro {
     private static final long PENDING_COMMISSION_VALIDATION_TIMEOUT_MS = 2_000L;
     private static final long CHAT_CLAIM_GUARD_TIMEOUT_MS = 20_000L;
 
-    @Getter
     private static final CommissionMacro instance = new CommissionMacro();
 
-    @Getter
+    public static CommissionMacro getInstance() {
+        return instance;
+    }
+
     private CommissionMacroState currentState;
-
-    @Getter
     private int actualCommissionCounter = 0;
-    @Getter
     private long totalHotmXP = 0L;
-
-    @Getter
-    @Setter
     private int miningSpeed = 0;
-
-    @Getter
-    @Setter
     private BlockMiner.PickaxeAbility pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
-
-    @Getter
-    @Setter
     private Commission currentCommission;
-    @Getter
     private Commission pendingCommission;
     private long pendingCommissionDeadlineMs = 0L;
     private long chatClaimGuardUntilMs = 0L;
-
-    @Getter
     private long lastCommissionCompleteAtMs = 0L;
+
+    public CommissionMacroState getCurrentState() { return currentState; }
+    public int getActualCommissionCounter() { return actualCommissionCounter; }
+    public long getTotalHotmXP() { return totalHotmXP; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public BlockMiner.PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(BlockMiner.PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
+    public Commission getCurrentCommission() { return currentCommission; }
+    public void setCurrentCommission(Commission currentCommission) { this.currentCommission = currentCommission; }
+    public Commission getPendingCommission() { return pendingCommission; }
+    public long getLastCommissionCompleteAtMs() { return lastCommissionCompleteAtMs; }
 
     @Override
     public String getName() {

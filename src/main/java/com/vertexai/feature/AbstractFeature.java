@@ -22,8 +22,8 @@ public abstract class AbstractFeature {
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected final Clock timer = new Clock();
-    @Getter
     protected List<Failsafe> failsafesToIgnore;
+    public List<Failsafe> getFailsafesToIgnore() { return failsafesToIgnore; }
     protected boolean enabled = false;
 
     public AbstractFeature() {

@@ -29,16 +29,17 @@ public class GameStateHandler {
     private final Pattern areaPattern = Pattern.compile("Area:\\s(.+)");
 
 
-    @Getter
     private String serverIp = "";
-    @Getter
     private Location currentLocation = Location.KNOWHERE;
-    @Getter
     private SubLocation currentSubLocation = SubLocation.KNOWHERE;
-    @Getter
     private boolean godpotActive = false;
-    @Getter
     private boolean cookieActive = false;
+
+    public String getServerIp() { return serverIp; }
+    public Location getCurrentLocation() { return currentLocation; }
+    public SubLocation getCurrentSubLocation() { return currentSubLocation; }
+    public boolean isGodpotActive() { return godpotActive; }
+    public boolean isCookieActive() { return cookieActive; }
 
     public static GameStateHandler getInstance() {
         return instance;

@@ -91,11 +91,12 @@ public enum Commission {
         VEINS = Collections.unmodifiableMap(veinsMap);
     }
 
-    @Getter
     private final String name;
-    @Getter
     private final SubLocation location;
     private final int priority;
+
+    public String getName() { return name; }
+    public SubLocation getLocation() { return location; }
 
     Commission(String name, SubLocation location) {
         this.name = name;

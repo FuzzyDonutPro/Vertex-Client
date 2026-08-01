@@ -8,8 +8,8 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 
 public class ProfileFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final ProfileFailsafe instance = new ProfileFailsafe();
+    public static final ProfileFailsafe instance = new ProfileFailsafe();
+    public static ProfileFailsafe getInstance() { return instance; }
 
     private static final String TRIGGER_PHRASE = "Profile";
 

@@ -96,7 +96,7 @@ public class VertexAIScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (cefBrowser != null) {
-            cefBrowser.injectMouseWheel((int) mouseX, (int) mouseY, 0, (int) (verticalAmount * 120), 0);
+            cefBrowser.injectMouseWheel((int) mouseX, (int) mouseY, 0, (int) (verticalAmount * 3), 0);
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }

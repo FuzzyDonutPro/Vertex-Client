@@ -8,16 +8,18 @@ import net.minecraft.core.BlockPos;
 
 public class ForagingMacro extends AbstractMacro {
 
-    @Getter
     private static final ForagingMacro instance = new ForagingMacro();
 
     private ForagingMacroState currentState;
 
-    @Getter @Setter
     private BlockPos targetBlockPos;
-
-    @Getter @Setter
     private String currentForagingMode = "";
+
+    public static ForagingMacro getInstance() { return instance; }
+    public BlockPos getTargetBlockPos() { return targetBlockPos; }
+    public void setTargetBlockPos(BlockPos targetBlockPos) { this.targetBlockPos = targetBlockPos; }
+    public String getCurrentForagingMode() { return currentForagingMode; }
+    public void setCurrentForagingMode(String currentForagingMode) { this.currentForagingMode = currentForagingMode; }
 
     @Override
     public void onEnable() {

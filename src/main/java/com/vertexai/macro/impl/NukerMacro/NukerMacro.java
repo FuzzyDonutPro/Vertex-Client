@@ -12,16 +12,15 @@ import java.util.List;
 
 public class NukerMacro extends AbstractMacro {
 
-    @Getter
     private static final NukerMacro instance = new NukerMacro();
-
-    @Getter
-    @Setter
     private int miningSpeed = 0;
-
-    @Getter
-    @Setter
     private BlockMiner.PickaxeAbility pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
+
+    public static NukerMacro getInstance() { return instance; }
+    public int getMiningSpeed() { return miningSpeed; }
+    public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
+    public BlockMiner.PickaxeAbility getPickaxeAbility() { return pickaxeAbility; }
+    public void setPickaxeAbility(BlockMiner.PickaxeAbility pickaxeAbility) { this.pickaxeAbility = pickaxeAbility; }
 
     private NukerMacroState currentState;
     private final List<String> necessaryItems = new ArrayList<>();

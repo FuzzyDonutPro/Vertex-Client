@@ -13,8 +13,8 @@ import java.util.List;
 
 public class FlagFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final FlagFailsafe instance = new FlagFailsafe();
+    public static final FlagFailsafe instance = new FlagFailsafe();
+    public static FlagFailsafe getInstance() { return instance; }
 
     private final List<Long> flagTimestamps = new ArrayList<>();
 

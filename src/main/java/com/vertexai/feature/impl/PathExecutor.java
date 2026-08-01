@@ -6,6 +6,7 @@ import lombok.Setter;
 import com.vertexai.Vertex;
 import com.vertexai.handler.RotationHandler;
 import com.vertexai.pathfinder.calculate.Path;
+import com.vertexai.pathfinder.helper.BlockStateAccessor;
 import com.vertexai.pathfinder.movement.CalculationContext;
 import com.vertexai.pathfinder.movement.MovementHelper;
 import com.vertexai.util.*;
@@ -47,7 +48,6 @@ public class PathExecutor {
     private static final int STUCK_RECOVERY_TIMEOUT_MS = 700;
     private static PathExecutor instance;
     private final Minecraft mc = Minecraft.getInstance();
-    @Getter
     private final Deque<Path> pathQueue = new LinkedList<>();
     private final Map<Long, List<Long>> map = new HashMap<>();
     private final List<BlockPos> blockPath = new ArrayList<>();
@@ -60,9 +60,7 @@ public class PathExecutor {
     private final List<Runnable> onFailCallbacks = new ArrayList<>();
     private final Random random = new Random();
     private final Clock dynamicPitch = new Clock();
-    @Getter
     private boolean enabled = false;
-    @Getter
     private String stopReason = "Not started";
     private Path prev;
     private Path curr;
@@ -79,13 +77,19 @@ public class PathExecutor {
     private boolean interpolated = true;
     private float interpolYawDiff = 0f;
 
-    @Getter
     private State state = State.STARTING_PATH;
 
-    @Setter
     private boolean allowSprint = true;
-    @Setter
     private boolean allowInterpolation = false;
+
+    public Deque<Path> getPathQueue() { return pathQueue; }
+    public boolean isEnabled() { return enabled; }
+    public String getStopReason() { return stopReason; }
+    public State getState() { return state; }
+    public boolean isAllowSprint() { return allowSprint; }
+    public void setAllowSprint(boolean allowSprint) { this.allowSprint = allowSprint; }
+    public boolean isAllowInterpolation() { return allowInterpolation; }
+    public void setAllowInterpolation(boolean allowInterpolation) { this.allowInterpolation = allowInterpolation; }
 
     public static PathExecutor getInstance() {
         if (instance == null) {
@@ -513,25 +517,57 @@ public class PathExecutor {
     }
 
     private boolean shouldJumpOneBlock(BlockPos playerPos, BlockPos targetPos, double horizontalDistToTarget) {
-        if (this.curr == null) {
+        if (mc.player == null || mc.level == null) {
             return false;
         }
 
-        CalculationContext ctx = this.curr.getCtx();
-        if (shouldJumpTowardTarget(ctx, playerPos, targetPos, horizontalDistToTarget)) {
+        // 1. Immediate Horizontal Collision (player is pressing against a wall or 1-block step-up while moving)
+        if (mc.player.horizontalCollision && mc.player.onGround()) {
+            BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+            int px = playerPos.getX();
+            int py = playerPos.getY();
+            int pz = playerPos.getZ();
+            if (MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))) {
+                return true;
+            }
+        }
+
+        // 2. Direct Target Elevation (Target node is higher than player standing Y)
+        if (targetPos.getY() > playerPos.getY() && horizontalDistToTarget <= 2.5) {
+            BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+            int px = playerPos.getX();
+            int py = playerPos.getY();
+            int pz = playerPos.getZ();
+            if (MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))) {
+                return true;
+            }
+        }
+
+        // 3. Live World Probe towards current target
+        if (shouldJumpTowardTargetLive(playerPos, targetPos, horizontalDistToTarget)) {
             return true;
         }
 
+        // 4. Probe next target node if approaching transition
         if (this.target < this.blockPath.size() - 1) {
             BlockPos nextTarget = this.blockPath.get(this.target + 1);
             double horizontalDistToNext = Math.hypot(mc.player.getX() - nextTarget.getX() - 0.5, mc.player.getZ() - nextTarget.getZ() - 0.5);
-            return shouldJumpTowardTarget(ctx, playerPos, nextTarget, horizontalDistToNext);
+            if (nextTarget.getY() > playerPos.getY() && horizontalDistToNext <= 2.5) {
+                BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+                int px = playerPos.getX();
+                int py = playerPos.getY();
+                int pz = playerPos.getZ();
+                if (MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))) {
+                    return true;
+                }
+            }
+            return shouldJumpTowardTargetLive(playerPos, nextTarget, horizontalDistToNext);
         }
 
         return false;
     }
 
-    private boolean shouldJumpTowardTarget(CalculationContext ctx, BlockPos playerPos, BlockPos desiredTarget, double horizontalDist) {
+    private boolean shouldJumpTowardTargetLive(BlockPos playerPos, BlockPos desiredTarget, double horizontalDist) {
         if (horizontalDist > MAX_JUMP_PROBE_DISTANCE) {
             return false;
         }
@@ -542,62 +578,25 @@ public class PathExecutor {
             return false;
         }
 
-        return shouldJumpForDirection(ctx, playerPos, stepX, stepZ);
-    }
+        BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+        int px = playerPos.getX();
+        int py = playerPos.getY();
+        int pz = playerPos.getZ();
 
-    private boolean shouldJumpForDirection(CalculationContext ctx, BlockPos playerPos, int stepX, int stepZ) {
-        if (stepX == 0 && stepZ == 0) {
-            return false;
-        }
+        int landingX = px + stepX;
+        int landingZ = pz + stepZ;
 
-        int landingX = playerPos.getX() + stepX;
-        int landingZ = playerPos.getZ() + stepZ;
-        int playerY = playerPos.getY();
-        double sourceSurfaceY = getSurfaceY(ctx, playerPos.getX(), playerY, playerPos.getZ(), stepX, stepZ);
+        // Block directly ahead at feet level (py + 1)
+        boolean feetBlocked = !MovementHelper.INSTANCE.canWalkThrough(bsa, landingX, py + 1, landingZ, bsa.get(landingX, py + 1, landingZ));
 
-        double bestRise = Double.POSITIVE_INFINITY;
-        for (int y = playerY - 1; y <= playerY + 2; y++) {
-            if (!isStandableWithHeadroom(ctx, landingX, y, landingZ)) {
-                continue;
-            }
+        // Valid landing surface at py + 1 (1-block step up)
+        boolean validLanding = MovementHelper.INSTANCE.canStandOn(bsa, landingX, py + 1, landingZ, bsa.get(landingX, py + 1, landingZ));
 
-            double destSurfaceY = getSurfaceY(ctx, landingX, y, landingZ, stepX, stepZ);
-            double rise = destSurfaceY - sourceSurfaceY;
-            double maxJumpableRise = com.vertexai.pathfinder.calculate.FluidAndFlyingPathfinder.getInstance().getMaxJumpClearanceHeight();
-            if (rise < MIN_FORWARD_RISE || rise > maxJumpableRise) {
-                continue;
-            }
-            bestRise = Math.min(bestRise, rise);
-        }
+        // Player headroom (py + 3)
+        boolean hasHeadroom = MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))
+                && MovementHelper.INSTANCE.canWalkThrough(bsa, landingX, py + 3, landingZ, bsa.get(landingX, py + 3, landingZ));
 
-        if (bestRise == Double.POSITIVE_INFINITY) {
-            return false;
-        }
-        return bestRise > STEP_UP_NO_JUMP_RISE;
-    }
-
-    private boolean isStandableWithHeadroom(CalculationContext ctx, int x, int y, int z) {
-        if (!MovementHelper.INSTANCE.canStandOn(ctx.getBsa(), x, y, z, ctx.get(x, y, z))) {
-            return false;
-        }
-        if (!MovementHelper.INSTANCE.canWalkThrough(ctx.getBsa(), x, y + 1, z, ctx.get(x, y + 1, z))) {
-            return false;
-        }
-        return MovementHelper.INSTANCE.canWalkThrough(ctx.getBsa(), x, y + 2, z, ctx.get(x, y + 2, z));
-    }
-
-    private double getSurfaceY(CalculationContext ctx, int x, int y, int z, int stepX, int stepZ) {
-        BlockState state = ctx.get(x, y, z);
-        return y + getSurfaceOffset(ctx, state, x, y, z, stepX, stepZ);
-    }
-
-    private double getSurfaceOffset(CalculationContext ctx, BlockState state, int x, int y, int z, int stepX, int stepZ) {
-        if (state.getBlock() instanceof SlabBlock || state.getBlock() instanceof StairBlock) {
-            return MovementHelper.INSTANCE.hasTop(state, stepX, stepZ) ? 1.0 : 0.5;
-        }
-
-        double maxY = MovementHelper.INSTANCE.collisionMaxY(state, ctx.getWorld(), new BlockPos(x, y, z));
-        return Math.max(0.0, maxY);
+        return (feetBlocked || validLanding) && hasHeadroom;
     }
 
     private long pack(int x, int z) {

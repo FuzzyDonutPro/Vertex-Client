@@ -17,8 +17,8 @@ import java.util.List;
 /*Hours wasted on this: None, this was easy as fuck*/
 public class BedrockBlockChangeFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final BedrockBlockChangeFailsafe instance = new BedrockBlockChangeFailsafe();
+    public static final BedrockBlockChangeFailsafe instance = new BedrockBlockChangeFailsafe();
+    public static BedrockBlockChangeFailsafe getInstance() { return instance; }
     private static final int THRESHOLD = 20;
     private static final long TIME_WINDOW = 100;
     private static final int RADIUS = 10;

@@ -8,16 +8,17 @@ import com.vertexai.feature.impl.AutoDrillRefuel.states.AutoDrillRefuelState;
 import com.vertexai.feature.impl.AutoDrillRefuel.states.StartingState;
 
 public class AutoDrillRefuel extends AbstractFeature {
-    @Getter
     private static final AutoDrillRefuel instance = new AutoDrillRefuel();
-    @Setter
-    @Getter
     private AutoDrillRefuelError error = AutoDrillRefuelError.NONE;
-    @Getter
     private FuelType fuelType;
-    @Getter
     private String drillName;
     private AutoDrillRefuelState currentState;
+
+    public static AutoDrillRefuel getInstance() { return instance; }
+    public AutoDrillRefuelError getError() { return error; }
+    public void setError(AutoDrillRefuelError error) { this.error = error; }
+    public FuelType getFuelType() { return fuelType; }
+    public String getDrillName() { return drillName; }
 
     @Override
     public String getName() {
@@ -84,12 +85,13 @@ public class AutoDrillRefuel extends AbstractFeature {
         OIL_BARREL("Oil Barrel"),
         SUNFLOWER_OIL("Sunflower Oil");
 
-        @Getter
         private final String name;
 
         FuelType(String name) {
             this.name = name;
         }
+
+        public String getName() { return name; }
     }
 
 }

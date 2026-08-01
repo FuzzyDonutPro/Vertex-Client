@@ -11,16 +11,19 @@ import net.minecraft.world.phys.Vec3;
 public class Target {
 
     private Vec3 vec;
-    @Getter
     private Entity entity;
-    @Getter
     private BlockPos blockPos;
-    @Getter
     private Angle angle;
-    @Accessors(fluent = true)
-    @Setter
-    @Getter
     private float additionalY = (float) (1 + Math.random()) * 0.75f;
+
+    public Entity getEntity() { return entity; }
+    public BlockPos getBlockPos() { return blockPos; }
+    public Angle getAngle() { return angle; }
+    public float additionalY() { return additionalY; }
+    public Target additionalY(float additionalY) {
+        this.additionalY = additionalY;
+        return this;
+    }
 
     public Target(Vec3 vec) {
         this.vec = vec;

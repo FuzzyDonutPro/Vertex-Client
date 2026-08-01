@@ -15,7 +15,6 @@ import java.util.List;
 
 public class MacroHUD extends TextHud {
 
-    @Getter
     private final static MacroHUD instance = new MacroHUD();
 
     public MacroHUD() {

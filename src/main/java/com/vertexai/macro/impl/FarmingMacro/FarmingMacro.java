@@ -12,8 +12,8 @@ import java.util.List;
 
 public class FarmingMacro extends AbstractMacro {
 
-    @Getter
-    private static final FarmingMacro instance = new FarmingMacro();
+    public static final FarmingMacro instance = new FarmingMacro();
+    public static FarmingMacro getInstance() { return instance; }
 
     private FarmingMacroState currentState;
     private final List<String> necessaryItems = new ArrayList<>();

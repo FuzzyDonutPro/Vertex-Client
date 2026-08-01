@@ -332,6 +332,10 @@ public enum SubLocation {
         this.name = name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public static SubLocation fromName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return KNOWHERE;

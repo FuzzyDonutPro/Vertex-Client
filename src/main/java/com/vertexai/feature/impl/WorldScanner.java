@@ -5,8 +5,8 @@ import com.vertexai.feature.AbstractFeature;
 
 public class WorldScanner extends AbstractFeature {
 
-    @Getter
     public static WorldScanner instance = new WorldScanner();
+    public static WorldScanner getInstance() { return instance; }
 
     @Override
     public String getName() {

@@ -62,8 +62,8 @@ public class VampireSlayerTracker {
     private static final int MAX_CLICK_AFTER_LOOK_MS = 90;
     private static final double HOLY_ICE_TRIGGER_SECONDS = 0.5D;
 
-    @Getter
     private static final VampireSlayerTracker instance = new VampireSlayerTracker();
+    public static VampireSlayerTracker getInstance() { return instance; }
     private static final Minecraft mc = Minecraft.getInstance();
     private final Clock scanTimer = new Clock();
     private final Clock locateCooldown = new Clock();

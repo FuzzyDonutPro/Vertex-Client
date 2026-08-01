@@ -12,8 +12,8 @@ import net.minecraft.core.BlockPos;
  */
 public class FastBreak extends AbstractFeature {
 
-    @Getter
-    private static final FastBreak instance = new FastBreak();
+    public static final FastBreak instance = new FastBreak();
+    public static FastBreak getInstance() { return instance; }
 
     @Override
     public String getName() {

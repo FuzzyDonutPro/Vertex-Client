@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class StatusHUD extends TextHud {
 
-    @Getter
     private static final StatusHUD instance = new StatusHUD();
 
     private long macroStartTime = -1;

@@ -18,7 +18,6 @@ import net.minecraft.world.phys.Vec3;
 import java.util.*;
 
 public class RouteBuilderHUD extends TextHud {
-   @Getter
    private static final RouteBuilderHUD instance = new RouteBuilderHUD();
    private final RouteBuilder routeBuilder = RouteBuilder.getInstance();
    private final GraphHandler graphHandler = GraphHandler.instance;

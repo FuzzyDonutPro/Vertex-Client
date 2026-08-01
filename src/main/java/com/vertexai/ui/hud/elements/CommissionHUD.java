@@ -16,7 +16,6 @@ import java.util.List;
 
 public class CommissionHUD extends TextHud {
 
-    @Getter
     private final static CommissionHUD instance = new CommissionHUD();
     private final transient CommissionMacro commissionMacro = CommissionMacro.getInstance();
     public boolean commHudResetStats = false;

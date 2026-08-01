@@ -36,8 +36,8 @@ public class RouteNavigator extends AbstractFeature {
     private int targetRouteIndex = -1;
     private State state = State.STARTING;
     private boolean isQueued = false;
-    @Getter
     private NavError navError = NavError.NONE;
+    public NavError getNavError() { return navError; }
     @Setter
     private RotationType rotationType = RotationType.CLIENT;
     private Vec3 rotationTarget = null;

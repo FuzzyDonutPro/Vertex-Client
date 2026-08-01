@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 
 public class ItemChangeFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final ItemChangeFailsafe instance = new ItemChangeFailsafe();
+    public static final ItemChangeFailsafe instance = new ItemChangeFailsafe();
+    public static ItemChangeFailsafe getInstance() { return instance; }
     private final Clock timer = new Clock();
     private final Map<String, Integer> removedItems = new HashMap<>();
 

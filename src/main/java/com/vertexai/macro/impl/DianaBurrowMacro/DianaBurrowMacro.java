@@ -22,8 +22,8 @@ import java.util.List;
  */
 public class DianaBurrowMacro extends AbstractMacro {
 
-    @Getter
     private static final DianaBurrowMacro instance = new DianaBurrowMacro();
+    public static DianaBurrowMacro getInstance() { return instance; }
 
     private final Clock actionClock = new Clock();
     private BlockPos currentBurrowPos = null;

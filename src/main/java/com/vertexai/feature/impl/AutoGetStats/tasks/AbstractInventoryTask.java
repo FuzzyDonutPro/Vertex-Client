@@ -16,11 +16,11 @@ import lombok.Getter;
  * @param <T> the type of result this task produces upon successful completion
  */
 public abstract class AbstractInventoryTask<T> {
-    @Getter
     protected TaskStatus taskStatus = TaskStatus.PENDING;
-
-    @Getter
     protected String error;
+
+    public TaskStatus getTaskStatus() { return taskStatus; }
+    public String getError() { return error; }
 
     abstract public void init();
 

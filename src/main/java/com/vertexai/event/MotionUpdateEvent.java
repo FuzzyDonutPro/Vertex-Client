@@ -11,14 +11,17 @@ import java.util.function.Consumer;
  * Event fired before sending player movement packets to server.
  * Allows modifying the yaw/pitch that gets sent.
  */
-@Getter
-@AllArgsConstructor
 public class MotionUpdateEvent {
 
     private static final List<Consumer<MotionUpdateEvent>> listeners = new ArrayList<>();
 
     public float yaw;
     public float pitch;
+
+    public MotionUpdateEvent(float yaw, float pitch) {
+        this.yaw = yaw;
+        this.pitch = pitch;
+    }
 
     public static void register(Consumer<MotionUpdateEvent> listener) {
         listeners.add(listener);

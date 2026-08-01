@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
 public class RouteHandler {
     private static final long SAVE_DEBOUNCE_MS = 250L;
     public static RouteHandler instance;
@@ -44,6 +43,11 @@ public class RouteHandler {
     private long lastDirtyAtMs = 0L;
     private volatile boolean pathfinderDirty = false;
     private long lastPathfinderDirtyAtMs = 0L;
+
+    public HashMap<String, Route> getRoutes() { return routes; }
+    public HashMap<String, Route> getPathfinderRoutes() { return pathfinderRoutes; }
+    public Route getSelectedRoute() { return selectedRoute; }
+    public Route getSelectedPathfinderRoute() { return selectedPathfinderRoute; }
 
     public static RouteHandler getInstance() {
         if (instance == null) {

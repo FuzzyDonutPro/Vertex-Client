@@ -7,8 +7,8 @@ import com.vertexai.macro.MacroManager;
 
 public class WorldChangeFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final WorldChangeFailsafe instance = new WorldChangeFailsafe();
+    public static final WorldChangeFailsafe instance = new WorldChangeFailsafe();
+    public static WorldChangeFailsafe getInstance() { return instance; }
     private static final Failsafe failsafeType = Failsafe.TELEPORT;
 
     @Override

@@ -11,8 +11,8 @@ import net.minecraft.network.protocol.Packet;
 
 public class SlotChangeFailsafe extends AbstractFailsafe {
 
-    @Getter
-    private static final SlotChangeFailsafe instance = new SlotChangeFailsafe();
+    public static final SlotChangeFailsafe instance = new SlotChangeFailsafe();
+    public static SlotChangeFailsafe getInstance() { return instance; }
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock timer = new Clock();
     private int lastSelectedSlot;

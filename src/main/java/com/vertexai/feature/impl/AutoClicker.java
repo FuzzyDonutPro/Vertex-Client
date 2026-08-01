@@ -10,8 +10,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoClicker extends AbstractFeature {
 
-    @Getter
     public static AutoClicker instance = new AutoClicker();
+    public static AutoClicker getInstance() { return instance; }
 
     private final Clock leftClock = new Clock();
     private final Clock rightClock = new Clock();

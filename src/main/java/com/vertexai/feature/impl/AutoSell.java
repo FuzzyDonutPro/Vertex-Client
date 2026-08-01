@@ -7,8 +7,8 @@ import com.vertexai.util.helper.Clock;
 
 public class AutoSell extends AbstractFeature {
 
-    @Getter
     public static final AutoSell instance = new AutoSell();
+    public static AutoSell getInstance() { return instance; }
 
     private final Clock cooldown = new Clock();
     private boolean selling = false;

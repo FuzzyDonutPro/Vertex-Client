@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class TrophyFishingMacro extends AbstractMacro {
 
-    @Getter
-    private static final TrophyFishingMacro instance = new TrophyFishingMacro();
+    public static final TrophyFishingMacro instance = new TrophyFishingMacro();
+    public static TrophyFishingMacro getInstance() { return instance; }
 
     private final Clock reelClock = new Clock();
     private boolean waitingForBite = false;

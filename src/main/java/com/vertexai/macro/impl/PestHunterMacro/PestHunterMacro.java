@@ -26,8 +26,8 @@ import java.util.List;
  */
 public class PestHunterMacro extends AbstractMacro {
 
-    @Getter
-    private static final PestHunterMacro instance = new PestHunterMacro();
+    public static final PestHunterMacro instance = new PestHunterMacro();
+    public static PestHunterMacro getInstance() { return instance; }
 
     private final Clock attackClock = new Clock();
     private Entity targetPest = null;

@@ -22,12 +22,13 @@ import java.util.List;
 public class FishingMacro extends AbstractMacro {
     private static final long SAFETY_WARNING_COOLDOWN_MS = 5_000L;
 
-    @Getter
     private static final FishingMacro instance = new FishingMacro();
     private final List<String> necessaryItems = new ArrayList<>();
-    @Getter
-    @Setter
     private FishingMacroState currentState;
+
+    public static FishingMacro getInstance() { return instance; }
+    public FishingMacroState getCurrentState() { return currentState; }
+    public void setCurrentState(FishingMacroState currentState) { this.currentState = currentState; }
     private long nextConfigWarningAtMs = 0L;
     private long nextSafetyWarningAtMs = 0L;
 

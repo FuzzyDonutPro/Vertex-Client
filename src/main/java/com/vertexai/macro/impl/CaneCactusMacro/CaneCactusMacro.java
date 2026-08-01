@@ -17,8 +17,8 @@ import java.util.List;
  */
 public class CaneCactusMacro extends AbstractMacro {
 
-    @Getter
     public static final CaneCactusMacro instance = new CaneCactusMacro();
+    public static CaneCactusMacro getInstance() { return instance; }
 
     private boolean movingLeft = true;
     private final Clock rowSwitchClock = new Clock();

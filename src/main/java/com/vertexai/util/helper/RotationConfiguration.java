@@ -9,21 +9,37 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 
-@Getter
-@Setter
-@Accessors(fluent = true)
 public class RotationConfiguration {
     private final Minecraft mc = Minecraft.getInstance();
     private Optional<Angle> from = Optional.empty();
     private Optional<Angle> to = Optional.empty();
-    private Optional<Target> target;
-    private Optional<Runnable> callback;
+    private Optional<Target> target = Optional.empty();
+    private Optional<Runnable> callback = Optional.empty();
     private long time;
     private boolean easeBackToClientSide = false;
     private boolean followTarget = false;
     private RotationType rotationType = RotationType.CLIENT;
     private Ease easeFunction = Ease.values()[new Random().nextInt(Ease.values().length - 1)];
     private boolean randomness = false;
+
+    public Optional<Angle> from() { return from; }
+    public RotationConfiguration from(Optional<Angle> from) { this.from = from; return this; }
+    public Optional<Angle> to() { return to; }
+    public RotationConfiguration to(Optional<Angle> to) { this.to = to; return this; }
+    public Optional<Target> target() { return target; }
+    public RotationConfiguration target(Optional<Target> target) { this.target = target; return this; }
+    public Optional<Runnable> callback() { return callback; }
+    public RotationConfiguration callback(Optional<Runnable> callback) { this.callback = callback; return this; }
+    public long time() { return time; }
+    public RotationConfiguration time(long time) { this.time = time; return this; }
+    public boolean easeBackToClientSide() { return easeBackToClientSide; }
+    public RotationConfiguration easeBackToClientSide(boolean easeBackToClientSide) { this.easeBackToClientSide = easeBackToClientSide; return this; }
+    public boolean followTarget() { return followTarget; }
+    public RotationConfiguration followTarget(boolean followTarget) { this.followTarget = followTarget; return this; }
+    public RotationType rotationType() { return rotationType; }
+    public RotationConfiguration rotationType(RotationType rotationType) { this.rotationType = rotationType; return this; }
+    public boolean randomness() { return randomness; }
+    public RotationConfiguration randomness(boolean randomness) { this.randomness = randomness; return this; }
 
     public RotationConfiguration(Angle from, Angle to, long time, RotationType rotationType, Runnable callback) {
         this.from = Optional.of(from);

@@ -31,44 +31,37 @@ public class AutoMobKiller extends AbstractFeature {
     /**
      * Names of mobs to kill (ex: Glacite Walker)
      */
-    @Getter
     private final Set<String> mobsToKill = new HashSet<>();
     private final Deque<LivingEntity> blacklistedOrder = new ArrayDeque<>();
     private AutoMobKillerState currentState;
-    @Getter
-    @Setter
     private MKError error = MKError.NONE;
-    @Getter
-    @Setter
     private SlayerProfile slayerProfile = SlayerProfile.GENERIC;
-    /**
-     * Target mob to kill
-     */
-    @Getter
-    @Setter
     private LivingEntity targetMob = null;
-    /**
-     * Original position of the target mob (to check if it has moved away)
-     */
-    @Getter
-    @Setter
     private Vec3 targetMobOriginalPos = null;
     
-    @Getter @Setter private String weaponName = null;
-    @Getter @Setter private String pickaxeWeaponName = null;
+    private String weaponName = null;
+    private String pickaxeWeaponName = null;
     
-    /**
-     * Number of Re-pathing attempts
-     */
-    @Getter
-    @Setter
     private int pathAttempts = 0;
-    /**
-     * Blacklisted mobs (from failed pathfinding attempts)
-     */
-    @Getter
-    @Setter
     private Set<LivingEntity> blacklistedMobs = new HashSet<>();
+
+    public Set<String> getMobsToKill() { return mobsToKill; }
+    public MKError getError() { return error; }
+    public void setError(MKError error) { this.error = error; }
+    public SlayerProfile getSlayerProfile() { return slayerProfile; }
+    public void setSlayerProfile(SlayerProfile slayerProfile) { this.slayerProfile = slayerProfile; }
+    public LivingEntity getTargetMob() { return targetMob; }
+    public void setTargetMob(LivingEntity targetMob) { this.targetMob = targetMob; }
+    public Vec3 getTargetMobOriginalPos() { return targetMobOriginalPos; }
+    public void setTargetMobOriginalPos(Vec3 targetMobOriginalPos) { this.targetMobOriginalPos = targetMobOriginalPos; }
+    public String getWeaponName() { return weaponName; }
+    public void setWeaponName(String weaponName) { this.weaponName = weaponName; }
+    public String getPickaxeWeaponName() { return pickaxeWeaponName; }
+    public void setPickaxeWeaponName(String pickaxeWeaponName) { this.pickaxeWeaponName = pickaxeWeaponName; }
+    public int getPathAttempts() { return pathAttempts; }
+    public void setPathAttempts(int pathAttempts) { this.pathAttempts = pathAttempts; }
+    public Set<LivingEntity> getBlacklistedMobs() { return blacklistedMobs; }
+    public void setBlacklistedMobs(Set<LivingEntity> blacklistedMobs) { this.blacklistedMobs = blacklistedMobs; }
     private LivingEntity approachBlockTarget = null;
     private BlockPos cachedApproachBlock = null;
     private BlockPos cachedApproachMobStanding = null;

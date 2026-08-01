@@ -53,6 +53,10 @@ public enum Location {
         this.name = name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public static Location fromName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return Location.KNOWHERE;
