@@ -274,36 +274,24 @@ public class PathFinder {
         BlockState belowState = world.getBlockState(below);
         net.minecraft.world.phys.shapes.VoxelShape shape = belowState.getCollisionShape(world, below);
         
-        // Exclude fences, fence gates, walls, iron bars, and blocks with weird collision boxes
-        if (belowState.is(net.minecraft.tags.BlockTags.FENCES) || 
-            belowState.is(net.minecraft.tags.BlockTags.FENCE_GATES) || 
-            belowState.is(net.minecraft.tags.BlockTags.WALLS) || 
-            belowState.getBlock() == Blocks.IRON_BARS ||
-            belowState.getBlock() instanceof net.minecraft.world.level.block.DoorBlock) {
+        if ((belowState.is(net.minecraft.tags.BlockTags.FENCES) || belowState.is(net.minecraft.tags.BlockTags.WALLS)) &&
+            !PartialBlockHelper.isPassablePartialBlock(world, below)) {
             return false;
         }
 
-        // The block below must have a solid collision shape to stand on
         return !shape.isEmpty();
     }
 
     private static boolean isAir(Level world, BlockPos pos) {
+        if (PartialBlockHelper.isPassablePartialBlock(world, pos)) {
+            return true;
+        }
+
         BlockState state = world.getBlockState(pos);
-        // Treat signs, torches, etc., as non-air if they obstruct movement or have collision
         if (!state.getCollisionShape(world, pos).isEmpty()) {
-            // Open fence gates are safe to walk through
-            if (state.is(net.minecraft.tags.BlockTags.FENCE_GATES) && state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN) && state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN)) {
-                // Treated as air
-            } else {
-                return false;
-            }
+            return false;
         }
-        
-        // Specifically treat torches and other small non-collidable blocks as solid to avoid clipping or getting stuck on them
-        if (state.getBlock() == Blocks.TORCH || state.getBlock() == Blocks.WALL_TORCH || state.getBlock() == Blocks.SOUL_TORCH || state.getBlock() == Blocks.SOUL_WALL_TORCH || state.getBlock() == Blocks.REDSTONE_TORCH || state.getBlock() == Blocks.REDSTONE_WALL_TORCH) {
-             return false;
-        }
-        
+
         return !isHazard(world, pos);
     }
 
