@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import './app.css';
+    import SpotifyWidget from './lib/components/SpotifyWidget.svelte';
 
     let currentTab = 'farming';
     let searchQuery = '';
@@ -524,6 +525,8 @@
                 <p class="text-[9px] text-emerald-400">● Connected {#if liveFps > 0}• {liveFps} FPS{/if}</p>
             </div>
         </div>
+
+        <SpotifyWidget />
     </aside>
 
     <!-- Main Workspace View -->

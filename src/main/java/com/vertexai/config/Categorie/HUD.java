@@ -54,4 +54,9 @@ public class HUD {
     @ConfigEditorBoolean
     public boolean enableFishingHud = true;
     public VertexConfig.HUDPos fishingHUD = new VertexConfig.HUDPos(5, 185, 0, 1.0f);
+
+    @ConfigOption(name = "Enable Spotify HUD", desc = "Show Spotify media player overlay")
+    @ConfigEditorBoolean
+    public boolean enableSpotifyHud = true;
+    public VertexConfig.HUDPos spotifyHUD = new VertexConfig.HUDPos(5, 230, 0, 1.0f);
 }

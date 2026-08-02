@@ -57,7 +57,8 @@ public class FeatureManager {
                 com.vertexai.feature.impl.SlayerQoL.SlayerQoL.getInstance(),
                 com.vertexai.feature.impl.RouteAutoRecorder.getInstance(),
                 com.vertexai.feature.impl.FastBreak.instance,
-                com.vertexai.feature.impl.PerspectiveMod.getInstance()
+                com.vertexai.feature.impl.PerspectiveMod.getInstance(),
+                com.vertexai.feature.impl.AutoSprint.getInstance()
         ));
     }
 

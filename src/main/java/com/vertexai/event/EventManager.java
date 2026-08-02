@@ -101,9 +101,22 @@ public class EventManager {
 
             handleConfigGuiShortcut(client);
             handleRouteBuilderShortcut(client);
+            handleFailsafeStopShortcut(client);
             GraphHandler.instance.onInput();
             MacroManager.getInstance().onInput();
         });
+    }
+
+    private static void handleFailsafeStopShortcut(Minecraft client) {
+        var config = Vertex.config();
+        if (config == null || config.failsafe == null) return;
+
+        int key = config.failsafe.failsafeStopKeybind;
+        if (key != 0 && com.vertexai.util.KeyPressUtil.wasPressed(client.getWindow(), key, client.screen == null)) {
+            if (com.vertexai.failsafe.FailsafeManager.getInstance().isFailsafeActiveOrTriggered()) {
+                com.vertexai.failsafe.FailsafeManager.getInstance().stopFailsafes();
+            }
+        }
     }
 
     private static void handleConfigGuiShortcut(Minecraft client) {

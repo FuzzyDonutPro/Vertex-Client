@@ -83,6 +83,7 @@ public class PathExecutor {
         if (mc.options != null) {
             mc.options.keyUp.setDown(false);
             mc.options.keyJump.setDown(false);
+            mc.options.keySprint.setDown(false);
         }
         currentPath = null;
     }

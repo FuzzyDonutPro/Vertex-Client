@@ -39,7 +39,8 @@ public class FailsafeManager {
                 BedrockCheckFailsafe.getInstance(),
                 PlayerFailsafe.getInstance(),
                 SlotChangeFailsafe.getInstance(),
-                FlagFailsafe.getInstance()
+                FlagFailsafe.getInstance(),
+                CropChangeFailsafe.getInstance()
         ));
     }
 
@@ -53,6 +54,14 @@ public class FailsafeManager {
     public void stopFailsafes() {
         triggeredFailsafe = Optional.empty();
         emergencyQueue.clear();
+        failsafes.forEach(AbstractFailsafe::resetStates);
+        StrafeUtil.forceStop = false;
+        com.vertexai.failsafe.reaction.RecordedReactionManager.getInstance().stopPlayback();
+        Logger.sendMessage("§a[Failsafe] Stopped active failsafe and reaction playback via keybind.");
+    }
+
+    public boolean isFailsafeActiveOrTriggered() {
+        return triggeredFailsafe.isPresent() || !emergencyQueue.isEmpty() || com.vertexai.failsafe.reaction.RecordedReactionManager.getInstance().isPlaying();
     }
 
     public boolean shouldNotCheckForFailsafe() {

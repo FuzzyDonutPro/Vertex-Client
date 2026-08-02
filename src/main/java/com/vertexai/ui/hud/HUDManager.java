@@ -34,6 +34,7 @@ public class HUDManager {
         elements.add(GlacialCommissionHUD.getInstance());
         elements.add(RouteBuilderHUD.getInstance());
         elements.add(FishingHUD.getInstance());
+        elements.add(com.vertexai.client.overlay.SpotifyHudElement.getInstance());
     }
 
     private void ensurePositionsLoaded() {
@@ -79,6 +80,7 @@ public class HUDManager {
         if (element instanceof MacroHUD) return hud.enableDebugHud;
         if (element instanceof RouteBuilderHUD) return hud.enableRouteBuilderHud;
         if (element instanceof FishingHUD) return hud.enableFishingHud;
+        if (element instanceof com.vertexai.client.overlay.SpotifyHudElement) return hud.enableSpotifyHud;
         return true;
     }
 
@@ -93,6 +95,7 @@ public class HUDManager {
         updateElement(GlacialCommissionHUD.getInstance(), hud.glacialHUD);
         updateElement(RouteBuilderHUD.getInstance(), hud.routeBuilderHUD);
         updateElement(FishingHUD.getInstance(), hud.fishingHUD);
+        updateElement(com.vertexai.client.overlay.SpotifyHudElement.getInstance(), hud.spotifyHUD);
         positionsLoaded = true;
     }
 
@@ -114,6 +117,7 @@ public class HUDManager {
         saveElement(GlacialCommissionHUD.getInstance(), hud.glacialHUD);
         saveElement(RouteBuilderHUD.getInstance(), hud.routeBuilderHUD);
         saveElement(FishingHUD.getInstance(), hud.fishingHUD);
+        saveElement(com.vertexai.client.overlay.SpotifyHudElement.getInstance(), hud.spotifyHUD);
 
         // Save the main config
         com.vertexai.VertexClient.configManager.saveConfig();
@@ -160,6 +164,11 @@ public class HUDManager {
         FishingHUD.getInstance().setY(185);
         FishingHUD.getInstance().setAnchor(0);
         FishingHUD.getInstance().setScale(1.0f);
+
+        com.vertexai.client.overlay.SpotifyHudElement.getInstance().setX(5);
+        com.vertexai.client.overlay.SpotifyHudElement.getInstance().setY(230);
+        com.vertexai.client.overlay.SpotifyHudElement.getInstance().setAnchor(0);
+        com.vertexai.client.overlay.SpotifyHudElement.getInstance().setScale(1.0f);
 
         savePositions();
     }

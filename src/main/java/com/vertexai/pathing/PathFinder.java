@@ -274,10 +274,9 @@ public class PathFinder {
         int max_xz = Math.max(dx, dz);
         int min_xz = Math.min(dx, dz);
         
-        // Multiply by 1.5 to make it a slightly Greedy A* search.
-        // This provides a good balance between performance and natural, organic pathing.
-        // Extreme values (like 5.0) cause the bot to aggressively hug walls and zigzag over rough terrain.
-        return ((min_xz * 1.414) + (max_xz - min_xz) + dy) * 1.5;
+        // Multiply by 1.1 to make it a fast yet admissible A* search.
+        // Extreme values cause non-optimal detours, while 1.1 ensures accurate pathing.
+        return ((min_xz * 1.414) + (max_xz - min_xz) + dy) * 1.1;
     }
 
     private static List<BlockPos> reconstructPath(Node node) {

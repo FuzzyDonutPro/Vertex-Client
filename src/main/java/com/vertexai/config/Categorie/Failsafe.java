@@ -119,4 +119,31 @@ public class Failsafe {
     )
     @ConfigEditorBoolean
     public boolean maxOutMinecraftSounds = false;
+
+    @ConfigOption(
+            name = "Enable Crop Change Failsafe",
+            desc = "Triggers a failsafe reaction if the crop type unexpectedly changes while farming"
+    )
+    @ConfigEditorBoolean
+    public boolean enableCropChangeFailsafe = true;
+
+    @ConfigOption(
+            name = "Crop Change Reaction Preset",
+            desc = "Recorded reaction preset to play when crop type changes unexpectedly"
+    )
+    public String cropChangeReactionName = "default";
+
+    @ConfigOption(
+            name = "Crop Change Reaction Delay (ms)",
+            desc = "Delay in milliseconds before triggering reaction when crop change is detected (default: 2000ms)"
+    )
+    @ConfigEditorSlider(minValue = 0, maxValue = 10000, minStep = 250)
+    public int cropChangeReactionDelay = 2000;
+
+    @ConfigOption(
+            name = "Manual Failsafe Stop Keybind",
+            desc = "Pressing this key (Default: G) immediately stops active failsafe alerts and reaction playbacks"
+    )
+    @io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind(defaultKey = org.lwjgl.glfw.GLFW.GLFW_KEY_G)
+    public int failsafeStopKeybind = org.lwjgl.glfw.GLFW.GLFW_KEY_G;
 }

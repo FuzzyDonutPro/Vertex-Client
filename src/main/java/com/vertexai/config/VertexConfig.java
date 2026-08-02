@@ -52,10 +52,14 @@ public class VertexConfig extends Config {
     public Animations animations = new Animations();
     @Category(name = "Bazaar Flipper", desc = "Bazaar Order Flipper Settings")
     public BazaarFlipper bazaarFlipper = new BazaarFlipper();
+    @Category(name = "Utilities", desc = "Utility and QoL Settings")
+    public Utilities utilities = new Utilities();
     @Category(name = "Other", desc = "Other Settings")
     public Misc misc = new Misc();
     @Category(name = "Webhook", desc = "Discord Webhook Settings")
     public Webhook webhook = new Webhook();
+    @Category(name = "Spotify", desc = "Spotify Web API Integration")
+    public com.vertexai.config.Categorie.Spotify spotify = new com.vertexai.config.Categorie.Spotify();
 //   @Expose
 //   @Category(name = "Main", desc = "")
 //   public MainCategory mainCategory = new MainCategory();

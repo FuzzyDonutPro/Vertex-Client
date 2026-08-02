@@ -169,6 +169,33 @@ public class MCEFBridge {
 
                 return String.format("{\"status\":\"ok\",\"playerName\":\"%s\",\"activeMacro\":\"%s\",\"isRunning\":%b,\"bps\":\"%s\",\"estProfit\":\"%s\",\"fps\":%d}",
                         playerName, macroName, isRunning, bpsStr, estProfitStr, fps);
+            } else if ("spotify_auth".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().startAuthFlow();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_play".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().play();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_pause".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().pause();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_toggle".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().togglePlay();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_next".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().nextTrack();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_prev".equals(action)) {
+                com.vertexai.integration.spotify.SpotifyManager.getInstance().previousTrack();
+                return "{\"status\":\"ok\"}";
+            } else if ("spotify_get_status".equals(action)) {
+                var s = com.vertexai.integration.spotify.SpotifyManager.getInstance();
+                return String.format("{\"status\":\"ok\",\"authenticated\":%b,\"isPlaying\":%b,\"trackName\":\"%s\",\"artistName\":\"%s\",\"albumName\":\"%s\",\"albumArtUrl\":\"%s\",\"progressMs\":%d,\"durationMs\":%d}",
+                        s.isAuthenticated(), s.isPlaying(),
+                        s.getTrackName().replace("\"", "\\\""),
+                        s.getArtistName().replace("\"", "\\\""),
+                        s.getAlbumName().replace("\"", "\\\""),
+                        s.getAlbumArtUrl(),
+                        s.getProgressMs(), s.getDurationMs());
             }
         } catch (Exception e) {
             return "{\"status\":\"error\",\"message\":\"" + e.getMessage() + "\"}";

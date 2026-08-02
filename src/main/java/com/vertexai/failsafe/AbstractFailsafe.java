@@ -85,6 +85,7 @@ public abstract class AbstractFailsafe {
         SLOT_CHANGE,
         PLAYER_PROFILE_OPEN,
         NAME_MENTION,
-        FLAG
+        FLAG,
+        CROP_CHANGE
     }
 }

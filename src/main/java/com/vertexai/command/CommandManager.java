@@ -45,6 +45,7 @@ public class CommandManager {
                     registerRouteBuilderCommand(dispatcher);
                     registerPathfinderRouteBuilderCommand(dispatcher);
                     new RouteAutoRecorderCommand().register(dispatcher);
+                    new SpotifyCommand().register(dispatcher);
                     registerReactionCommand(dispatcher);
                     // Primary mod command: /fuzzy, /fz
                     registerVertexCommand(dispatcher, "fuzzy", openConfigAction);
