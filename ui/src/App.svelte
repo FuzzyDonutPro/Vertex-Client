@@ -504,6 +504,10 @@
                     Diana Mythological
                 </li>
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
+                <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'utilities' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'utilities'; }}>
+                    Misc
+                </li>
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events a11y-click-events-have-key-events -->
                 <li class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 {currentTab === 'settings' ? 'bg-gradient-to-r from-sky-400/15 to-transparent border-l-2 border-sky-400 text-sky-400' : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-0.5'}" on:click={() => { playUiSound(); currentTab = 'settings'; }}>
                     Settings & Config
                 </li>
@@ -650,6 +654,41 @@
                     {/if}
                 </div>
                 {/each}
+            </div>
+        {/if}
+
+        {#if currentTab === 'utilities'}
+            <div class="flex flex-col gap-3 pb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <div>
+                        <h2 class="text-sm font-bold text-sky-400">Misc & Client Utilities</h2>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Toggle and configure client utilities, auto-sprint, auto-buffs, and helper features.</p>
+                    </div>
+                    <button class="text-[10px] text-sky-400 font-semibold border border-sky-400/30 px-3 py-1.5 rounded-lg bg-sky-400/10 hover:bg-sky-400/20 transition-colors" on:click={openConfigGui}>Open In-Game Settings</button>
+                </div>
+                
+                {#if dynamicConfigSchema && dynamicConfigSchema.utilities}
+                    <div class="grid grid-cols-2 gap-3">
+                    {#each dynamicConfigSchema.utilities.settings as setting}
+                        <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
+                            <div>
+                                <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                            </div>
+                            <div class="flex justify-start">
+                                {#if setting.type === 'boolean'}
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('utilities', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    {/each}
+                    </div>
+                {:else}
+                    <div class="text-xs text-slate-400 text-center py-10">Loading utilities configuration schema from Java...</div>
+                {/if}
             </div>
         {/if}
 
