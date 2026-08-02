@@ -147,6 +147,10 @@ public class MacroManager {
         return this.currentMacro != null;
     }
 
+    public boolean isPaused() {
+        return this.currentMacro != null && !this.currentMacro.isEnabled();
+    }
+
     public boolean isRunning() {
         return this.currentMacro != null && this.currentMacro.isEnabled();
     }

@@ -578,7 +578,7 @@
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-[12px] font-semibold text-white truncate flex-1">{macro.title}</div>
                                 <button title="Configure Settings" class="text-slate-400 hover:text-sky-400 text-[12px] px-1.5 py-0.5 bg-white/5 rounded transition-colors cursor-pointer shrink-0" on:click|stopPropagation={() => { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; }}>
-                                    ⚙ {macro.expanded ? 'Close' : ''}
+                                    {macro.expanded ? 'Close' : 'Config'}
                                 </button>
                             </div>
                             <div class="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">{macro.desc}</div>
@@ -612,7 +612,7 @@
                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2.5" on:click|stopPropagation>
                             <div class="flex justify-between items-center mb-0.5">
-                                <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">⚡ {macro.title} Fine-Tuning</span>
+                                <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">{macro.title} Fine-Tuning</span>
                                 <button class="text-[9px] text-slate-400 hover:text-white" on:click={() => { macro.expanded = false; macros = [...macros]; }}>✕ Close</button>
                             </div>
 

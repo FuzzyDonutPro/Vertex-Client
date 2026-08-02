@@ -34,13 +34,28 @@ public class AutoResponder extends AbstractFeature {
                                msg.contains("reply to") || msg.contains("type ") || msg.contains("captcha");
 
         if (isWhisper || (isMentioned && !msg.contains("joined")) || isAdminCheck) {
-            warn("ALERT: Direct message or admin check detected: \"" + message + "\"! Pausing macro...");
+            // Calculate reading pause: 0.7 seconds (700ms) per word in the received message (minimum 2.5s pause)
+            String[] words = message.trim().split("\\s+");
+            long pauseDurationMs = Math.max(2500L, (long) (words.length * 700L));
+
+            warn("ALERT: Direct message or admin check detected: \"" + message + "\" (" + words.length + " words)! Pausing movement for " + (pauseDurationMs / 1000.0) + "s...");
 
             if (MacroManager.getInstance().isRunning()) {
                 MacroManager.getInstance().pause();
+
+                // Schedule automated macro resumption after the calculated humanized reading pause
+                com.vertexai.Vertex.executor().execute(() -> {
+                    try {
+                        Thread.sleep(pauseDurationMs);
+                        if (MacroManager.getInstance().isPaused()) {
+                            warn("Reading pause elapsed (" + (pauseDurationMs / 1000.0) + "s). Resuming macro movement...");
+                            MacroManager.getInstance().resume();
+                        }
+                    } catch (InterruptedException ignored) {}
+                });
             }
 
-            DiscordWebhookNotifier.sendWebhookNotification("💬 CHAT ALERT / ADMIN CHECK", "Message received: `" + message + "`\nMacro paused automatically.", 0xFFF59E0B);
+            DiscordWebhookNotifier.sendWebhookNotification("CHAT ALERT / ADMIN CHECK", "Message received: `" + message + "`\nMovement paused for `" + (pauseDurationMs / 1000.0) + "s` (" + words.length + " words at 0.7s/word).", 0xFFF59E0B);
         }
     }
 }
