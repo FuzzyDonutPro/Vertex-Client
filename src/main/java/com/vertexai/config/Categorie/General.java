@@ -32,7 +32,8 @@ public class General {
                     "Route Miner",
                     "Mithril Nuker",
                     "Slayer Macro",
-                    "Farm Builder Macro"
+                    "Farm Builder Macro",
+                    "Kuudra Boss Suite"
             }
     )
     public int macroType = 0;

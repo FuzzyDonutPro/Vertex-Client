@@ -50,6 +50,8 @@ public class MacroManager {
                 return com.vertexai.macro.impl.SlayerMacro.SlayerMacro.getInstance();
             case 6:
                 return com.vertexai.macro.impl.FarmBuilderMacro.FarmBuilderMacro.getInstance();
+            case 7:
+                return com.vertexai.macro.impl.KuudraMacro.KuudraMacro.getInstance();
             default:
                 return CommissionMacro.getInstance();
         }
