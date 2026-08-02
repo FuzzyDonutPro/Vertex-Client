@@ -44,8 +44,8 @@ public class PathExecutor {
     private static final double NODE_REACHED_VERTICAL_TOLERANCE = 1.35;
     private static final double SEGMENT_PROGRESS_SWITCH_THRESHOLD = 0.65;
     private static final double STUCK_SPEED_THRESHOLD = 0.05;
-    private static final int STUCK_DETECTION_MS = 1000;
-    private static final int STUCK_RECOVERY_TIMEOUT_MS = 700;
+    private static final int STUCK_DETECTION_MS = 350;
+    private static final int STUCK_RECOVERY_TIMEOUT_MS = 400;
     private static PathExecutor instance;
     private final Minecraft mc = Minecraft.getInstance();
     private final Deque<Path> pathQueue = new LinkedList<>();

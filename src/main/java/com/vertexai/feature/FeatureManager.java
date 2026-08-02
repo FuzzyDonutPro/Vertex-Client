@@ -58,7 +58,10 @@ public class FeatureManager {
                 com.vertexai.feature.impl.RouteAutoRecorder.getInstance(),
                 com.vertexai.feature.impl.FastBreak.instance,
                 com.vertexai.feature.impl.PerspectiveMod.getInstance(),
-                com.vertexai.feature.impl.AutoSprint.getInstance()
+                com.vertexai.feature.impl.AutoSprint.getInstance(),
+                com.vertexai.feature.impl.ExperimentationSolver.getInstance(),
+                com.vertexai.feature.impl.DungeonSolver.getInstance(),
+                com.vertexai.feature.impl.SessionAnalytics.getInstance()
         ));
     }
 

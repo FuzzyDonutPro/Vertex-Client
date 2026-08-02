@@ -47,7 +47,8 @@ public class PathFinder {
                 BlockPos neighborPos = neighborResult.pos;
                 if (closedSet.contains(neighborPos)) continue;
 
-                double tentativeG = current.gScore + neighborResult.cost;
+                double hazardPenalty = calculateHazardCost(world, neighborPos);
+                double tentativeG = current.gScore + neighborResult.cost + hazardPenalty;
                 
                 // Add penalty for turning to prefer straight lines and avoid zigzags
                 if (current.parent != null) {
@@ -83,13 +84,62 @@ public class PathFinder {
     }
     
     private static List<BlockPos> smoothPath(Level world, List<BlockPos> path) {
-        // Disable aggressive string pulling. 8-way diagonal A* is already naturally smooth,
-        // and string pulling causes the bot to cut corners and clip into fences/walls.
-        return path;
+        if (path.size() <= 2) return path;
+
+        List<BlockPos> smoothed = new ArrayList<>();
+        smoothed.add(path.get(0));
+
+        int currentIdx = 0;
+        while (currentIdx < path.size() - 1) {
+            int furthestVisible = currentIdx + 1;
+            for (int nextIdx = path.size() - 1; nextIdx > currentIdx + 1; nextIdx--) {
+                if (hasClearLineOfSight(world, path.get(currentIdx), path.get(nextIdx))) {
+                    furthestVisible = nextIdx;
+                    break;
+                }
+            }
+            smoothed.add(path.get(furthestVisible));
+            currentIdx = furthestVisible;
+        }
+
+        return smoothed;
     }
 
     private static boolean hasClearLineOfSight(Level world, BlockPos start, BlockPos end) {
-        return false; // Deprecated by removing smoothPath
+        if (Math.abs(start.getY() - end.getY()) > 1) return false;
+
+        int x0 = start.getX(); int y0 = start.getY(); int z0 = start.getZ();
+        int x1 = end.getX(); int y1 = end.getY(); int z1 = end.getZ();
+
+        int dx = Math.abs(x1 - x0);
+        int dz = Math.abs(z1 - z0);
+
+        int sx = x0 < x1 ? 1 : -1;
+        int sz = z0 < z1 ? 1 : -1;
+
+        int err = dx - dz;
+        int currX = x0;
+        int currZ = z0;
+
+        while (true) {
+            BlockPos currentPos = new BlockPos(currX, y0, currZ);
+            if (!isWalkable(world, currentPos)) {
+                return false;
+            }
+
+            if (currX == x1 && currZ == z1) break;
+
+            int e2 = 2 * err;
+            if (e2 > -dz) {
+                err -= dz;
+                currX += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                currZ += sz;
+            }
+        }
+        return true;
     }
 
     private static Map<BlockPos, List<NeighborResult>> buildHighwayMap() {
@@ -264,6 +314,24 @@ public class PathFinder {
             || state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)
             || state.is(Blocks.SWEET_BERRY_BUSH) || state.is(Blocks.COBWEB)
             || state.is(Blocks.POWDER_SNOW);
+    }
+
+    private static double calculateHazardCost(Level world, BlockPos pos) {
+        double penalty = 0.0;
+        BlockState state = world.getBlockState(pos);
+        if (state.is(Blocks.WATER)) penalty += 5.0;
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    BlockState adj = world.getBlockState(pos.offset(dx, dy, dz));
+                    if (adj.is(Blocks.LAVA) || adj.is(Blocks.FIRE) || adj.is(Blocks.MAGMA_BLOCK)) {
+                        penalty += 15.0;
+                    }
+                }
+            }
+        }
+        return penalty;
     }
 
     private static double getHeuristic(BlockPos a, BlockPos b) {
