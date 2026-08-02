@@ -130,12 +130,12 @@ tasks.named("sourcesJar") {
 task copyToModrinth(type: Copy) {
     dependsOn remapJar
     doFirst {
-        delete fileTree("C:/Users/jerem/AppData/Roaming/ModrinthApp/profiles/vertex/mods") {
+        delete fileTree("${System.getProperty('user.home')}/AppData/Roaming/ModrinthApp/profiles/vertex/mods") {
             include "Vertex*1.0*.jar"
         }
     }
     from remapJar.archiveFile
-    into "C:/Users/jerem/AppData/Roaming/ModrinthApp/profiles/vertex/mods"
+    into "${System.getProperty('user.home')}/AppData/Roaming/ModrinthApp/profiles/vertex/mods"
     rename { "Vertex-Client-v1.0.3.jar" }
 }
 

@@ -458,14 +458,7 @@ public class RouteHandler {
                 String jsonStr = Vertex.gson.toJson(obj);
                 Files.write(Vertex.pathfinderRoutesFile, jsonStr.getBytes(StandardCharsets.UTF_8));
                 
-                try {
-                    java.nio.file.Path sourceFile = java.nio.file.Paths.get("C:\\Users\\jerem\\CLionProjects\\Vertex Client\\src\\main\\resources\\pathfinder_routes.json");
-                    if (Files.exists(sourceFile.getParent())) {
-                        Files.write(sourceFile, jsonStr.getBytes(StandardCharsets.UTF_8));
-                    }
-                } catch (Exception ignored) {
-                    // Ignore if dev path is inaccessible
-                }
+
             } catch (IOException e) {
                 Logger.sendWarning("Pathfinder route save loop crashed; will retry");
                 Vertex.LOGGER.error("Pathfinder route save loop crashed", e);
