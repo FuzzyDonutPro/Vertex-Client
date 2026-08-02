@@ -462,7 +462,7 @@
     <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
     
     <!-- Sidebar Navigation -->
-    <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-5 flex flex-col justify-between shrink-0 select-none">
+    <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-4 flex flex-col justify-between shrink-0 select-none overflow-y-auto max-h-full custom-scrollbar">
         <div>
             <div class="flex items-center gap-2.5 mb-5">
                 <div class="w-[32px] h-[32px] bg-gradient-to-br from-sky-400 to-sky-600 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-[0_3px_10px_rgba(56,189,248,0.4)]">

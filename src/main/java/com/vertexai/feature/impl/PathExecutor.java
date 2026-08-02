@@ -521,7 +521,7 @@ public class PathExecutor {
             return false;
         }
 
-        // 1. Immediate Horizontal Collision (player is pressing against a wall or 1-block step-up while moving)
+        // 1. Immediate Horizontal Collision against a step-up (player is pressing against a 1-block step-up)
         if (mc.player.horizontalCollision && mc.player.onGround()) {
             BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
             int px = playerPos.getX();
@@ -532,36 +532,18 @@ public class PathExecutor {
             }
         }
 
-        // 2. Direct Target Elevation (Target node is higher than player standing Y)
+        // 2. Target node is elevated above player standing Y
         if (targetPos.getY() > playerPos.getY() && horizontalDistToTarget <= 2.5) {
-            BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
-            int px = playerPos.getX();
-            int py = playerPos.getY();
-            int pz = playerPos.getZ();
-            if (MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))) {
-                return true;
-            }
+            return shouldJumpTowardTargetLive(playerPos, targetPos, horizontalDistToTarget);
         }
 
-        // 3. Live World Probe towards current target
-        if (shouldJumpTowardTargetLive(playerPos, targetPos, horizontalDistToTarget)) {
-            return true;
-        }
-
-        // 4. Probe next target node if approaching transition
+        // 3. Probe next target node if approaching transition to an elevated node
         if (this.target < this.blockPath.size() - 1) {
             BlockPos nextTarget = this.blockPath.get(this.target + 1);
             double horizontalDistToNext = Math.hypot(mc.player.getX() - nextTarget.getX() - 0.5, mc.player.getZ() - nextTarget.getZ() - 0.5);
             if (nextTarget.getY() > playerPos.getY() && horizontalDistToNext <= 2.5) {
-                BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
-                int px = playerPos.getX();
-                int py = playerPos.getY();
-                int pz = playerPos.getZ();
-                if (MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))) {
-                    return true;
-                }
+                return shouldJumpTowardTargetLive(playerPos, nextTarget, horizontalDistToNext);
             }
-            return shouldJumpTowardTargetLive(playerPos, nextTarget, horizontalDistToNext);
         }
 
         return false;

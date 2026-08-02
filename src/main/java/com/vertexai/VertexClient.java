@@ -32,7 +32,7 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 public class VertexClient implements ClientModInitializer {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public static final String MOD_ID = "veinforge";
+    public static final String MOD_ID = "vertexai";
     public static ConfigManager configManager;
     public static VertexConfig config;
     public static VertexClient instance;

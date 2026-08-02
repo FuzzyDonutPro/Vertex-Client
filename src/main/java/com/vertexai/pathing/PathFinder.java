@@ -108,35 +108,37 @@ public class PathFinder {
     private static boolean hasClearLineOfSight(Level world, BlockPos start, BlockPos end) {
         if (Math.abs(start.getY() - end.getY()) > 1) return false;
 
-        int x0 = start.getX(); int y0 = start.getY(); int z0 = start.getZ();
-        int x1 = end.getX(); int y1 = end.getY(); int z1 = end.getZ();
+        // Player bounding box width clearance (0.6 width = ±0.35 padding from center)
+        double startX = start.getX() + 0.5;
+        double startY = start.getY();
+        double startZ = start.getZ() + 0.5;
 
-        int dx = Math.abs(x1 - x0);
-        int dz = Math.abs(z1 - z0);
+        double endX = end.getX() + 0.5;
+        double endY = end.getY();
+        double endZ = end.getZ() + 0.5;
 
-        int sx = x0 < x1 ? 1 : -1;
-        int sz = z0 < z1 ? 1 : -1;
+        double dist = Math.hypot(endX - startX, endZ - startZ);
+        int steps = (int) Math.ceil(dist * 5.0); // Probe every 0.2 blocks along the line of sight
 
-        int err = dx - dz;
-        int currX = x0;
-        int currZ = z0;
+        double padding = 0.35; // Account for 0.6w player hitbox
 
-        while (true) {
-            BlockPos currentPos = new BlockPos(currX, y0, currZ);
-            if (!isWalkable(world, currentPos)) {
-                return false;
-            }
+        for (int i = 0; i <= steps; i++) {
+            double t = (double) i / steps;
+            double px = startX + (endX - startX) * t;
+            double py = startY + (endY - startY) * t;
+            double pz = startZ + (endZ - startZ) * t;
 
-            if (currX == x1 && currZ == z1) break;
+            // Probe player's 3D bounding box corners at feet level, body level, and head level
+            double[] xOffsets = {-padding, padding};
+            double[] zOffsets = {-padding, padding};
 
-            int e2 = 2 * err;
-            if (e2 > -dz) {
-                err -= dz;
-                currX += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                currZ += sz;
+            for (double ox : xOffsets) {
+                for (double oz : zOffsets) {
+                    BlockPos probePos = BlockPos.containing(px + ox, py, pz + oz);
+                    if (!isWalkable(world, probePos)) {
+                        return false;
+                    }
+                }
             }
         }
         return true;

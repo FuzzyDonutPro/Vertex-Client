@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  */
 public class Vertex {
 
-    public static final String MOD_ID = "veinforge";
+    public static final String MOD_ID = "vertexai";
     public static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<Graph<RouteWaypoint>>() {
@@ -85,7 +85,7 @@ public class Vertex {
                 new LinkedBlockingQueue<>(EXECUTOR_QUEUE_CAPACITY),
                 runnable -> {
                     Thread thread = new Thread(runnable);
-                    thread.setName("veinforge-worker-" + threadId.getAndIncrement());
+                    thread.setName("vertexai-worker-" + threadId.getAndIncrement());
                     thread.setDaemon(true);
                     thread.setUncaughtExceptionHandler((t, e) -> {
                         Logger.sendError("Uncaught exception in " + t.getName() + ": " + e);
