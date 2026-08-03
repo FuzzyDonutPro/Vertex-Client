@@ -52,7 +52,8 @@ public class Target {
         }
 
         if (entity != null) {
-            return AngleUtil.getRotation(entity.position().add(0, additionalY, 0));
+            double targetY = entity.getY() + (entity.getBbHeight() * 0.55);
+            return AngleUtil.getRotation(new Vec3(entity.getX(), targetY, entity.getZ()));
         }
 
         return angle;

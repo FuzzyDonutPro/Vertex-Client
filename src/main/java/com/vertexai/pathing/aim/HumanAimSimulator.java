@@ -72,9 +72,12 @@ public class HumanAimSimulator {
                 // 3. Sample a random tick from the recorded organic profile
                 RotationProfile.TickData sample = loadedProfile.ticks.get(random.nextInt(loadedProfile.ticks.size()));
 
-                // 4. Scale the sampled delta based on direction
-                float appliedYawDelta = Math.abs(sample.deltaYaw) * Math.signum(dYaw);
-                float appliedPitchDelta = Math.abs(sample.deltaPitch) * Math.signum(dPitch);
+                // 4. Scale the sampled delta based on direction and distance ratio
+                float yawRatio = Math.abs(dYaw) > 0.01f ? Math.min(1.0f, Math.abs(dYaw) / 30.0f) : 1.0f;
+                float pitchRatio = Math.abs(dPitch) > 0.01f ? Math.min(1.0f, Math.abs(dPitch) / 20.0f) : 1.0f;
+                
+                float appliedYawDelta = Math.max(Math.abs(dYaw) * 0.25f, Math.abs(sample.deltaYaw) * yawRatio) * Math.signum(dYaw);
+                float appliedPitchDelta = Math.max(Math.abs(dPitch) * 0.25f, Math.abs(sample.deltaPitch) * pitchRatio) * Math.signum(dPitch);
 
                 // Cap movement to prevent overshooting
                 if (Math.abs(appliedYawDelta) > Math.abs(dYaw)) appliedYawDelta = dYaw;

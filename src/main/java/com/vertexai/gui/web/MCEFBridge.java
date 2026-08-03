@@ -165,6 +165,7 @@ public class MCEFBridge {
                     else if (lower.contains("sludge")) index = 7;
                     else if (lower.contains("yog")) index = 8;
                     else if (lower.contains("zombie")) index = 9;
+                    else if (lower.contains("spider") || lower.contains("silverfish")) index = 10;
                     com.vertexai.Vertex.config().combat.mobKillerTarget = index;
                     com.vertexai.VertexClient.configManager.saveConfig();
                 } else if ("foraging".equalsIgnoreCase(macroId)) {

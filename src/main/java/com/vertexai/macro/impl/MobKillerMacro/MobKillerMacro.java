@@ -40,7 +40,17 @@ public class MobKillerMacro extends AbstractMacro {
             case 5 -> targetList.add("Glacite Walker");
             case 6 -> targetList.add("Automoton");
             case 7 -> targetList.add("Sludge");
-            case 8 -> targetList.add("Yog");
+            case 9 -> {
+                targetList.add("Zombie");
+                targetList.add("Graveyard Zombie");
+            }
+            case 10 -> {
+                targetList.add("Voracious Spider");
+                targetList.add("Dasher Spider");
+                targetList.add("Weaver Spider");
+                targetList.add("Spider");
+                targetList.add("Silverfish");
+            }
             default -> {
                 targetList.add("Zombie");
                 targetList.add("Graveyard Zombie");
