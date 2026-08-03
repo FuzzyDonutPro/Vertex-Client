@@ -158,51 +158,34 @@ public class KillState implements AutoMobKillerState {
             wTapping = false;
         }
 
-        if (!reaimTimer.isScheduled() || reaimTimer.passed()) {
-            RotationHandler.getInstance().easeTo(new RotationConfiguration(
-                    new Target(mobKiller.getTargetMob()),
-                    REAIM_ROTATION_TIME_MS,
-                    null
-            ));
-            reaimTimer.schedule(REAIM_INTERVAL_MS);
+        // Smooth rotation through RotationHandler anti-cheat humanized engine
+        RotationHandler.getInstance().easeTo(new RotationConfiguration(
+                new com.vertexai.util.helper.Target(mobKiller.getTargetMob()),
+                90L,
+                null
+        ));
+
+        // Always push forward to close distance if not directly touching
+        if (distanceSq > 2.25) {
+            KeyBindUtil.setKeyBindState(mc.options.keyUp, true);
         }
 
-        if (!inMeleeRange || !hasLineOfSight) {
-            KeyBindUtil.setKeyBindState(mc.options.keyJump, false);
-            return this;
-        }
-
-        if (targetYDelta > 2.0 || targetYDelta < -5.0) {
-            mobKiller.blacklistTargetMob();
-            Pathfinder.getInstance().stop();
-            return new FindMobState();
-        }
-
-        KeyBindUtil.setKeyBindState(mc.options.keyJump, targetYDelta < -2.0);
-
-        boolean crosshairOnTarget = mc.hitResult instanceof EntityHitResult && ((EntityHitResult) mc.hitResult).getEntity() == mobKiller.getTargetMob();
-        if (!crosshairOnTarget) {
-            return this;
-        }
-
-        if (mc.player.getAttackStrengthScale(0.0F) < 0.92F) {
-            return this;
+        // Hop over 1-block obstacles when colliding
+        if (mc.player.horizontalCollision && mc.player.onGround()) {
+            KeyBindUtil.setKeyBindState(mc.options.keyJump, true);
         }
 
         if (attackDelay.isScheduled() && !attackDelay.passed()) {
             return this;
         }
 
-        KeyBindUtil.leftClick();
-        attackDelay.schedule(85 + (long)(Math.random() * 40)); // random delay
-        closeRangeStuckTimer.reset();
-        
-        // Trigger W-Tap sprint reset
-        if (inMeleeRange) {
-            KeyBindUtil.setKeyBindState(mc.options.keyUp, false);
-            wTapping = true;
-            wTapTimer.schedule(50 + (long)(Math.random() * 50)); // release W for 50-100ms
+        // Attack execution via both gameMode.attack and leftClick
+        if (mc.gameMode != null) {
+            mc.gameMode.attack(mc.player, mobKiller.getTargetMob());
         }
+        KeyBindUtil.leftClick();
+        attackDelay.schedule(100 + (long)(Math.random() * 50));
+        closeRangeStuckTimer.reset();
         
         return this;
     }

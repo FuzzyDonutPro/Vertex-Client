@@ -105,10 +105,10 @@ public class AutoMobKiller extends AbstractFeature {
         this.weaponName = weaponName;
         this.pickaxeWeaponName = pickaxeWeaponName;
 
-        if (weaponName != null && !weaponName.trim().isEmpty() && !InventoryUtil.holdItem(weaponName)) {
-            sendError("Weapon not found in inventory!");
-            stop();
-            return;
+        if (weaponName != null && !weaponName.trim().isEmpty()) {
+            if (!InventoryUtil.holdItem(weaponName)) {
+                log("Weapon '" + weaponName + "' not in hotbar, using current held item.");
+            }
         }
 
         this.mobsToKill.clear();
@@ -145,7 +145,9 @@ public class AutoMobKiller extends AbstractFeature {
         this.slayerProfile = SlayerProfile.GENERIC;
         resetApproachBlockCache();
 
-        Pathfinder.getInstance().stop();
+        try {
+            Pathfinder.getInstance().stop();
+        } catch (Exception ignored) {}
         log("MobKiller stopped");
     }
 

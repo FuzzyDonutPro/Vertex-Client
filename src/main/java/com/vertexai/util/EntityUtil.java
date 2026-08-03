@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball;
 import net.minecraft.world.phys.AABB;
@@ -26,11 +27,11 @@ public class EntityUtil {
         if (!(entity instanceof RemotePlayer)) {
             return false;
         }
-        // Assuming TablistUtil is ported
         return !TablistUtil.getTabListPlayersSkyblock().contains(entity.getName().getString());
     }
 
     public static BlockPos getBlockStandingOn(Entity entity) {
+        if (entity == null) return PlayerUtil.getBlockStandingOn();
         return new BlockPos((int) entity.getX(), (int) Math.ceil(entity.getY() - 0.25) - 1, (int) entity.getZ());
     }
 
@@ -56,11 +57,9 @@ public class EntityUtil {
     }
 
     public static Entity getEntityCuttingOtherEntity(Entity e, Class<?> entityType) {
-        AABB box = e.getBoundingBox().inflate(0.3D, 2.0D, 0.3D);
+        if (e == null || mc.level == null) return null;
+        AABB box = e.getBoundingBox().inflate(0.5D, 2.5D, 0.5D);
         List<Entity> possible = mc.level.getEntities(e, box, a -> {
-            boolean flag1 = (!a.isAlive() && !a.equals(mc.player)); // wait, isDead -> !isAlive?
-            // Old code: !a.isDead. So a.isAlive().
-            // And !a.equals(mc.player)
             if (!a.isAlive() || a.equals(mc.player)) return false;
 
             boolean flag2 = !(a instanceof ArmorStand);
@@ -77,84 +76,85 @@ public class EntityUtil {
 
     public static List<LivingEntity> getEntities(Set<String> entityNames, Set<LivingEntity> entitiesToIgnore) {
         List<LivingEntity> entities = new ArrayList<>();
-        if (mc.level == null || mc.player == null) return entities;
-
-        if (entityNames == null || entityNames.isEmpty()) {
+        if (mc.level == null || mc.player == null || entityNames == null || entityNames.isEmpty()) {
             return entities;
         }
 
-        // mc.world.loadedEntityList is gone. Use mc.world.getEntities()
-        // Iterate once and avoid stream allocations; caller performs final scoring.
-        for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand)) continue;
-            if (!entity.isAlive()) continue;
+        net.minecraft.world.phys.AABB searchBox = mc.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+        for (Entity entity : mc.level.getEntities((Entity) null, searchBox, e -> e != null && e.isAlive())) {
+            if (!(entity instanceof LivingEntity living)) continue;
+            if (!living.isAlive() || living.equals(mc.player) || living.getHealth() <= 0) continue;
+            if (entitiesToIgnore != null && entitiesToIgnore.contains(living)) continue;
 
-            String customName = entity.getCustomName() != null ? entity.getCustomName().getString() : "";
-            if (customName.isEmpty()) continue;
-            if (customName.contains(mc.player.getName().getString())) continue;
+            // Mode 1: Check direct LivingEntity (Zombies, Spiders, Wolves, Endermen, Ghosts, etc.)
+            if (!(living instanceof ArmorStand)) {
+                String entityName = living.getName().getString().toLowerCase(Locale.ROOT);
+                String customName = living.getCustomName() != null ? living.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
+                String typeName = living.getType().getDescription().getString().toLowerCase(Locale.ROOT);
 
-            boolean nameMatch = false;
-            for (String entityName : entityNames) {
-                if (customName.contains(entityName)) {
-                    nameMatch = true;
-                    break;
-                }
-            }
-
-            if (nameMatch && ((LivingEntity) entity).getHealth() > 0) { // ArmorStand is LivingEntity in 1.21? Yes.
-                Entity livingBase = getEntityCuttingOtherEntity(entity, null);
-
-                if (livingBase instanceof LivingEntity) {
-                    if (!entitiesToIgnore.contains(livingBase)
-                            && !livingBase.equals(mc.player)
-                            && getHealthFromStandName(customName) != 1) {
-                        entities.add((LivingEntity) livingBase);
+                boolean matches = false;
+                for (String targetName : entityNames) {
+                    String lowerTarget = targetName.toLowerCase(Locale.ROOT);
+                    if (entityName.contains(lowerTarget) || customName.contains(lowerTarget) || typeName.contains(lowerTarget)) {
+                        matches = true;
+                        break;
                     }
                 }
+                if (matches) {
+                    entities.add(living);
+                    continue;
+                }
             }
-        }
-        return entities;
-    }
 
-    private static long pack(int x, int z) {
-        return ((long) x << 32) | (z & 0xFFFFFFFFL);
-    }
+            // Mode 2: Check SkyBlock ArmorStand Hologram Nametags
+            if (living instanceof ArmorStand armorStand) {
+                String customName = armorStand.getCustomName() != null ? armorStand.getCustomName().getString() : "";
+                if (customName.isEmpty() || customName.contains(mc.player.getName().getString())) continue;
 
-    public static BlockPos nearbyBlock(LivingEntity entityLivingBase) {
-        BlockPos closestBlock = null;
-        double closestDistance = Double.MAX_VALUE;
-        if (mc.level == null) return entityLivingBase.blockPosition();
+                boolean nameMatch = false;
+                for (String entityName : entityNames) {
+                    if (customName.toLowerCase(Locale.ROOT).contains(entityName.toLowerCase(Locale.ROOT))) {
+                        nameMatch = true;
+                        break;
+                    }
+                }
 
-        BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
-
-        for (int x = -3; x <= 3; x++) {
-            for (int y = -3; y <= 3; y++) {
-                for (int z = -3; z <= 3; z++) {
-                    BlockPos currentPos = entityLivingBase.blockPosition().offset(x, y, z);
-
-                    if (MovementHelper.INSTANCE.canStandOn(
-                            bsa,
-                            currentPos.getX(),
-                            currentPos.getY(),
-                            currentPos.getZ(),
-                            bsa.get(currentPos.getX(), currentPos.getY(), currentPos.getZ())
-                    ) && RaytracingUtil.canSeePoint(new Vec3(currentPos.getX(), currentPos.getY(), currentPos.getZ()), entityLivingBase.getEyePosition())) { // 1.0F eyes? getEyePos() is precise.
-                        double distance = currentPos.distSqr(PlayerUtil.getBlockStandingOn());
-
-                        if (distance < closestDistance) {
-                            closestBlock = currentPos;
-                            closestDistance = distance;
+                if (nameMatch) {
+                    Entity livingBase = getEntityCuttingOtherEntity(armorStand, null);
+                    if (livingBase instanceof LivingEntity baseLiving) {
+                        if ((entitiesToIgnore == null || !entitiesToIgnore.contains(baseLiving)) && !baseLiving.equals(mc.player) && baseLiving.isAlive()) {
+                            if (!entities.contains(baseLiving)) {
+                                entities.add(baseLiving);
+                            }
                         }
                     }
                 }
             }
         }
 
-        if (closestBlock == null) {
-            return getBlockStandingOn(entityLivingBase);
-        }
-
-        return closestBlock;
+        return entities;
     }
 
+    public static BlockPos nearbyBlock(LivingEntity entityLivingBase) {
+        if (entityLivingBase == null || mc.level == null) return PlayerUtil.getBlockStandingOn();
+
+        BlockPos closestBlock = null;
+        double closestDistance = Double.MAX_VALUE;
+        BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+
+        for (int x = -2; x <= 2; x++) {
+            for (int y = -2; y <= 2; y++) {
+                for (int z = -2; z <= 2; z++) {
+                    BlockPos currentPos = entityLivingBase.blockPosition().offset(x, y, z);
+                    double distance = currentPos.distSqr(PlayerUtil.getBlockStandingOn());
+                    if (distance < closestDistance) {
+                        closestBlock = currentPos;
+                        closestDistance = distance;
+                    }
+                }
+            }
+        }
+
+        return closestBlock != null ? closestBlock : entityLivingBase.blockPosition();
+    }
 }

@@ -75,6 +75,19 @@ public class VertexUIServer {
                             }
                         }
                         response = MCEFBridge.handleJsQuery("toggle_macro:" + macroId + ":" + enabled);
+                    } else if (path.endsWith("/macro/target")) {
+                        String macroId = "";
+                        String target = "";
+                        if (query != null) {
+                            for (String param : query.split("&")) {
+                                String[] pair = param.split("=");
+                                if (pair.length == 2) {
+                                    if ("id".equals(pair[0])) macroId = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                                    if ("target".equals(pair[0])) target = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                                }
+                            }
+                        }
+                        response = MCEFBridge.handleJsQuery("set_target:" + macroId + ":" + target);
                     } else if (path.endsWith("/config/gui")) {
                         response = MCEFBridge.handleJsQuery("open_config_gui");
                     } else if (path.endsWith("/config/schema")) {

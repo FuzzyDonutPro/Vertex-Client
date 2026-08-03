@@ -112,10 +112,15 @@ public abstract class AbstractMacro {
 
     public boolean checkStuckAndRecover() {
         if (mc.player == null) return false;
+        // Only trigger stuck recovery if player is actively attempting to move!
+        if (!mc.options.keyUp.isDown() && !mc.options.keyDown.isDown()) {
+            lastPlayerPos = mc.player.position();
+            return false;
+        }
         long now = System.currentTimeMillis();
-        if (now - lastStuckCheckTime > 350) {
+        if (now - lastStuckCheckTime > 500) {
             Vec3 currentPos = mc.player.position();
-            if (lastPlayerPos != Vec3.ZERO && currentPos.distanceToSqr(lastPlayerPos) < 0.005) {
+            if (lastPlayerPos != Vec3.ZERO && currentPos.distanceToSqr(lastPlayerPos) < 0.01) {
                 // Execute sub-tick stuck recovery jump/strafe
                 if (mc.player.onGround()) {
                     mc.player.jumpFromGround();

@@ -92,6 +92,12 @@ public class MCEFBridge {
                         case "slayer":
                             targetMacro = com.vertexai.macro.impl.SlayerMacro.SlayerMacro.getInstance();
                             break;
+                        case "mob_killer":
+                            targetMacro = com.vertexai.macro.impl.MobKillerMacro.MobKillerMacro.getInstance();
+                            break;
+                        case "kuudra":
+                            targetMacro = com.vertexai.macro.impl.KuudraMacro.KuudraMacro.getInstance();
+                            break;
                         case "zealot":
                             targetMacro = com.vertexai.macro.impl.ZealotMacro.ZealotMacro.getInstance();
                             break;
@@ -134,6 +140,29 @@ public class MCEFBridge {
                 String macroId = parts.length > 1 ? parts[1] : "";
                 String target = parts.length > 2 ? parts[2] : "";
                 Logger.sendLog("[IPC] Setting target for " + macroId + " -> " + target);
+
+                if ("slayer".equalsIgnoreCase(macroId)) {
+                    int index = 0;
+                    if (target.contains("Tarantula")) index = 1;
+                    else if (target.contains("Sven")) index = 2;
+                    else if (target.contains("Voidgloom")) index = 3;
+                    com.vertexai.Vertex.config().combat.slayerTarget = index;
+                    com.vertexai.VertexClient.configManager.saveConfig();
+                } else if ("mob_killer".equalsIgnoreCase(macroId)) {
+                    int index = 0;
+                    String lower = target.toLowerCase(java.util.Locale.ROOT);
+                    if (lower.contains("ghost")) index = 1;
+                    else if (lower.contains("ice walker")) index = 2;
+                    else if (lower.contains("hoarder")) index = 3;
+                    else if (lower.contains("goblin")) index = 4;
+                    else if (lower.contains("glacite")) index = 5;
+                    else if (lower.contains("automoton")) index = 6;
+                    else if (lower.contains("sludge")) index = 7;
+                    else if (lower.contains("yog")) index = 8;
+                    else if (lower.contains("zombie")) index = 9;
+                    com.vertexai.Vertex.config().combat.mobKillerTarget = index;
+                    com.vertexai.VertexClient.configManager.saveConfig();
+                }
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {
                 net.minecraft.client.Minecraft.getInstance().execute(() -> {

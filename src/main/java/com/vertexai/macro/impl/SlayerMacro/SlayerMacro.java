@@ -32,8 +32,13 @@ public class SlayerMacro extends AbstractMacro {
     @Override
     public void onDisable() {
         log("Disabling Slayer Macro");
-        if (currentState != null) currentState.onEnd(this);
-        AutoMobKiller.getInstance().stop();
+        try {
+            if (currentState != null) currentState.onEnd(this);
+        } catch (Exception ignored) {}
+        try {
+            AutoMobKiller.getInstance().stop();
+        } catch (Exception ignored) {}
+        this.currentState = null;
     }
 
     @Override

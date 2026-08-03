@@ -46,7 +46,10 @@ public class MobKillerMacro extends AbstractMacro {
             case 6 -> targetList.add("Automoton");
             case 7 -> targetList.add("Sludge");
             case 8 -> targetList.add("Yog");
-            case 9 -> targetList.add("Zombie");
+            case 9 -> {
+                targetList.add("Zombie");
+                targetList.add("Graveyard Zombie");
+            }
         }
 
         String weapon = Vertex.config().general.slayerWeapon;
@@ -59,7 +62,9 @@ public class MobKillerMacro extends AbstractMacro {
     @Override
     public void onDisable() {
         log("Disabling Mob Killer Macro");
-        AutoMobKiller.getInstance().stop();
+        try {
+            AutoMobKiller.getInstance().stop();
+        } catch (Exception ignored) {}
     }
 
     @Override

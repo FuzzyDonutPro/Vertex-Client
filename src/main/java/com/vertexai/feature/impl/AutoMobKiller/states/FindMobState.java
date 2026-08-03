@@ -89,10 +89,8 @@ public class FindMobState implements AutoMobKillerState {
             if (mob == null || !mob.isAlive()) continue;
             double distanceSq = mc.player.distanceToSqr(mob);
             if (distanceSq >= (42 * 42)) continue;
-            if (!BlockUtil.canStandOn(EntityUtil.getBlockStandingOn(mob))) continue;
             if (!slayerProfile.isTargetInPreferredZone(mob)) continue;
             if (slayerProfile == AutoMobKiller.SlayerProfile.GLACITE && !mc.player.hasLineOfSight(mob)) continue;
-            if (!nearestOnly && isCrowdedByOtherPlayer(mob, playerCrowdingRadiusSq)) continue;
 
             double distanceCost = Math.sqrt(distanceSq);
             double angleCost = Math.abs(AngleUtil.getNeededYawChange(normalizedYaw, AngleUtil.getRotationYaw(mob.position())));

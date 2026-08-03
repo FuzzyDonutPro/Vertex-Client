@@ -163,7 +163,8 @@
         'farming': ['farming', 'melonPumpkin', 'farmBuilder'],
         'mining': ['miningMacro', 'powderMacro', 'routeMiner', 'commission'],
         'fishing': ['fishing'],
-        'slayer': ['combat', 'dungeons'],
+        'slayer': ['combat'],
+        'dungeons': ['dungeons'],
         'foraging': ['foraging'],
         'alchemy': ['bazaarFlipper', 'misc'],
         'diana': ['combat', 'misc']
@@ -191,9 +192,11 @@
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
 
-        'slayer': { catIds: ['combat'], allowedFieldIds: ['bossTarget', 'autoWeaponSwap', 'killAuraRange'] },
+        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
+        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
+        'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
 
         'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
@@ -255,7 +258,7 @@
 
         // Slayer & Combat
         { id: 'slayer', category: 'slayer', title: 'Slayer Boss Macro', desc: 'Auto-spawns and slays Slayer bosses (Revenant, Tarantula, Sven, Voidgloom).', running: false, target: 'Revenant Horror', options: ['Revenant Horror', 'Tarantula Broodfather', 'Sven Packmaster', 'Voidgloom Seraph'] },
-        { id: 'mob_killer', category: 'slayer', title: 'General Mob Killer', desc: 'Auto-pathfinds and grinds area mobs for EXP, drops, and bestiary.', running: false, target: 'Zealots', options: ['Zealots', 'Ghosts', 'Ice Walkers', 'Treasure Hoarders', 'Goblins', 'Glacite Walkers', 'Automotons', 'Sludge', 'Yog', 'Graveyard Zombies'] },
+        { id: 'mob_killer', category: 'slayer', title: 'General Mob Killer', desc: 'Auto-pathfinds and grinds area mobs for EXP, drops, and bestiary.', running: false, target: 'Graveyard Zombies', options: ['Zealots', 'Ghosts', 'Ice Walkers', 'Treasure Hoarders', 'Goblins', 'Glacite Walkers', 'Automotons', 'Sludge', 'Yog', 'Graveyard Zombies'] },
         { id: 'zealot', category: 'slayer', title: 'End Zealot & Bruiser Farmer', desc: 'Auto-pathfinds and kills Zealots & Special Zealot Bruisers in The End.', running: false, target: 'Special Zealots' },
         { id: 'dungeon', category: 'slayer', title: 'Dungeons & Catacombs Solver', desc: 'Auto room clear, secret finder & boss room combat helper.', running: false, target: 'Catacombs Floor 7' },
         { id: 'kuudra', category: 'slayer', title: 'Kuudra Boss Suite', desc: 'Auto-Supply Rush, Cannon Build/Fueling, Pod Head Stun, and Core DPS.', running: false, target: 'Kuudra T5', options: ['Kuudra T1', 'Kuudra T2', 'Kuudra T3', 'Kuudra T4', 'Kuudra T5'] },
@@ -296,6 +299,27 @@
             .then(data => {
                 if (data && typeof data === 'object' && Object.keys(data).length > 0) {
                     dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+
+                    // Two-way sync card targets with loaded Java config
+                    if (data.combat && data.combat.settings) {
+                        let mk = data.combat.settings.find(s => s.id === 'mobKillerTarget');
+                        if (mk && mk.options) {
+                            let card = macros.find(m => m.id === 'mob_killer');
+                            let idx = parseInt(mk.value);
+                            if (card && !isNaN(idx) && mk.options[idx]) {
+                                card.target = mk.options[idx];
+                            }
+                        }
+                        let sl = data.combat.settings.find(s => s.id === 'slayerTarget');
+                        if (sl && sl.options) {
+                            let card = macros.find(m => m.id === 'slayer');
+                            let idx = parseInt(sl.value);
+                            if (card && !isNaN(idx) && sl.options[idx]) {
+                                card.target = sl.options[idx];
+                            }
+                        }
+                        macros = [...macros];
+                    }
                 }
             })
             .catch(e => console.error(e));
@@ -312,6 +336,32 @@
             playUiSound();
         }
         
+        // Sync fine-tuning modal changes back to card dropdown state
+        if (fieldId === 'mobKillerTarget' && dynamicConfigSchema.combat) {
+            let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'mobKillerTarget');
+            let card = macros.find(m => m.id === 'mob_killer');
+            if (setting && setting.options && card) {
+                let idx = parseInt(value);
+                if (!isNaN(idx) && setting.options[idx]) {
+                    card.target = setting.options[idx];
+                    setting.value = idx;
+                    macros = [...macros];
+                }
+            }
+        }
+        if (fieldId === 'slayerTarget' && dynamicConfigSchema.combat) {
+            let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'slayerTarget');
+            let card = macros.find(m => m.id === 'slayer');
+            if (setting && setting.options && card) {
+                let idx = parseInt(value);
+                if (!isNaN(idx) && setting.options[idx]) {
+                    card.target = setting.options[idx];
+                    setting.value = idx;
+                    macros = [...macros];
+                }
+            }
+        }
+
         if (window.cefQuery) {
             window.cefQuery({
                 request: `update_config:${categoryId}:${fieldId}:${value}`,
@@ -382,6 +432,33 @@
     }
 
     function onTargetChange(id, target) {
+        let macro = macros.find(m => m.id === id);
+        if (macro) {
+            macro.target = target;
+            macros = [...macros];
+        }
+
+        // Two-way sync card selection into dynamicConfigSchema modal value
+        if (id === 'mob_killer' && dynamicConfigSchema.combat) {
+            let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'mobKillerTarget');
+            if (setting && setting.options) {
+                let idx = setting.options.indexOf(target);
+                if (idx !== -1) {
+                    setting.value = idx;
+                    updateConfigValue('combat', 'mobKillerTarget', idx);
+                }
+            }
+        } else if (id === 'slayer' && dynamicConfigSchema.combat) {
+            let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'slayerTarget');
+            if (setting && setting.options) {
+                let idx = setting.options.indexOf(target);
+                if (idx !== -1) {
+                    setting.value = idx;
+                    updateConfigValue('combat', 'slayerTarget', idx);
+                }
+            }
+        }
+
         if (window.cefQuery) {
             window.cefQuery({ request: `set_target:${id}:${target}` });
         }

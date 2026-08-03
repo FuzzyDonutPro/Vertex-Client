@@ -13,10 +13,26 @@ public class HumanAimSimulator {
     private static final Random random = new Random();
 
     public static void loadProfile() {
-        File dir = new File(Minecraft.getInstance().gameDirectory, "config/vertex/aim_profiles");
-        File file = new File(dir, "recorded_aim.json");
-        if (file.exists()) {
-            loadedProfile = RotationProfile.load(file);
+        if (loadedProfile != null && !loadedProfile.ticks.isEmpty()) return;
+
+        File gameDir = Minecraft.getInstance().gameDirectory;
+        File[] candidateFiles = new File[] {
+            new File(gameDir, "config/vertex/aim_profiles/recorded_aim.json"),
+            new File(gameDir, "config/vertex/recorded_aim.json"),
+            new File(gameDir, "config/vertex/rotations.json"),
+            new File(gameDir, "config/vertex/recorded_rotations.json"),
+            new File(gameDir, "config/vertex/aim_profile.json")
+        };
+
+        for (File candidate : candidateFiles) {
+            if (candidate.exists()) {
+                RotationProfile prof = RotationProfile.load(candidate);
+                if (prof != null && prof.ticks != null && !prof.ticks.isEmpty()) {
+                    loadedProfile = prof;
+                    com.vertexai.util.Logger.sendLog("[Humanizer] Loaded trained rotation profile from " + candidate.getName() + " (" + prof.ticks.size() + " ticks)");
+                    break;
+                }
+            }
         }
     }
 

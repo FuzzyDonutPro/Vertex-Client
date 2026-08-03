@@ -36,7 +36,7 @@ public class Combat {
             "Yog",
             "Graveyard Zombies"
     })
-    public int mobKillerTarget = 0; // Default: Zealots
+    public int mobKillerTarget = 9; // Default: Graveyard Zombies
 
     @ConfigOption(name = "Auto-Heal", desc = "Automatically swap to a healing item and use it when health is low")
     @ConfigEditorBoolean
