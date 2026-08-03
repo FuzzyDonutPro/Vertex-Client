@@ -82,12 +82,29 @@ public class PathfindingState implements ForagingMacroState {
                     Block block = mc.level.getBlockState(pos).getBlock();
                     
                     boolean isValid = false;
-                    if (mode.equals("Mangrove")) {
-                        isValid = (block == Blocks.JUNGLE_LOG || block == Blocks.MANGROVE_LOG); 
-                    } else if (mode.equals("Lushlilac")) {
-                        isValid = (block == Blocks.FLOWERING_AZALEA);
-                    } else {
-                        isValid = (block == Blocks.OAK_LOG);
+                    switch (mode) {
+                        case "Dark Oak":
+                            isValid = (block == Blocks.DARK_OAK_LOG);
+                            break;
+                        case "Acacia":
+                            isValid = (block == Blocks.ACACIA_LOG);
+                            break;
+                        case "Jungle":
+                        case "Mangrove":
+                            isValid = (block == Blocks.JUNGLE_LOG || block == Blocks.MANGROVE_LOG);
+                            break;
+                        case "Spruce":
+                            isValid = (block == Blocks.SPRUCE_LOG);
+                            break;
+                        case "Oak":
+                            isValid = (block == Blocks.OAK_LOG);
+                            break;
+                        case "Birch":
+                            isValid = (block == Blocks.BIRCH_LOG);
+                            break;
+                        default:
+                            isValid = (block == Blocks.DARK_OAK_LOG || block == Blocks.OAK_LOG || block == Blocks.ACACIA_LOG || block == Blocks.JUNGLE_LOG || block == Blocks.SPRUCE_LOG || block == Blocks.BIRCH_LOG);
+                            break;
                     }
                     
                     if (isValid) {

@@ -162,6 +162,16 @@ public class MCEFBridge {
                     else if (lower.contains("zombie")) index = 9;
                     com.vertexai.Vertex.config().combat.mobKillerTarget = index;
                     com.vertexai.VertexClient.configManager.saveConfig();
+                } else if ("foraging".equalsIgnoreCase(macroId)) {
+                    int index = 0;
+                    String lower = target.toLowerCase(java.util.Locale.ROOT);
+                    if (lower.contains("acacia")) index = 1;
+                    else if (lower.contains("jungle")) index = 2;
+                    else if (lower.contains("spruce")) index = 3;
+                    else if (lower.contains("oak") && !lower.contains("dark")) index = 4;
+                    else if (lower.contains("birch")) index = 5;
+                    com.vertexai.Vertex.config().foraging.foragingTreeType = index;
+                    com.vertexai.VertexClient.configManager.saveConfig();
                 }
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {

@@ -8,6 +8,7 @@ import com.vertexai.util.helper.Clock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
+import java.util.List;
 
 public class PathfindingState implements AutoMobKillerState {
 
@@ -51,28 +52,32 @@ public class PathfindingState implements AutoMobKillerState {
             return new KillState();
         }
 
-        // Repath if target mob moved significantly
-        if (target.position().distanceToSqr(mobKiller.getTargetMobOriginalPos()) > TARGET_DRIFT_REPATH_THRESHOLD_SQ) {
-            if (++pathAttempts > MAX_REPATH_ATTEMPTS) {
-                log("Target mob moved away too many times. Re-choosing mob.");
-                mobKiller.blacklistTargetMob();
-                Pathfinder.getInstance().stop();
-                return new FindMobState();
+        // Dynamic nearest target check: Switch if a mob is significantly closer
+        List<LivingEntity> mobs = com.vertexai.util.EntityUtil.getEntities(mobKiller.getMobsToKill(), mobKiller.getBlacklistedMobs());
+        double currentDistSq = mc.player.distanceToSqr(target);
+        for (LivingEntity m : mobs) {
+            if (m != null && m.isAlive() && m != target) {
+                double mDistSq = mc.player.distanceToSqr(m);
+                if (mDistSq + 16.0 < currentDistSq || (mDistSq <= 25.0 && mDistSq < currentDistSq - 4.0)) {
+                    mobKiller.updateTargetMob(m);
+                    target = m;
+                    mobKiller.setTargetMobOriginalPos(m.position());
+                    queuePathToTarget(mobKiller, true);
+                    break;
+                }
             }
+        }
+
+        // Dynamic live tracking: Update target position instantly on every tick if mob moves
+        BlockPos currentMobPos = target.blockPosition();
+        if (lastQueuedTarget == null || !currentMobPos.equals(lastQueuedTarget)) {
             mobKiller.setTargetMobOriginalPos(target.position());
             queuePathToTarget(mobKiller, true);
-            return this;
         }
 
         // Ensure Pathfinder engine is active
         if (!Pathfinder.getInstance().isRunning()) {
             if (!repathDelay.isScheduled() || repathDelay.passed()) {
-                if (++pathAttempts > MAX_REPATH_ATTEMPTS) {
-                    log("Pathfinding stopped too many times. Re-choosing mob.");
-                    mobKiller.blacklistTargetMob();
-                    Pathfinder.getInstance().stop();
-                    return new FindMobState();
-                }
                 queuePathToTarget(mobKiller, false);
             }
         }

@@ -194,23 +194,7 @@ public class AutoMobKiller extends AbstractFeature {
         if (targetMob == null) {
             return null;
         }
-
-        BlockPos currentMobStanding = EntityUtil.getBlockStandingOn(targetMob);
-        long now = System.currentTimeMillis();
-
-        boolean sameTarget = targetMob == approachBlockTarget;
-        boolean cacheFresh = (now - cachedApproachComputedAt) <= APPROACH_BLOCK_CACHE_MS;
-        boolean mobStillNearby = cachedApproachMobStanding != null && currentMobStanding.distSqr(cachedApproachMobStanding) <= 1.0;
-
-        if (!forceRefresh && sameTarget && cacheFresh && mobStillNearby && cachedApproachBlock != null) {
-            return cachedApproachBlock;
-        }
-
-        cachedApproachBlock = EntityUtil.nearbyBlock(targetMob);
-        cachedApproachMobStanding = currentMobStanding;
-        cachedApproachComputedAt = now;
-        approachBlockTarget = targetMob;
-        return cachedApproachBlock;
+        return EntityUtil.nearbyBlock(targetMob);
     }
 
     public void blacklistTargetMob() {

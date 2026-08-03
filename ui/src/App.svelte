@@ -201,7 +201,7 @@
         'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
 
-        'foraging': { catIds: ['foraging'], allowedFieldIds: ['treeType', 'treecapitatorSwap'] },
+        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'foragingPark', 'foragingHub', 'foragingFig'] },
         'alchemy': { catIds: ['misc'], allowedFieldIds: ['potionRecipe', 'batchSize'] },
         'flip': { catIds: ['bazaarFlipper'], allowedFieldIds: ['bazaarMargin', 'orderAutoUpdate'] },
         'diana': { catIds: ['combat'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
@@ -268,7 +268,7 @@
         { id: 'trophy_fishing', category: 'fishing', title: 'Trophy Fishing Solver', desc: 'Optimized trophy fish hook timing with auto-slugfish & Obfuscated Fish filleting.', running: false, target: 'Trophy Fish Auto-Catch' },
 
         // Foraging
-        { id: 'foraging', category: 'foraging', title: 'Park & Jungle Wood Foraging', desc: 'Auto-cuts Dark Oak, Acacia & Jungle trees with Treecapitator auto-swap.', running: false, target: 'Dark Oak' },
+        { id: 'foraging', category: 'foraging', title: 'Park & Jungle Wood Foraging', desc: 'Auto-cuts Dark Oak, Acacia, Jungle, Spruce, Oak & Birch trees with Treecapitator auto-swap.', running: false, target: 'Dark Oak', options: ['Dark Oak', 'Acacia', 'Jungle', 'Spruce', 'Oak', 'Birch'] },
 
         // Economy & Alchemy
         { id: 'alchemy', category: 'alchemy', title: 'Auto Alchemy Potion Brewer', desc: 'Auto-brews Speed / EXP potions via Nether Wart & Enchanted Sugarcane.', running: false, target: 'Speed Potion', options: ['Speed Potion', 'EXP Potion', 'Alchemy 50 Batch'] },
@@ -284,7 +284,7 @@
         miningMacro: { id: 'miningMacro', name: 'Mining Settings', settings: [{ id: 'mineTarget', name: 'Target Ore', desc: 'Select ore type to prioritize', type: 'dropdown', options: ['Mithril', 'Titanium', 'Gemstones', 'Glacite'], value: 0 }, { id: 'rotationSpeed', name: 'Head Rotation Speed', desc: 'Camera movement speed (ms)', type: 'slider', min: 50, max: 500, step: 10, value: 150 }, { id: 'autoPickaxeAbility', name: 'Auto Speed Boost', desc: 'Use pickaxe ability on cooldown', type: 'boolean', value: true }] },
         combat: { id: 'combat', name: 'Combat & Slayer Settings', settings: [{ id: 'bossTarget', name: 'Slayer Target', desc: 'Select Slayer Boss tier', type: 'dropdown', options: ['Revenant T4', 'Revenant T5', 'Tarantula T4', 'Sven T4', 'Voidgloom T4'], value: 0 }, { id: 'autoWeaponSwap', name: 'Auto Weapon Swap', desc: 'Swap weapon when boss spawns', type: 'boolean', value: true }, { id: 'killAuraRange', name: 'Combat Range', desc: 'Maximum hit range in blocks', type: 'slider', min: 3, max: 6, step: 0.1, value: 4.5 }] },
         fishing: { id: 'fishing', name: 'Fishing Settings', settings: [{ id: 'rodAutoCast', name: 'Auto Recast Rod', desc: 'Recast rod automatically after catch', type: 'boolean', value: true }, { id: 'seaCreatureKill', name: 'Auto Slay Creatures', desc: 'Slay sea creatures instantly', type: 'boolean', value: true }] },
-        foraging: { id: 'foraging', name: 'Foraging Settings', settings: [{ id: 'treeType', name: 'Tree Type', desc: 'Target wood type', type: 'dropdown', options: ['Dark Oak', 'Acacia', 'Jungle', 'Spruce'], value: 0 }, { id: 'treecapitatorSwap', name: 'Treecapitator Swap', desc: 'Auto swap axe before chop', type: 'boolean', value: true }] },
+        foraging: { id: 'foraging', name: 'Foraging Settings', settings: [{ id: 'foragingTreeType', name: 'Target Tree Type', desc: 'Select target wood type', type: 'dropdown', options: ['Dark Oak', 'Acacia', 'Jungle', 'Spruce', 'Oak', 'Birch'], value: 0 }] },
         general: { id: 'general', name: 'General Settings', settings: [{ id: 'autoFailSafe', name: 'Failsafe Protection', desc: 'Pause macro when admin check detected', type: 'boolean', value: true }] }
     };
 
@@ -318,8 +318,18 @@
                                 card.target = sl.options[idx];
                             }
                         }
-                        macros = [...macros];
                     }
+                    if (data.foraging && data.foraging.settings) {
+                        let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
+                        if (fg && fg.options) {
+                            let card = macros.find(m => m.id === 'foraging');
+                            let idx = parseInt(fg.value);
+                            if (card && !isNaN(idx) && fg.options[idx]) {
+                                card.target = fg.options[idx];
+                            }
+                        }
+                    }
+                    macros = [...macros];
                 }
             })
             .catch(e => console.error(e));
@@ -352,6 +362,18 @@
         if (fieldId === 'slayerTarget' && dynamicConfigSchema.combat) {
             let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'slayerTarget');
             let card = macros.find(m => m.id === 'slayer');
+            if (setting && setting.options && card) {
+                let idx = parseInt(value);
+                if (!isNaN(idx) && setting.options[idx]) {
+                    card.target = setting.options[idx];
+                    setting.value = idx;
+                    macros = [...macros];
+                }
+            }
+        }
+        if (fieldId === 'foragingTreeType' && dynamicConfigSchema.foraging) {
+            let setting = dynamicConfigSchema.foraging.settings.find(s => s.id === 'foragingTreeType');
+            let card = macros.find(m => m.id === 'foraging');
             if (setting && setting.options && card) {
                 let idx = parseInt(value);
                 if (!isNaN(idx) && setting.options[idx]) {
@@ -455,6 +477,15 @@
                 if (idx !== -1) {
                     setting.value = idx;
                     updateConfigValue('combat', 'slayerTarget', idx);
+                }
+            }
+        } else if (id === 'foraging' && dynamicConfigSchema.foraging) {
+            let setting = dynamicConfigSchema.foraging.settings.find(s => s.id === 'foragingTreeType');
+            if (setting && setting.options) {
+                let idx = setting.options.indexOf(target);
+                if (idx !== -1) {
+                    setting.value = idx;
+                    updateConfigValue('foraging', 'foragingTreeType', idx);
                 }
             }
         }

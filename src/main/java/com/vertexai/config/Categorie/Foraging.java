@@ -1,11 +1,24 @@
 package com.vertexai.config.Categorie;
 
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
+import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorDropdown;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 
 public class Foraging {
 
-
+    @ConfigOption(
+            name = "Target Tree Type",
+            desc = "Select the target wood / tree type to forage"
+    )
+    @ConfigEditorDropdown(values = {
+            "Dark Oak",
+            "Acacia",
+            "Jungle",
+            "Spruce",
+            "Oak",
+            "Birch"
+    })
+    public int foragingTreeType = 0; // Default: Dark Oak
 
     @ConfigOption(name = "Fig", desc = "The best method for general foraging no matter the gear you have. Supports jump boost, scaffolding, axe throwing, and more.")
     @ConfigEditorBoolean

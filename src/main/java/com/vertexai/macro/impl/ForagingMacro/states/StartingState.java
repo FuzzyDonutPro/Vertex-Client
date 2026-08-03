@@ -13,22 +13,19 @@ public class StartingState implements ForagingMacroState {
 
     @Override
     public ForagingMacroState onTick(ForagingMacro macro) {
-        if (Vertex.config().foraging.foragingFig) {
-            macro.setCurrentForagingMode("Fig");
-        } else if (Vertex.config().foraging.foragingLushlilac) {
-            macro.setCurrentForagingMode("Lushlilac");
-        } else if (Vertex.config().foraging.foragingMangrove) {
-            macro.setCurrentForagingMode("Mangrove");
-        } else if (Vertex.config().foraging.foragingPark) {
-            macro.setCurrentForagingMode("Park");
-        } else if (Vertex.config().foraging.foragingHub) {
-            macro.setCurrentForagingMode("Hub");
-        } else {
-            macro.disable("Please enable at least one Foraging Mode in the config!");
-            return this;
+        int treeTypeIdx = Vertex.config().foraging.foragingTreeType;
+        String mode = "Dark Oak";
+        switch (treeTypeIdx) {
+            case 1: mode = "Acacia"; break;
+            case 2: mode = "Jungle"; break;
+            case 3: mode = "Spruce"; break;
+            case 4: mode = "Oak"; break;
+            case 5: mode = "Birch"; break;
+            default: mode = "Dark Oak"; break;
         }
+        macro.setCurrentForagingMode(mode);
 
-        log("Starting Foraging Macro in mode: " + macro.getCurrentForagingMode());
+        log("Starting Foraging Macro for wood type: " + macro.getCurrentForagingMode());
         return new PathfindingState();
     }
 

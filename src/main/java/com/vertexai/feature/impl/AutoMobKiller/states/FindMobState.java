@@ -71,18 +71,13 @@ public class FindMobState implements AutoMobKillerState {
         if (mc.level == null || mc.player == null) return null;
 
         AutoMobKiller.SlayerProfile slayerProfile = mobKiller.getSlayerProfile();
-        boolean nearestOnly = slayerProfile == AutoMobKiller.SlayerProfile.GOBLIN;
-        double playerCrowdingRadiusSq = slayerProfile == AutoMobKiller.SlayerProfile.GENERIC ? 16.0 : 2.25;
 
         List<LivingEntity> mobs = EntityUtil.getEntities(mobKiller.getMobsToKill(), mobKiller.getBlacklistedMobs());
         if (mobs.isEmpty()) {
             return null;
         }
 
-        float normalizedYaw = AngleUtil.normalizeAngle(mc.player.getYRot());
-        float distanceCostWeight = (float) Vertex.config().debug.mobKillerDistCost / 100f;
-        float rotationCostWeight = (float) Vertex.config().debug.mobKillerRotCost / 100f;
-        double bestScore = Double.MAX_VALUE;
+        double bestDistanceSq = Double.MAX_VALUE;
         LivingEntity bestMob = null;
 
         for (LivingEntity mob : mobs) {
@@ -91,13 +86,8 @@ public class FindMobState implements AutoMobKillerState {
             if (distanceSq >= (42 * 42)) continue;
             if (!slayerProfile.isTargetInPreferredZone(mob)) continue;
 
-            double distanceCost = Math.sqrt(distanceSq);
-            double angleCost = Math.abs(AngleUtil.getNeededYawChange(normalizedYaw, AngleUtil.getRotationYaw(mob.position())));
-            double score = nearestOnly
-                    ? distanceSq
-                    : distanceCost * distanceCostWeight + angleCost * rotationCostWeight;
-            if (score < bestScore) {
-                bestScore = score;
+            if (distanceSq < bestDistanceSq) {
+                bestDistanceSq = distanceSq;
                 bestMob = mob;
             }
         }
