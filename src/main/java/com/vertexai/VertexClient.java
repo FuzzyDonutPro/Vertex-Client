@@ -123,6 +123,7 @@ public class VertexClient implements ClientModInitializer {
         HUDManager.getInstance().loadPositions();
 
         PacketEvent.registerReceived(event -> Minecraft.getInstance().execute(() -> {
+            com.vertexai.util.ManaTracker.onPacketReceive(event.getPacket());
             FailsafeManager.getInstance().onPacketReceive(event.getPacket());
             MacroManager.getInstance().onPacketReceive(event);
             FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handlePacketReceive(event.getPacket()));

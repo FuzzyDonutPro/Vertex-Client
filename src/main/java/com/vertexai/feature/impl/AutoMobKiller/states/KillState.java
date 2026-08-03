@@ -31,6 +31,7 @@ public class KillState implements AutoMobKillerState {
     private final Clock reaimTimer = new Clock();
     private final Clock chaseRepathTimer = new Clock();
     private final Clock strafeTimer = new Clock();
+    private final Clock rogueTimer = new Clock();
     private boolean strafeDirectionLeft = true;
     private final Clock wTapTimer = new Clock();
     private boolean wTapping = false;
@@ -78,6 +79,22 @@ public class KillState implements AutoMobKillerState {
                     return this; // Skip combat logic for this tick
                 } else {
                     com.vertexai.util.Logger.sendWarning("Healing item '" + com.vertexai.Vertex.config().combat.healingItem + "' not found in hotbar!");
+                }
+            }
+        }
+
+        // Auto Rogue Sword Speed Boost
+        if (com.vertexai.Vertex.config().combat.autoRogueSword) {
+            if (!rogueTimer.isScheduled() || rogueTimer.passed()) {
+                int rogueSlot = InventoryUtil.getHotbarSlotOfItem("Rogue");
+                if (rogueSlot != -1) {
+                    int mana = com.vertexai.util.ManaTracker.getCurrentMana();
+                    if (mana >= 50) {
+                        InventoryUtil.holdItem("Rogue");
+                        KeyBindUtil.rightClick();
+                        rogueTimer.schedule(3000L);
+                        log("Auto Rogue Sword speed boost! Mana: " + mana);
+                    }
                 }
             }
         }

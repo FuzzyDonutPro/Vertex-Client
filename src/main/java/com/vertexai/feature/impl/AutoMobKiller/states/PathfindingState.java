@@ -21,6 +21,7 @@ public class PathfindingState implements AutoMobKillerState {
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock timeout = new Clock();
     private final Clock repathDelay = new Clock();
+    private final Clock rogueTimer = new Clock();
     private int pathAttempts = 0;
     private BlockPos lastQueuedTarget = null;
 
@@ -31,6 +32,7 @@ public class PathfindingState implements AutoMobKillerState {
         timeout.reset();
         timeout.schedule(PATHING_TIMEOUT_MS);
         repathDelay.reset();
+        rogueTimer.reset();
         lastQueuedTarget = null;
 
         Pathfinder.getInstance().setSprintState(Vertex.config().commission.dwarvenCommission.mobKillerSprint);
@@ -50,6 +52,22 @@ public class PathfindingState implements AutoMobKillerState {
         if (isInKillRange(mobKiller)) {
             Pathfinder.getInstance().stop();
             return new KillState();
+        }
+
+        // Auto Rogue Sword Speed Boost
+        if (com.vertexai.Vertex.config().combat.autoRogueSword) {
+            if (!rogueTimer.isScheduled() || rogueTimer.passed()) {
+                int rogueSlot = com.vertexai.util.InventoryUtil.getHotbarSlotOfItem("Rogue");
+                if (rogueSlot != -1) {
+                    int mana = com.vertexai.util.ManaTracker.getCurrentMana();
+                    if (mana >= 50) {
+                        com.vertexai.util.InventoryUtil.holdItem("Rogue");
+                        com.vertexai.util.KeyBindUtil.rightClick();
+                        rogueTimer.schedule(3000L);
+                        log("Auto Rogue Sword speed boost! Mana: " + mana);
+                    }
+                }
+            }
         }
 
         // Dynamic nearest target check: Switch if a mob is significantly closer

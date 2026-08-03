@@ -42,6 +42,10 @@ public class Combat {
     @ConfigEditorBoolean
     public boolean autoHealEnabled = true;
 
+    @ConfigOption(name = "Auto Rogue Sword", desc = "Automatically swap to Rogue Sword and right-click when mana is 50+ for speed boost")
+    @ConfigEditorBoolean
+    public boolean autoRogueSword = false;
+
     @ConfigOption(name = "Healing Item", desc = "Name of the healing item in your hotbar (e.g., Florid Zombie Sword)")
     @ConfigEditorText
     public String healingItem = "Florid Zombie Sword";

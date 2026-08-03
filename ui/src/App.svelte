@@ -192,11 +192,11 @@
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
 
-        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
-        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
+        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
-        'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'healingItem', 'autoHealThreshold'] },
+        'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
 
         'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
