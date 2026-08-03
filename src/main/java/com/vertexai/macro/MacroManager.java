@@ -165,21 +165,30 @@ public class MacroManager {
      * Called every client tick.
      */
     public void onTick() {
-        com.vertexai.pathing.aim.RotationRecorder.getInstance().onTick();
-        com.vertexai.failsafe.reaction.RecordedReactionManager.getInstance().onTick();
-        
-        if (this.currentMacro == null) {
-            return;
-        }
+        try {
+            com.vertexai.pathing.aim.RotationRecorder.getInstance().onTick();
+            com.vertexai.failsafe.reaction.RecordedReactionManager.getInstance().onTick();
+            
+            if (this.currentMacro == null) {
+                return;
+            }
 
-        // Disable if macro stopped itself
-        if (!currentMacro.isEnabled()) {
-            this.disable();
-            return;
-        }
+            // Disable if macro stopped itself
+            if (!currentMacro.isEnabled()) {
+                this.disable();
+                return;
+            }
 
-        this.currentMacro.onTick();
-        this.currentMacro.getStateMachine().onTick();
+            this.currentMacro.onTick();
+            if (this.currentMacro != null && this.currentMacro.getStateMachine() != null) {
+                this.currentMacro.getStateMachine().onTick();
+            }
+        } catch (Throwable t) {
+            Logger.sendError("[MacroManager] Error in macro tick execution: " + t.getMessage());
+            if (Vertex.config() != null && Vertex.config().debug.debugMode) {
+                t.printStackTrace();
+            }
+        }
     }
 
     /**

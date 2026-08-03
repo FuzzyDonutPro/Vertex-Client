@@ -137,12 +137,13 @@ public abstract class AbstractMacro {
 
     public void checkHealthFailsafe() {
         if (mc.player == null) return;
+        if (!uptime.isScheduled() || uptime.getTimePassed() < 3000L) return; // 3-second startup grace period
         float currentHealth = mc.player.getHealth();
         float maxHealth = mc.player.getMaxHealth();
 
-        if (maxHealth > 0) {
+        if (maxHealth > 0 && currentHealth > 0) {
             float healthRatio = currentHealth / maxHealth;
-            if (healthRatio < 0.35f) {
+            if (healthRatio < 0.15f) { // Only pause if health critically drops below 15%
                 warn("CRITICAL HEALTH ALERT (" + (int)(healthRatio * 100) + "%)! Pausing macro safety...");
                 if (isEnabled()) {
                     pause();

@@ -127,13 +127,18 @@ public class MCEFBridge {
                             targetMacro = MacroManager.getInstance().getCurrentMacro();
                             break;
                     }
-                    if (targetMacro != null) {
-                        MacroManager.getInstance().enableMacro(targetMacro);
-                    } else {
-                        MacroManager.getInstance().enable();
-                    }
+                    com.vertexai.macro.AbstractMacro finalMacro = targetMacro;
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                        if (finalMacro != null) {
+                            MacroManager.getInstance().enableMacro(finalMacro);
+                        } else {
+                            MacroManager.getInstance().enable();
+                        }
+                    });
                 } else {
-                    MacroManager.getInstance().disable();
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                        MacroManager.getInstance().disable();
+                    });
                 }
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"enabled\":" + enable + "}";
             } else if ("set_target".equals(action)) {
@@ -182,11 +187,14 @@ public class MCEFBridge {
             } else if ("get_config_schema".equals(action)) {
                 return ConfigSerializer.serialize(VertexClient.config).toString();
             } else if ("update_config".equals(action)) {
-                if (parts.length >= 4) {
-                    String categoryId = parts[1];
-                    String fieldId = parts[2];
-                    String value = parts[3];
-                    ConfigSerializer.updateField(VertexClient.config, categoryId, fieldId, value);
+                String[] configParts = request.split(":", 4);
+                if (configParts.length >= 4) {
+                    String categoryId = configParts[1];
+                    String fieldId = configParts[2];
+                    String value = configParts[3];
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                        ConfigSerializer.updateField(VertexClient.config, categoryId, fieldId, value);
+                    });
                     return "{\"status\":\"ok\"}";
                 }
                 return "{\"status\":\"error\",\"message\":\"invalid_args\"}";

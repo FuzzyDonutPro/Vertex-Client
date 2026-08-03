@@ -85,27 +85,58 @@ public class ConfigSerializer {
     }
 
     public static void updateField(VertexConfig config, String categoryId, String fieldId, String valueStr) {
+        if (config == null || categoryId == null || fieldId == null) return;
         try {
-            Field catField = VertexConfig.class.getDeclaredField(categoryId);
+            Field catField = null;
+            for (Field f : VertexConfig.class.getDeclaredFields()) {
+                if (f.getName().equalsIgnoreCase(categoryId)) {
+                    catField = f;
+                    break;
+                }
+            }
+            if (catField == null) {
+                com.vertexai.util.Logger.sendError("[Config] Category not found: " + categoryId);
+                return;
+            }
             catField.setAccessible(true);
             Object categoryObj = catField.get(config);
             if (categoryObj == null) return;
 
-            Field field = categoryObj.getClass().getDeclaredField(fieldId);
+            Field field = null;
+            Class<?> clazz = categoryObj.getClass();
+            while (clazz != null && clazz != Object.class) {
+                for (Field f : clazz.getDeclaredFields()) {
+                    if (f.getName().equalsIgnoreCase(fieldId)) {
+                        field = f;
+                        break;
+                    }
+                }
+                if (field != null) break;
+                clazz = clazz.getSuperclass();
+            }
+
+            if (field == null) {
+                com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " in " + categoryId);
+                return;
+            }
             field.setAccessible(true);
-            
-            if (field.getType() == boolean.class) {
-                field.setBoolean(categoryObj, Boolean.parseBoolean(valueStr));
-            } else if (field.getType() == int.class) {
+
+            if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                field.setBoolean(categoryObj, Boolean.parseBoolean(valueStr) || "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr));
+            } else if (field.getType() == int.class || field.getType() == Integer.class) {
                 field.setInt(categoryObj, (int) Double.parseDouble(valueStr));
-            } else if (field.getType() == float.class) {
+            } else if (field.getType() == float.class || field.getType() == Float.class) {
                 field.setFloat(categoryObj, Float.parseFloat(valueStr));
+            } else if (field.getType() == double.class || field.getType() == Double.class) {
+                field.setDouble(categoryObj, Double.parseDouble(valueStr));
             } else if (field.getType() == String.class) {
                 field.set(categoryObj, valueStr);
             }
-            
+
             VertexClient.configManager.saveConfig();
+            com.vertexai.util.Logger.sendLog("[Config] Updated " + categoryId + "." + fieldId + " -> " + valueStr);
         } catch (Exception e) {
+            com.vertexai.util.Logger.sendError("[Config] Failed to update " + categoryId + "." + fieldId + ": " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -11,6 +11,7 @@ import com.vertexai.util.helper.RotationConfiguration;
 import com.vertexai.util.helper.Target;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.EntityHitResult;
 
 public class KillState implements AutoMobKillerState {
@@ -182,6 +183,17 @@ public class KillState implements AutoMobKillerState {
                 null
         ));
 
+        // Crosshair Raycast Target Lock: If crosshair touches ANY valid mob, lock onto it instantly
+        if (mc.hitResult instanceof EntityHitResult hitResult && hitResult.getEntity() instanceof LivingEntity hitLiving) {
+            if (hitLiving.isAlive() && mc.player.distanceToSqr(hitLiving) <= MELEE_RANGE_SQ) {
+                String hitName = ChatFormatting.stripFormatting(hitLiving.getName().getString().toLowerCase(java.util.Locale.ROOT));
+                boolean isValidTarget = mobKiller.getMobsToKill().stream().anyMatch(t -> hitName.contains(t.toLowerCase(java.util.Locale.ROOT)));
+                if (isValidTarget && !mobKiller.getBlacklistedMobs().contains(hitLiving)) {
+                    mobKiller.setTargetMob(hitLiving);
+                }
+            }
+        }
+
         // Always push forward to close distance if not directly touching
         if (distanceSq > 2.25) {
             KeyBindUtil.setKeyBindState(mc.options.keyUp, true);
@@ -198,8 +210,8 @@ public class KillState implements AutoMobKillerState {
         }
 
         // Require crosshair/aim alignment on target mob (vanilla reach 3.0 blocks max)
-        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() == mobKiller.getTargetMob())
-                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 12.0f);
+        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() instanceof LivingEntity living && living.isAlive())
+                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 25.0f);
 
         if (!aimAlignedOnMob) {
             return this;

@@ -24,12 +24,7 @@ public class MobKillerMacro extends AbstractMacro {
 
     @Override
     public List<String> getNecessaryItems() {
-        List<String> items = new ArrayList<>();
-        String weapon = Vertex.config().general.slayerWeapon;
-        if (weapon != null && !weapon.trim().isEmpty()) {
-            items.add(weapon);
-        }
-        return items;
+        return new ArrayList<>();
     }
 
     @Override
@@ -46,7 +41,7 @@ public class MobKillerMacro extends AbstractMacro {
             case 6 -> targetList.add("Automoton");
             case 7 -> targetList.add("Sludge");
             case 8 -> targetList.add("Yog");
-            case 9 -> {
+            default -> {
                 targetList.add("Zombie");
                 targetList.add("Graveyard Zombie");
             }
