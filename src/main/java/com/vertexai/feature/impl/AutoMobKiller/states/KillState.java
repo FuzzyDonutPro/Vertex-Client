@@ -180,11 +180,11 @@ public class KillState implements AutoMobKillerState {
             return this;
         }
 
-        // Require crosshair to be actively pointing at target mob (no hitboxes / silent aim cheats)
-        boolean crosshairOnMob = mc.hitResult instanceof EntityHitResult hit
-                && hit.getEntity() == mobKiller.getTargetMob();
+        // Require crosshair/aim alignment on target mob (vanilla reach 3.0 blocks max)
+        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() == mobKiller.getTargetMob())
+                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 12.0f);
 
-        if (!crosshairOnMob) {
+        if (!aimAlignedOnMob) {
             return this;
         }
 
@@ -192,9 +192,9 @@ public class KillState implements AutoMobKillerState {
             return this;
         }
 
-        // Legitimate attack via vanilla leftClick input simulation only
+        // Fast & smooth humanized click dispatch (~10-12 CPS)
         KeyBindUtil.leftClick();
-        attackDelay.schedule(100 + (long)(Math.random() * 50));
+        attackDelay.schedule(70 + (long)(Math.random() * 35));
         closeRangeStuckTimer.reset();
         
         return this;

@@ -77,6 +77,21 @@ public class PathfindingState implements AutoMobKillerState {
             }
         }
 
+        // Only apply direct fallback drive if Pathfinder is not actively navigating
+        if (!Pathfinder.getInstance().isRunning()) {
+            RotationHandler.getInstance().easeTo(new com.vertexai.util.helper.RotationConfiguration(
+                    new com.vertexai.util.helper.Target(target),
+                    100L,
+                    null
+            ));
+            com.vertexai.util.KeyBindUtil.setKeyBindState(mc.options.keyUp, true);
+            if (mc.player.horizontalCollision && mc.player.onGround()) {
+                com.vertexai.util.KeyBindUtil.setKeyBindState(mc.options.keyJump, true);
+            } else {
+                com.vertexai.util.KeyBindUtil.setKeyBindState(mc.options.keyJump, false);
+            }
+        }
+
         if (timeout.passed()) {
             log("Pathfinding timeout. Re-choosing target mob.");
             mobKiller.blacklistTargetMob();
@@ -96,7 +111,8 @@ public class PathfindingState implements AutoMobKillerState {
         if (mc.player == null || mobKiller.getTargetMob() == null) {
             return false;
         }
-        return mc.player.distanceToSqr(mobKiller.getTargetMob()) <= ENTER_KILL_RANGE_SQ;
+        return mc.player.distanceToSqr(mobKiller.getTargetMob()) <= ENTER_KILL_RANGE_SQ
+                && mc.player.hasLineOfSight(mobKiller.getTargetMob());
     }
 
     private void queuePathToTarget(AutoMobKiller mobKiller, boolean forceRefreshApproachTarget) {

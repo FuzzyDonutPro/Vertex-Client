@@ -137,24 +137,21 @@ public class EntityUtil {
 
     public static BlockPos nearbyBlock(LivingEntity entityLivingBase) {
         if (entityLivingBase == null || mc.level == null) return PlayerUtil.getBlockStandingOn();
+        BlockPos mobPos = entityLivingBase.blockPosition();
 
-        BlockPos closestBlock = null;
-        double closestDistance = Double.MAX_VALUE;
         BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
+        if (MovementHelper.INSTANCE.canStandOn(bsa, mobPos.getX(), mobPos.getY(), mobPos.getZ(), bsa.get(mobPos.getX(), mobPos.getY(), mobPos.getZ()))) {
+            return mobPos;
+        }
 
-        for (int x = -2; x <= 2; x++) {
-            for (int y = -2; y <= 2; y++) {
-                for (int z = -2; z <= 2; z++) {
-                    BlockPos currentPos = entityLivingBase.blockPosition().offset(x, y, z);
-                    double distance = currentPos.distSqr(PlayerUtil.getBlockStandingOn());
-                    if (distance < closestDistance) {
-                        closestBlock = currentPos;
-                        closestDistance = distance;
-                    }
-                }
+        // Search 1-2 blocks below mob for solid standable ground
+        for (int y = 0; y >= -3; y--) {
+            BlockPos testPos = mobPos.offset(0, y, 0);
+            if (MovementHelper.INSTANCE.canStandOn(bsa, testPos.getX(), testPos.getY(), testPos.getZ(), bsa.get(testPos.getX(), testPos.getY(), testPos.getZ()))) {
+                return testPos;
             }
         }
 
-        return closestBlock != null ? closestBlock : entityLivingBase.blockPosition();
+        return mobPos;
     }
 }
