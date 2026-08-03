@@ -91,6 +91,13 @@ public class EntityUtil {
                 String entityName = living.getName().getString().toLowerCase(Locale.ROOT);
                 String customName = living.getCustomName() != null ? living.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
                 String typeName = living.getType().getDescription().getString().toLowerCase(Locale.ROOT);
+                String fullName = entityName + " " + customName + " " + typeName;
+
+                // Exclude Crypt Ghouls, Golden Ghouls & Revenants when targeting Graveyard Zombies
+                boolean isZombieTarget = entityNames.stream().anyMatch(t -> t.equalsIgnoreCase("Zombie") || t.equalsIgnoreCase("Graveyard Zombie"));
+                if (isZombieTarget && (fullName.contains("ghoul") || fullName.contains("crypt") || fullName.contains("golden") || fullName.contains("revenant"))) {
+                    continue;
+                }
 
                 boolean matches = false;
                 for (String targetName : entityNames) {
@@ -110,6 +117,12 @@ public class EntityUtil {
             if (living instanceof ArmorStand armorStand) {
                 String customName = armorStand.getCustomName() != null ? armorStand.getCustomName().getString() : "";
                 if (customName.isEmpty() || customName.contains(mc.player.getName().getString())) continue;
+
+                String lowerCustom = customName.toLowerCase(Locale.ROOT);
+                boolean isZombieTarget = entityNames.stream().anyMatch(t -> t.equalsIgnoreCase("Zombie") || t.equalsIgnoreCase("Graveyard Zombie"));
+                if (isZombieTarget && (lowerCustom.contains("ghoul") || lowerCustom.contains("crypt") || lowerCustom.contains("golden") || lowerCustom.contains("revenant"))) {
+                    continue;
+                }
 
                 boolean nameMatch = false;
                 for (String entityName : entityNames) {
