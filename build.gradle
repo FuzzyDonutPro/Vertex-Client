@@ -8,6 +8,7 @@ plugins {
 
 version = project.mod_version
 group = project.maven_group
+base.archivesName = 'Vertex-Client'
 
 repositories {
 	maven {

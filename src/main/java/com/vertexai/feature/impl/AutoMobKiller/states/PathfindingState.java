@@ -75,6 +75,19 @@ public class PathfindingState implements AutoMobKillerState {
             queuePathToTarget(mobKiller, true);
         }
 
+        // Auto-reroute if Pathfinder engine cancels or fails a route
+        if (Pathfinder.getInstance().failed()) {
+            log("Pathfinder cancelled/failed route. Rerouting automatically...");
+            lastQueuedTarget = null;
+            if (++pathAttempts > 3) {
+                log("Target unreachable after multiple route attempts. Re-choosing nearest mob.");
+                mobKiller.blacklistTargetMob();
+                Pathfinder.getInstance().stop();
+                return new FindMobState();
+            }
+            queuePathToTarget(mobKiller, true);
+        }
+
         // Ensure Pathfinder engine is active
         if (!Pathfinder.getInstance().isRunning()) {
             if (!repathDelay.isScheduled() || repathDelay.passed()) {
@@ -128,11 +141,11 @@ public class PathfindingState implements AutoMobKillerState {
         }
 
         boolean sameQueuedTarget = approachTarget.equals(lastQueuedTarget);
-        if (!sameQueuedTarget || !pathfinder.isRunning()) {
+        if (!sameQueuedTarget || !pathfinder.isRunning() || pathfinder.failed()) {
             pathfinder.stopAndRequeue(approachTarget);
             lastQueuedTarget = approachTarget;
-        }
-        if (!pathfinder.isRunning()) {
+            pathfinder.start();
+        } else if (!pathfinder.isRunning()) {
             pathfinder.start();
         }
         repathDelay.schedule(REPATH_DELAY_MS);
