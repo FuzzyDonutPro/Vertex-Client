@@ -9,14 +9,22 @@ import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorSlider;
 public class Combat {
 
     @ConfigOption(
-            name = "Slayer / Combat Target",
-            desc = "Select the single target mob or Slayer boss to farm (Only one active at a time)"
+            name = "Slayer Boss Target",
+            desc = "Select the Slayer boss quest to farm (Auto-summons boss & auto-claims Maddox quest)"
     )
     @ConfigEditorDropdown(values = {
-            "None",
-            "Revenant Slayer (Crypt Ghoul)",
-            "Tarantula Slayer (Spider)",
-            "Sven Slayer (Wolf)",
+            "Revenant Horror (Crypt Ghouls)",
+            "Tarantula Broodfather (Spiders)",
+            "Sven Packmaster (Wolves)",
+            "Voidgloom Seraph (Endermen)"
+    })
+    public int slayerTarget = 0; // Default: Revenant Horror
+
+    @ConfigOption(
+            name = "Mob Killer Target",
+            desc = "Select the general area mob to farm for combat EXP, drops, and bestiary"
+    )
+    @ConfigEditorDropdown(values = {
             "Zealots",
             "Ghosts",
             "Ice Walkers",
@@ -28,7 +36,7 @@ public class Combat {
             "Yog",
             "Graveyard Zombies"
     })
-    public int slayerTarget = 1; // Default: Revenant Slayer
+    public int mobKillerTarget = 0; // Default: Zealots
 
     @ConfigOption(name = "Auto-Heal", desc = "Automatically swap to a healing item and use it when health is low")
     @ConfigEditorBoolean

@@ -52,6 +52,8 @@ public class MacroManager {
                 return com.vertexai.macro.impl.FarmBuilderMacro.FarmBuilderMacro.getInstance();
             case 7:
                 return com.vertexai.macro.impl.KuudraMacro.KuudraMacro.getInstance();
+            case 8:
+                return com.vertexai.macro.impl.MobKillerMacro.MobKillerMacro.getInstance();
             default:
                 return CommissionMacro.getInstance();
         }

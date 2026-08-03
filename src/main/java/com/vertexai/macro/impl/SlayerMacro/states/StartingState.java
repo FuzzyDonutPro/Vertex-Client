@@ -20,29 +20,29 @@ public class StartingState implements SlayerMacroState {
     public SlayerMacroState onTick(SlayerMacro macro) {
         List<String> targetList = new java.util.ArrayList<>();
         switch (Vertex.config().combat.slayerTarget) {
-            case 1 -> { // Rev
+            case 0 -> { // Rev Horror
                 targetList.add("Crypt Ghoul");
+                targetList.add("Golden Ghoul");
                 targetList.add("Revenant Horror");
+                targetList.add("Atoned Rev");
             }
-            case 2 -> { // Tara
-                targetList.add("Spider");
-                targetList.add("Weaver Spider");
+            case 1 -> { // Tara Broodfather
+                targetList.add("Spider Jockey");
+                targetList.add("Voracious Spider");
+                targetList.add("Tarantula Beast");
                 targetList.add("Tarantula Broodfather");
             }
-            case 3 -> { // Sven
-                targetList.add("Wolf");
+            case 2 -> { // Sven Packmaster
+                targetList.add("Pack Alpha");
+                targetList.add("Howling Spirit");
+                targetList.add("Sven Follower");
                 targetList.add("Sven Packmaster");
             }
-            case 4 -> targetList.add("Zealot");
-            case 5 -> targetList.add("Ghost");
-            case 6 -> targetList.add("Ice Walker");
-            case 7 -> targetList.add("Treasure Hoarder");
-            case 8 -> targetList.add("Goblin");
-            case 9 -> targetList.add("Glacite Walker");
-            case 10 -> targetList.add("Automoton");
-            case 11 -> targetList.add("Sludge");
-            case 12 -> targetList.add("Yog");
-            case 13 -> targetList.add("Zombie");
+            case 3 -> { // Voidgloom Seraph
+                targetList.add("Voidling Fanatic");
+                targetList.add("Voidling Extremist");
+                targetList.add("Voidgloom Seraph");
+            }
         }
         
         if (targetList.isEmpty()) {

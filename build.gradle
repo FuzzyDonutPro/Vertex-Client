@@ -136,7 +136,7 @@ task copyToModrinth(type: Copy) {
     }
     from remapJar.archiveFile
     into "${System.getProperty('user.home')}/AppData/Roaming/ModrinthApp/profiles/vertex/mods"
-    rename { "Vertex-Client-v1.0.3.jar" }
+    rename { "Vertex-Client-v1.0.4.jar" }
 }
 
 build.finalizedBy(copyToModrinth)
