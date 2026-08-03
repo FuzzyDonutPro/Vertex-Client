@@ -175,14 +175,24 @@ public class KillState implements AutoMobKillerState {
             KeyBindUtil.setKeyBindState(mc.options.keyJump, true);
         }
 
+        // Strictly enforce 3.0-block vanilla reach limit (3.0^2 = 9.0)
+        if (distanceSq > 9.0) {
+            return this;
+        }
+
+        // Require crosshair to be actively pointing at target mob (no hitboxes / silent aim cheats)
+        boolean crosshairOnMob = mc.hitResult instanceof EntityHitResult hit
+                && hit.getEntity() == mobKiller.getTargetMob();
+
+        if (!crosshairOnMob) {
+            return this;
+        }
+
         if (attackDelay.isScheduled() && !attackDelay.passed()) {
             return this;
         }
 
-        // Attack execution via both gameMode.attack and leftClick
-        if (mc.gameMode != null) {
-            mc.gameMode.attack(mc.player, mobKiller.getTargetMob());
-        }
+        // Legitimate attack via vanilla leftClick input simulation only
         KeyBindUtil.leftClick();
         attackDelay.schedule(100 + (long)(Math.random() * 50));
         closeRangeStuckTimer.reset();
