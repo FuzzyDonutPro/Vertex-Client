@@ -10,8 +10,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 public class PathfindingState implements ForagingMacroState {
 
@@ -124,7 +128,7 @@ public class PathfindingState implements ForagingMacroState {
                     if (blacklistedBlocks.contains(pos)) continue;
 
                     Block block = mc.level.getBlockState(pos).getBlock();
-                    if (isLogBlock(block, mode)) {
+                    if (isLogBlock(block, mode) && isTreeCluster(pos, mode)) {
                         validBlocks.add(pos);
                     }
                 }
@@ -132,29 +136,80 @@ public class PathfindingState implements ForagingMacroState {
         }
 
         return validBlocks.stream()
-                .min(Comparator.comparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+                .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
+                        .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
                 .orElse(null);
+    }
+
+    private boolean isTreeCluster(BlockPos startPos, String mode) {
+        Set<BlockPos> visited = new HashSet<>();
+        Queue<BlockPos> queue = new ArrayDeque<>();
+
+        queue.add(startPos);
+        visited.add(startPos);
+
+        int count = 0;
+
+        while (!queue.isEmpty()) {
+            BlockPos current = queue.poll();
+            count++;
+
+            if (count >= 10) {
+                return true; // Cluster has at least 10 connected logs (real tree!)
+            }
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        BlockPos neighbor = current.offset(dx, dy, dz);
+                        if (!visited.contains(neighbor) && !blacklistedBlocks.contains(neighbor)) {
+                            Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
+                            if (isLogBlock(neighborBlock, mode)) {
+                                visited.add(neighbor);
+                                queue.add(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return count >= 10;
     }
 
     private boolean isLogBlock(Block block, String mode) {
         if (block == null) return false;
-        String name = block.getDescriptionId().toLowerCase(java.util.Locale.ROOT);
-        if (name.contains("stripped")) return false; // Exclude stripped logs as requested
+        String id = block.getDescriptionId().toLowerCase(java.util.Locale.ROOT);
+        
+        // Exclude stripped logs and non-log wooden structures (planks, fences, stairs, slabs, trapdoors, doors, signs, etc.)
+        if (id.contains("stripped") || id.contains("planks") || id.contains("fence") || 
+            id.contains("stairs") || id.contains("slab") || id.contains("door") || 
+            id.contains("sign") || id.contains("plate") || id.contains("button") || 
+            id.contains("gate") || id.contains("table") || id.contains("chest") || 
+            id.contains("barrel") || id.contains("composter") || id.contains("boat")) {
+            return false;
+        }
+
+        // Must explicitly be a log or wood block
+        boolean isLogOrWood = id.contains("log") || id.contains("wood");
+        if (!isLogOrWood) return false;
+
         String m = mode != null ? mode.toLowerCase(java.util.Locale.ROOT) : "";
 
         if (m.contains("dark")) {
-            return name.contains("dark_oak") && (name.contains("log") || name.contains("wood"));
+            return id.contains("dark_oak");
         } else if (m.contains("acacia")) {
-            return name.contains("acacia") && (name.contains("log") || name.contains("wood"));
+            return id.contains("acacia");
         } else if (m.contains("jungle") || m.contains("mangrove")) {
-            return (name.contains("jungle") || name.contains("mangrove")) && (name.contains("log") || name.contains("wood"));
+            return id.contains("jungle") || id.contains("mangrove");
         } else if (m.contains("spruce")) {
-            return name.contains("spruce") && (name.contains("log") || name.contains("wood"));
+            return id.contains("spruce");
         } else if (m.contains("oak")) {
-            return name.contains("oak") && !name.contains("dark") && (name.contains("log") || name.contains("wood"));
+            return id.contains("oak") && !id.contains("dark");
         } else if (m.contains("birch")) {
-            return name.contains("birch") && (name.contains("log") || name.contains("wood"));
+            return id.contains("birch");
         }
-        return name.contains("log") || name.contains("wood");
+        return true;
     }
 }

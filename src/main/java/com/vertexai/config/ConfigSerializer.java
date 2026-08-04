@@ -30,34 +30,61 @@ public class ConfigSerializer {
                 catJson.addProperty("name", categoryName);
                 
                 JsonArray settings = new JsonArray();
+                collectSettings(categoryObj, settings);
                 
-                for (Field field : categoryObj.getClass().getDeclaredFields()) {
-                    if (Modifier.isStatic(field.getModifiers())) continue;
-                    if (Modifier.isTransient(field.getModifiers()) && !field.isAnnotationPresent(ConfigEditorButton.class)) continue;
-                    
-                    ConfigOption opt = field.getAnnotation(ConfigOption.class);
-                    if (opt == null) continue;
-                    
+                catJson.add("settings", settings);
+                root.add(catField.getName(), catJson);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return root;
+    }
+
+    private static void collectSettings(Object obj, JsonArray settings) {
+        if (obj == null) return;
+        Class<?> clazz = obj.getClass();
+        while (clazz != null && clazz != Object.class) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                
+                if (field.isAnnotationPresent(Category.class)) {
                     field.setAccessible(true);
-                    JsonObject settingJson = new JsonObject();
-                    settingJson.addProperty("id", field.getName());
-                    settingJson.addProperty("name", opt.name());
-                    settingJson.addProperty("desc", opt.desc());
-                    
+                    try {
+                        Object subObj = field.get(obj);
+                        if (subObj != null) {
+                            collectSettings(subObj, settings);
+                        }
+                    } catch (Exception ignored) {}
+                    continue;
+                }
+
+                if (Modifier.isTransient(field.getModifiers()) && !field.isAnnotationPresent(ConfigEditorButton.class)) continue;
+                
+                ConfigOption opt = field.getAnnotation(ConfigOption.class);
+                if (opt == null) continue;
+                
+                field.setAccessible(true);
+                JsonObject settingJson = new JsonObject();
+                settingJson.addProperty("id", field.getName());
+                settingJson.addProperty("name", opt.name());
+                settingJson.addProperty("desc", opt.desc());
+                
+                try {
                     if (field.isAnnotationPresent(ConfigEditorBoolean.class)) {
                         settingJson.addProperty("type", "boolean");
-                        settingJson.addProperty("value", field.getBoolean(categoryObj));
+                        settingJson.addProperty("value", field.getBoolean(obj));
                     } else if (field.isAnnotationPresent(ConfigEditorSlider.class)) {
                         ConfigEditorSlider slider = field.getAnnotation(ConfigEditorSlider.class);
                         settingJson.addProperty("type", "slider");
                         settingJson.addProperty("min", slider.minValue());
                         settingJson.addProperty("max", slider.maxValue());
                         settingJson.addProperty("step", slider.minStep());
-                        if (field.getType() == int.class) settingJson.addProperty("value", field.getInt(categoryObj));
-                        else if (field.getType() == float.class) settingJson.addProperty("value", field.getFloat(categoryObj));
+                        if (field.getType() == int.class) settingJson.addProperty("value", field.getInt(obj));
+                        else if (field.getType() == float.class) settingJson.addProperty("value", field.getFloat(obj));
                     } else if (field.isAnnotationPresent(ConfigEditorText.class)) {
                         settingJson.addProperty("type", "text");
-                        settingJson.addProperty("value", (String) field.get(categoryObj));
+                        settingJson.addProperty("value", (String) field.get(obj));
                     } else if (field.isAnnotationPresent(ConfigEditorDropdown.class)) {
                         ConfigEditorDropdown dropdown = field.getAnnotation(ConfigEditorDropdown.class);
                         settingJson.addProperty("type", "dropdown");
@@ -66,10 +93,10 @@ public class ConfigSerializer {
                             opts.add(v);
                         }
                         settingJson.add("options", opts);
-                        settingJson.addProperty("value", field.getInt(categoryObj));
+                        settingJson.addProperty("value", field.getInt(obj));
                     } else if (field.isAnnotationPresent(io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind.class)) {
                         settingJson.addProperty("type", "keybind");
-                        settingJson.addProperty("value", field.getInt(categoryObj));
+                        settingJson.addProperty("value", field.getInt(obj));
                     } else if (field.isAnnotationPresent(ConfigEditorButton.class)) {
                         ConfigEditorButton btn = field.getAnnotation(ConfigEditorButton.class);
                         settingJson.addProperty("type", "button");
@@ -79,15 +106,44 @@ public class ConfigSerializer {
                         continue;
                     }
                     settings.add(settingJson);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                
-                catJson.add("settings", settings);
-                root.add(catField.getName(), catJson);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            clazz = clazz.getSuperclass();
         }
-        return root;
+    }
+
+    private static class FieldOwnerPair {
+        Field field;
+        Object owner;
+        FieldOwnerPair(Field field, Object owner) {
+            this.field = field;
+            this.owner = owner;
+        }
+    }
+
+    private static FieldOwnerPair findFieldAndOwner(Object obj, String fieldId) {
+        if (obj == null) return null;
+        Class<?> clazz = obj.getClass();
+        while (clazz != null && clazz != Object.class) {
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.getName().equalsIgnoreCase(fieldId)) {
+                    f.setAccessible(true);
+                    return new FieldOwnerPair(f, obj);
+                }
+                if (f.isAnnotationPresent(Category.class)) {
+                    f.setAccessible(true);
+                    try {
+                        Object subObj = f.get(obj);
+                        FieldOwnerPair subPair = findFieldAndOwner(subObj, fieldId);
+                        if (subPair != null) return subPair;
+                    } catch (Exception ignored) {}
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return null;
     }
 
     public static void executeButton(VertexConfig config, String categoryId, String fieldId) {
@@ -105,21 +161,10 @@ public class ConfigSerializer {
             Object categoryObj = catField.get(config);
             if (categoryObj == null) return;
 
-            Field field = null;
-            Class<?> clazz = categoryObj.getClass();
-            while (clazz != null && clazz != Object.class) {
-                for (Field f : clazz.getDeclaredFields()) {
-                    if (f.getName().equalsIgnoreCase(fieldId)) {
-                        field = f;
-                        break;
-                    }
-                }
-                if (field != null) break;
-                clazz = clazz.getSuperclass();
-            }
-            if (field == null) return;
-            field.setAccessible(true);
-            Object val = field.get(categoryObj);
+            FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
+            if (pair == null) return;
+
+            Object val = pair.field.get(pair.owner);
             if (val instanceof Runnable runnable) {
                 runnable.run();
             } else if ("setMiningToolButton".equalsIgnoreCase(fieldId) || "miningTool".equalsIgnoreCase(fieldId)) {
@@ -152,37 +197,27 @@ public class ConfigSerializer {
             Object categoryObj = catField.get(config);
             if (categoryObj == null) return;
 
-            Field field = null;
-            Class<?> clazz = categoryObj.getClass();
-            while (clazz != null && clazz != Object.class) {
-                for (Field f : clazz.getDeclaredFields()) {
-                    if (f.getName().equalsIgnoreCase(fieldId)) {
-                        field = f;
-                        break;
-                    }
-                }
-                if (field != null) break;
-                clazz = clazz.getSuperclass();
-            }
-
-            if (field == null) {
+            FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
+            if (pair == null) {
                 com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " in " + categoryId);
                 return;
             }
-            field.setAccessible(true);
+
+            Field field = pair.field;
+            Object owner = pair.owner;
 
             if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                field.set(categoryObj, Boolean.parseBoolean(valueStr) || "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr));
+                field.set(owner, Boolean.parseBoolean(valueStr) || "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr));
             } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                field.set(categoryObj, (int) Double.parseDouble(valueStr));
+                field.set(owner, (int) Double.parseDouble(valueStr));
             } else if (field.getType() == float.class || field.getType() == Float.class) {
-                field.set(categoryObj, Float.parseFloat(valueStr));
+                field.set(owner, Float.parseFloat(valueStr));
             } else if (field.getType() == double.class || field.getType() == Double.class) {
-                field.set(categoryObj, Double.parseDouble(valueStr));
+                field.set(owner, Double.parseDouble(valueStr));
             } else if (field.getType() == long.class || field.getType() == Long.class) {
-                field.set(categoryObj, (long) Double.parseDouble(valueStr));
+                field.set(owner, (long) Double.parseDouble(valueStr));
             } else if (field.getType() == String.class) {
-                field.set(categoryObj, valueStr);
+                field.set(owner, valueStr);
             }
 
             VertexClient.configManager.saveConfig();

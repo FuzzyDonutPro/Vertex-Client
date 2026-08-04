@@ -3,6 +3,7 @@ package com.vertexai.macro.impl.ForagingMacro.states;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacroState;
 import com.vertexai.handler.RotationHandler;
+import com.vertexai.util.InventoryUtil;
 import com.vertexai.util.KeyBindUtil;
 import com.vertexai.util.helper.Clock;
 import com.vertexai.util.helper.RotationConfiguration;
@@ -15,15 +16,15 @@ public class BreakingState implements ForagingMacroState {
 
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock breakDelay = new Clock();
-    private final Clock throwDelay = new Clock();
-    private final Clock reaimTimer = new Clock();
+    private final Clock postBreakTimer = new Clock();
+    private boolean logBroken = false;
 
     @Override
     public void onStart(ForagingMacro macro) {
         log("Aiming and breaking target tree...");
         breakDelay.reset();
-        throwDelay.reset();
-        reaimTimer.reset();
+        postBreakTimer.reset();
+        logBroken = false;
     }
 
     @Override
@@ -36,8 +37,17 @@ public class BreakingState implements ForagingMacroState {
 
         // Check if block turned to air
         if (mc.level.isEmptyBlock(targetPos)) {
-            log("Tree log broken!");
-            return new PathfindingState();
+            if (!logBroken) {
+                logBroken = true;
+                postBreakTimer.schedule(150L); // 150ms post-break pause for Treecapitator/Jungle Axe server packet sync
+            }
+            if (postBreakTimer.passed()) {
+                log("Tree log broken!");
+                return new PathfindingState();
+            }
+            // Stop attacking while waiting for packet sync
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            return this;
         }
 
         // Verify reach limit (4.5 blocks max)
@@ -63,17 +73,12 @@ public class BreakingState implements ForagingMacroState {
             }
         }
 
-        // Auto-swap to axe / Treecapitator in hotbar
-        int axeSlot = com.vertexai.util.InventoryUtil.getHotbarSlotOfItem("Axe");
-        if (axeSlot == -1) axeSlot = com.vertexai.util.InventoryUtil.getHotbarSlotOfItem("Treecapitator");
-        if (axeSlot != -1) {
+        // Auto-swap to Treecapitator / Jungle Axe / Axe in hotbar
+        int axeSlot = InventoryUtil.getHotbarSlotOfItem("Treecapitator");
+        if (axeSlot == -1) axeSlot = InventoryUtil.getHotbarSlotOfItem("Jungle Axe");
+        if (axeSlot == -1) axeSlot = InventoryUtil.getHotbarSlotOfItem("Axe");
+        if (axeSlot != -1 && mc.player.getInventory().getSelectedSlot() != axeSlot) {
             mc.player.getInventory().setSelectedSlot(axeSlot);
-        }
-
-        // Axe Throwing logic for specialized SkyBlock axes (Right click)
-        if (!throwDelay.isScheduled() || throwDelay.passed()) {
-            KeyBindUtil.rightClick();
-            throwDelay.schedule(350L);
         }
 
         // Regular Mining / Breaking logic (Hold left click)
