@@ -215,7 +215,7 @@ public class MiningMacro extends AbstractMacro {
             case 0:
                 List<MineableBlock> list = new ArrayList<>();
                 if (Vertex.config().miningMacro.mineGrayMithril) list.add(MineableBlock.GRAY_MITHRIL);
-                if (Vertex.config().miningMacro.mineGrayConcreteMithril) list.add(MineableBlock.GRAY_CONCRETE_MITHRIL);
+                if (Vertex.config().miningMacro.mineGrayTerracottaMithril) list.add(MineableBlock.GRAY_TERRACOTTA_MITHRIL);
                 if (Vertex.config().miningMacro.mineGreenMithril) list.add(MineableBlock.GREEN_MITHRIL);
                 if (Vertex.config().miningMacro.mineBlueMithril) list.add(MineableBlock.BLUE_MITHRIL);
                 if (Vertex.config().miningMacro.mineTitanium) list.add(MineableBlock.TITANIUM);
@@ -254,7 +254,7 @@ public class MiningMacro extends AbstractMacro {
         if (Vertex.config().miningMacro.oreType == 0) {
             List<Integer> priorities = new ArrayList<>();
             if (Vertex.config().miningMacro.mineGrayMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
-            if (Vertex.config().miningMacro.mineGrayConcreteMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
+            if (Vertex.config().miningMacro.mineGrayTerracottaMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
             if (Vertex.config().miningMacro.mineGreenMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGreenDefault);
             if (Vertex.config().miningMacro.mineBlueMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityBlueDefault);
             if (Vertex.config().miningMacro.mineTitanium) priorities.add(Vertex.config().miningMacro.mithrilPriorityTitaniumDefault);

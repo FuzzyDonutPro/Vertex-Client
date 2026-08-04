@@ -187,7 +187,7 @@
 
         'commission': { catIds: ['commission'], allowedFieldIds: ['commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['mineTarget', 'mineGrayMithril', 'mineGrayConcreteMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'rotationSpeed', 'autoPickaxeAbility'] },
+        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
@@ -1074,23 +1074,26 @@
                             </div>
                             
                             {#if setting.type === 'boolean'}
-                                <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                <label class="flex items-center gap-2 cursor-pointer select-none">
+                                    <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                    <span class="text-[10px] text-slate-300 font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                </label>
                             {:else if setting.type === 'slider'}
                                 <div class="flex items-center gap-2">
                                     <span class="text-[10px] text-sky-400 font-mono w-8 text-right">{setting.value}</span>
-                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="w-[100px] accent-sky-400 cursor-pointer" />
+                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-[100px] accent-sky-400 cursor-pointer" />
                                 </div>
                             {:else if setting.type === 'text'}
-                                <input type="text" bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
+                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
                             {:else if setting.type === 'dropdown'}
-                                <select bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]">
+                                <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]">
                                     {#each setting.options as opt, i}
                                         <option value={i}>{opt}</option>
                                     {/each}
                                 </select>
                             {:else if setting.type === 'keybind'}
-                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded-lg text-[10px] w-[140px] hover:text-white hover:border-sky-500/50 transition-colors flex items-center justify-between font-mono" on:click={openConfigGui}>
-                                    <span>Change Keybind</span>
+                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded-lg text-[10px] w-[140px] hover:text-white hover:border-sky-500/50 transition-colors flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
+                                    <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Change Keybind'}</span>
                                     <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-1.5 py-0.5 rounded">
                                         {getKeyName(setting.value)}
                                     </span>

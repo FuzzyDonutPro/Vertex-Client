@@ -22,13 +22,13 @@ public class MiningMacro {
     )
     public int oreType = 0;
 
-    @ConfigOption(name = "Mine Gray Mithril (Gray Wool)", desc = "")
+    @ConfigOption(name = "Mine Gray Mithril (Gray Wool)", desc = "Target Gray Wool Mithril blocks in Dwarven Mines")
     @ConfigEditorBoolean
     public boolean mineGrayMithril = true;
 
-    @ConfigOption(name = "Mine Gray Concrete Mithril", desc = "Target Gray Concrete & Light Gray Concrete Mithril blocks in Dwarven Mines")
+    @ConfigOption(name = "Mine Gray Terracotta Mithril", desc = "Target Cyan & Gray Terracotta Mithril blocks in Dwarven Mines")
     @ConfigEditorBoolean
-    public boolean mineGrayConcreteMithril = true;
+    public boolean mineGrayTerracottaMithril = true;
 
     @ConfigOption(name = "Mine Green Mithril (Prismarine)", desc = "")
     @ConfigEditorBoolean
