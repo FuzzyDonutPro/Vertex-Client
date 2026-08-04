@@ -213,12 +213,13 @@ public class MiningMacro extends AbstractMacro {
         );
         switch (Vertex.config().miningMacro.oreType) {
             case 0:
-                blocksToMine = new MineableBlock[]{
-                        MineableBlock.GRAY_MITHRIL,
-                        MineableBlock.GREEN_MITHRIL,
-                        MineableBlock.BLUE_MITHRIL,
-                        MineableBlock.TITANIUM,
-                };
+                List<MineableBlock> list = new ArrayList<>();
+                if (Vertex.config().miningMacro.mineGrayMithril) list.add(MineableBlock.GRAY_MITHRIL);
+                if (Vertex.config().miningMacro.mineGrayConcreteMithril) list.add(MineableBlock.GRAY_CONCRETE_MITHRIL);
+                if (Vertex.config().miningMacro.mineGreenMithril) list.add(MineableBlock.GREEN_MITHRIL);
+                if (Vertex.config().miningMacro.mineBlueMithril) list.add(MineableBlock.BLUE_MITHRIL);
+                if (Vertex.config().miningMacro.mineTitanium) list.add(MineableBlock.TITANIUM);
+                blocksToMine = list.toArray(new MineableBlock[0]);
                 break;
             case 1:
                 blocksToMine = new MineableBlock[]{MineableBlock.DIAMOND};
@@ -251,20 +252,13 @@ public class MiningMacro extends AbstractMacro {
 
     private int[] determinePriority() {
         if (Vertex.config().miningMacro.oreType == 0) {
-            return new int[]{
-                    Vertex.config().miningMacro.mineGrayMithril
-                            ? Vertex.config().miningMacro.mithrilPriorityGrayDefault
-                            : 0,
-                    Vertex.config().miningMacro.mineGreenMithril
-                            ? Vertex.config().miningMacro.mithrilPriorityGreenDefault
-                            : 0,
-                    Vertex.config().miningMacro.mineBlueMithril
-                            ? Vertex.config().miningMacro.mithrilPriorityBlueDefault
-                            : 0,
-                    Vertex.config().miningMacro.mineTitanium
-                            ? Vertex.config().miningMacro.mithrilPriorityTitaniumDefault
-                            : 0,
-            };
+            List<Integer> priorities = new ArrayList<>();
+            if (Vertex.config().miningMacro.mineGrayMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
+            if (Vertex.config().miningMacro.mineGrayConcreteMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
+            if (Vertex.config().miningMacro.mineGreenMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGreenDefault);
+            if (Vertex.config().miningMacro.mineBlueMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityBlueDefault);
+            if (Vertex.config().miningMacro.mineTitanium) priorities.add(Vertex.config().miningMacro.mithrilPriorityTitaniumDefault);
+            return priorities.stream().mapToInt(i -> i).toArray();
         }
         return new int[]{1, 1, 1, 1};
     }

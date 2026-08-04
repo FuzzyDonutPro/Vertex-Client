@@ -189,10 +189,11 @@ public class MCEFBridge {
                 return ConfigSerializer.serialize(VertexClient.config).toString();
             } else if ("update_config".equals(action)) {
                 String[] configParts = request.split(":", 4);
-                if (configParts.length >= 4) {
+                if (configParts.length >= 3) {
                     String categoryId = configParts[1];
                     String fieldId = configParts[2];
-                    String value = configParts[3];
+                    String value = configParts.length > 3 ? configParts[3] : "";
+                    Logger.sendLog("[IPC] update_config received: category=" + categoryId + " field=" + fieldId + " value=" + value);
                     net.minecraft.client.Minecraft.getInstance().execute(() -> {
                         ConfigSerializer.updateField(VertexClient.config, categoryId, fieldId, value);
                     });

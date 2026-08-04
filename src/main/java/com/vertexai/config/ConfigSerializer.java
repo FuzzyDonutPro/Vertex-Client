@@ -122,13 +122,15 @@ public class ConfigSerializer {
             field.setAccessible(true);
 
             if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                field.setBoolean(categoryObj, Boolean.parseBoolean(valueStr) || "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr));
+                field.set(categoryObj, Boolean.parseBoolean(valueStr) || "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr));
             } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                field.setInt(categoryObj, (int) Double.parseDouble(valueStr));
+                field.set(categoryObj, (int) Double.parseDouble(valueStr));
             } else if (field.getType() == float.class || field.getType() == Float.class) {
-                field.setFloat(categoryObj, Float.parseFloat(valueStr));
+                field.set(categoryObj, Float.parseFloat(valueStr));
             } else if (field.getType() == double.class || field.getType() == Double.class) {
-                field.setDouble(categoryObj, Double.parseDouble(valueStr));
+                field.set(categoryObj, Double.parseDouble(valueStr));
+            } else if (field.getType() == long.class || field.getType() == Long.class) {
+                field.set(categoryObj, (long) Double.parseDouble(valueStr));
             } else if (field.getType() == String.class) {
                 field.set(categoryObj, valueStr);
             }

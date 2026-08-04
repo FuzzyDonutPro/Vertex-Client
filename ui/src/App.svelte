@@ -187,7 +187,7 @@
 
         'commission': { catIds: ['commission'], allowedFieldIds: ['commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['mineTarget', 'rotationSpeed', 'autoPickaxeAbility'] },
+        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['mineTarget', 'mineGrayMithril', 'mineGrayConcreteMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'rotationSpeed', 'autoPickaxeAbility'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
@@ -338,6 +338,9 @@
     });
 
     function updateConfigValue(categoryId, fieldId, value) {
+        dynamicConfigSchema = dynamicConfigSchema; // Force Svelte reactivity update for all nested config state
+        macros = macros;
+        
         if (fieldId === 'guiFont') {
             selectedFont = fontsList[parseInt(value)] || 'Outfit';
         }
@@ -733,26 +736,26 @@
                                             <div class="text-[10px] font-medium text-slate-200 truncate">{setting.name}</div>
                                             
                                             {#if setting.type === 'boolean'}
-                                                <div class="flex items-center gap-2">
-                                                    <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.checked)} class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                                                <label class="flex items-center gap-2 cursor-pointer select-none">
+                                                    <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
                                                     <span class="text-[9px] text-slate-300">{setting.value ? 'Enabled' : 'Disabled'}</span>
-                                                </div>
+                                                </label>
                                             {:else if setting.type === 'slider'}
                                                 <div class="flex items-center gap-1.5">
-                                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer h-1" />
+                                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer h-1" />
                                                     <span class="text-[9px] text-sky-400 font-mono w-7 text-right">{setting.value}</span>
                                                 </div>
                                             {:else if setting.type === 'text'}
-                                                <input type="text" bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
+                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
                                             {:else if setting.type === 'dropdown'}
-                                                <select bind:value={setting.value} on:change={(e) => updateConfigValue(setting.catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
+                                                <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
                                                     {#each setting.options as opt, i}
                                                         <option value={i}>{opt}</option>
                                                     {/each}
                                                 </select>
                                             {:else if setting.type === 'keybind'}
-                                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={openConfigGui}>
-                                                    <span>Rebind</span>
+                                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
+                                                    <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Rebind'}</span>
                                                     <span class="text-sky-400 font-bold bg-sky-500/10 px-1 rounded">{getKeyName(setting.value)}</span>
                                                 </button>
                                             {/if}
@@ -787,10 +790,10 @@
                             </div>
                             <div class="flex justify-start">
                                 {#if setting.type === 'boolean'}
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('utilities', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                    <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
+                                        <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue('utilities', setting.id, setting.value); }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
-                                    </div>
+                                    </label>
                                 {/if}
                             </div>
                         </div>
@@ -824,10 +827,10 @@
                                     </div>
                                     <div class="flex justify-start">
                                         {#if setting.type === 'boolean'}
-                                            <div class="flex items-center gap-2 mt-1">
+                                            <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
                                                 <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                                 <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
-                                            </div>
+                                            </label>
                                         {:else if setting.type === 'slider'}
                                             <div class="flex items-center gap-3 w-full">
                                                 <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
@@ -877,53 +880,40 @@
                     <p class="text-[9px] text-slate-400 leading-tight">If set, Vertex will send live screenshots and ping you if a staff member teleports to your island, or if you are warped into limbo.</p>
                 </div>
 
-                <!-- Toggles -->
-                <div class="grid grid-cols-2 gap-3 mt-2">
-                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
-                        <div>
-                            <h3 class="text-[12px] font-semibold text-white">Admin Detection</h3>
-                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Instantly halts all macros and pings webhook if a staff member enters render distance.</p>
+                <!-- Toggles & Failsafe Parameters -->
+                {#if dynamicConfigSchema && dynamicConfigSchema.failsafe}
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                    {#each dynamicConfigSchema.failsafe.settings as setting}
+                        <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
+                            <div>
+                                <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                            </div>
+                            <div class="flex justify-start">
+                                {#if setting.type === 'boolean'}
+                                    <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
+                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.checked)} class="w-4 h-4 accent-red-500 cursor-pointer" />
+                                        <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                    </label>
+                                {:else if setting.type === 'slider'}
+                                    <div class="flex items-center gap-3 w-full">
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.value)} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
+                                        <span class="text-[10px] text-red-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-red-500/20">{setting.value}</span>
+                                    </div>
+                                {:else if setting.type === 'dropdown'}
+                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-red-500/50 transition-colors">
+                                        {#each setting.options as opt, i}
+                                            <option value={i}>{opt}</option>
+                                        {/each}
+                                    </select>
+                                {/if}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" bind:checked={adminDetection} class="w-4 h-4 accent-red-500 cursor-pointer" />
-                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{adminDetection ? 'Enabled' : 'Disabled'}</span>
-                        </div>
+                    {/each}
                     </div>
-                    
-                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
-                        <div>
-                            <h3 class="text-[12px] font-semibold text-white">Auto-Disconnect</h3>
-                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Automatically disconnects from the server immediately after an admin is detected.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" bind:checked={autoDisconnect} class="w-4 h-4 accent-red-500 cursor-pointer" />
-                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{autoDisconnect ? 'Enabled' : 'Disabled'}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
-                        <div>
-                            <h3 class="text-[12px] font-semibold text-white">Captcha Alert</h3>
-                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">Plays a loud alarm sound and stops macroing if a Bedrock or map captcha appears.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" bind:checked={captchaAlert} class="w-4 h-4 accent-red-500 cursor-pointer" />
-                            <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{captchaAlert ? 'Enabled' : 'Disabled'}</span>
-                        </div>
-                    </div>
-
-                    <!-- Volume Slider -->
-                    <div class="bg-slate-800/70 border border-white/10 p-3 rounded-xl flex flex-col justify-between gap-3">
-                        <div>
-                            <h3 class="text-[12px] font-semibold text-white">Alert Volume</h3>
-                            <p class="text-[9px] text-slate-400 mt-1 leading-tight">The volume of the in-game alarm sound played during an emergency failsafe event.</p>
-                        </div>
-                        <div class="flex items-center gap-2 w-full">
-                            <input type="range" min="0" max="100" step="1" bind:value={failsafeVolume} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
-                            <span class="text-[10px] text-red-400 font-mono w-8 text-right bg-slate-900/80 px-1 py-0.5 rounded border border-red-500/20">{failsafeVolume}%</span>
-                        </div>
-                    </div>
-                </div>
+                {:else}
+                    <div class="text-xs text-slate-400 text-center py-6">Loading security and failsafe settings from Java...</div>
+                {/if}
             </div>
         {/if}
 

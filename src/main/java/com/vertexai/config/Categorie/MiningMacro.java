@@ -26,6 +26,10 @@ public class MiningMacro {
     @ConfigEditorBoolean
     public boolean mineGrayMithril = true;
 
+    @ConfigOption(name = "Mine Gray Concrete Mithril", desc = "Target Gray Concrete & Light Gray Concrete Mithril blocks in Dwarven Mines")
+    @ConfigEditorBoolean
+    public boolean mineGrayConcreteMithril = true;
+
     @ConfigOption(name = "Mine Green Mithril (Prismarine)", desc = "")
     @ConfigEditorBoolean
     public boolean mineGreenMithril = true;

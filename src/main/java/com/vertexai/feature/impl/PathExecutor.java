@@ -464,8 +464,12 @@ public class PathExecutor {
         // Apply all the calculated key presses
         KeyBindUtil.holdThese(keyBindings.toArray(new KeyMapping[0]));
 
-        // Handle sprinting - only sprint when moving relatively straight
-        KeyBindUtil.setKeyBindState(mc.options.keySprint, this.allowSprint && yawDiff < MAX_YAW_DIFF_FOR_SPRINT && !shouldJump && !recoveryJumping);
+        // Handle sprinting - sprint whenever moving forward along path
+        boolean shouldSprint = this.allowSprint && yawDiff < 45.0f;
+        KeyBindUtil.setKeyBindState(mc.options.keySprint, shouldSprint);
+        if (shouldSprint && mc.player != null && mc.options.keyUp.isDown()) {
+            mc.player.setSprinting(true);
+        }
 
         return mc.player.position().distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) < 100;
     }

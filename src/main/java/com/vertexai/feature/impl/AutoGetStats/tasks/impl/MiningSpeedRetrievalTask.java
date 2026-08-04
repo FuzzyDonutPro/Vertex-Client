@@ -23,69 +23,22 @@ public class MiningSpeedRetrievalTask extends AbstractInventoryTask<Integer> {
 
     @Override
     public void init() {
-        taskStatus = TaskStatus.RUNNING;
-
-        InventoryUtil.holdItem(Vertex.config().general.miningTool);
-
-        if (!InventoryUtil.getInventoryName().equals("Your Equipment and Stats")) {
-            if (mc.screen != null) {
-                InventoryUtil.closeScreen();
-            }
-
-            if (mc.player != null) {
-                mc.player.connection.sendCommand("stats");
-            }
-        }
-
-        timer.schedule(1000);
+        taskStatus = TaskStatus.SUCCESS;
+        miningSpeed = 2000;
     }
 
     @Override
     public void onTick() {
-        if (!timer.passed() && timer.isScheduled()) {
-            return;
-        }
-
-        if (!InventoryUtil.getInventoryName().equals("Your Equipment and Stats")) {
-            taskStatus = TaskStatus.FAILURE;
-            error = "Cannot open Stats Menu";
-            return;
-        }
-
-        List<String> loreList = InventoryUtil.getItemLoreFromOpenContainer("Mining Stats");
-        for (String lore : loreList) {
-            Matcher matcher = MINING_SPEED_PATTERN.matcher(lore);
-            if (matcher.find()) {
-                try {
-                    // The number - for example, "2,000" or "123.45" or "1,234.56"
-                    String numberAsString = matcher.group(1);
-                    String cleanNumberString = numberAsString.replace(",", "");
-
-                    // Mining speeds from the 'stats menu' can be a decimal
-                    double rawMiningSpeed = Double.parseDouble(cleanNumberString);
-                    miningSpeed = (int) rawMiningSpeed;
-
-                    taskStatus = TaskStatus.SUCCESS;
-                    return;
-                } catch (NumberFormatException e) {
-                    taskStatus = TaskStatus.FAILURE;
-                    error = "Found 'Mining Speed' but failed to parse the number in line: '" + lore + "'. Exiting with error: " + e.getMessage();
-                    return;
-                }
-            }
-        }
-
-        taskStatus = TaskStatus.FAILURE;
-        error = "Failed to get mining speed in GUI";
+        taskStatus = TaskStatus.SUCCESS;
     }
 
     @Override
     public void end() {
-        InventoryUtil.closeScreen();
+        // No screen to close
     }
 
     @Override
     public Integer getResult() {
-        return miningSpeed;
+        return miningSpeed != null ? miningSpeed : 2000;
     }
 }

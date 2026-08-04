@@ -35,6 +35,9 @@ public class AutoSprint extends AbstractFeature {
         if (mc.options != null && mc.options.keyUp.isDown()) {
             if (SprintBypass.canSprint()) {
                 mc.options.keySprint.setDown(true);
+                if (mc.player != null) {
+                    mc.player.setSprinting(true);
+                }
             }
         }
     }

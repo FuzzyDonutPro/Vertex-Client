@@ -80,49 +80,50 @@ public class EntityUtil {
             return entities;
         }
 
+        boolean isZombieTarget = entityNames.stream().anyMatch(t -> 
+            t.equalsIgnoreCase("Zombie") || t.equalsIgnoreCase("Graveyard Zombie")
+        );
+
         net.minecraft.world.phys.AABB searchBox = mc.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+
+        if (isZombieTarget) {
+            // Strict Hologram Nametag Inspection for Graveyard Zombies & Zombie Villagers
+            for (Entity entity : mc.level.getEntities((Entity) null, searchBox, e -> e instanceof ArmorStand && e.isAlive())) {
+                ArmorStand armorStand = (ArmorStand) entity;
+                String customName = armorStand.getCustomName() != null ? armorStand.getCustomName().getString() : "";
+                if (customName.isEmpty() || customName.contains(mc.player.getName().getString())) continue;
+
+                String lowerName = customName.toLowerCase(Locale.ROOT);
+
+                // Strictly exclude Crypt Ghouls, Golden Ghouls, Revenant Horrors & Slayer bosses
+                if (lowerName.contains("ghoul") || lowerName.contains("crypt") || lowerName.contains("golden") || lowerName.contains("revenant")) {
+                    continue;
+                }
+
+                // Must contain "zombie" or "zombie villager" or "graveyard zombie"
+                if (lowerName.contains("zombie")) {
+                    Entity mob = getEntityCuttingOtherEntity(armorStand, null);
+                    if (mob instanceof LivingEntity living && living.isAlive() && !living.equals(mc.player) && living.getHealth() > 0) {
+                        if (entitiesToIgnore == null || !entitiesToIgnore.contains(living)) {
+                            if (!entities.contains(living)) {
+                                entities.add(living);
+                            }
+                        }
+                    }
+                }
+            }
+            return entities;
+        }
+
+        // Generic Mob Search for other targets (Zealots, Ghosts, Ice Walkers, Spiders, Goblins, etc.)
         for (Entity entity : mc.level.getEntities((Entity) null, searchBox, e -> e != null && e.isAlive())) {
             if (!(entity instanceof LivingEntity living)) continue;
             if (!living.isAlive() || living.equals(mc.player) || living.getHealth() <= 0) continue;
             if (entitiesToIgnore != null && entitiesToIgnore.contains(living)) continue;
 
-            // Mode 1: Check direct LivingEntity (Zombies, Spiders, Wolves, Endermen, Ghosts, etc.)
-            if (!(living instanceof ArmorStand)) {
-                String entityName = living.getName().getString().toLowerCase(Locale.ROOT);
-                String customName = living.getCustomName() != null ? living.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
-                String typeName = living.getType().getDescription().getString().toLowerCase(Locale.ROOT);
-                String fullName = entityName + " " + customName + " " + typeName;
-
-                // Exclude Crypt Ghouls, Golden Ghouls & Revenants when targeting Graveyard Zombies
-                boolean isZombieTarget = entityNames.stream().anyMatch(t -> t.equalsIgnoreCase("Zombie") || t.equalsIgnoreCase("Graveyard Zombie"));
-                if (isZombieTarget && (fullName.contains("ghoul") || fullName.contains("crypt") || fullName.contains("golden") || fullName.contains("revenant"))) {
-                    continue;
-                }
-
-                boolean matches = false;
-                for (String targetName : entityNames) {
-                    String lowerTarget = targetName.toLowerCase(Locale.ROOT);
-                    if (entityName.contains(lowerTarget) || customName.contains(lowerTarget) || typeName.contains(lowerTarget)) {
-                        matches = true;
-                        break;
-                    }
-                }
-                if (matches) {
-                    entities.add(living);
-                    continue;
-                }
-            }
-
-            // Mode 2: Check SkyBlock ArmorStand Hologram Nametags
             if (living instanceof ArmorStand armorStand) {
                 String customName = armorStand.getCustomName() != null ? armorStand.getCustomName().getString() : "";
                 if (customName.isEmpty() || customName.contains(mc.player.getName().getString())) continue;
-
-                String lowerCustom = customName.toLowerCase(Locale.ROOT);
-                boolean isZombieTarget = entityNames.stream().anyMatch(t -> t.equalsIgnoreCase("Zombie") || t.equalsIgnoreCase("Graveyard Zombie"));
-                if (isZombieTarget && (lowerCustom.contains("ghoul") || lowerCustom.contains("crypt") || lowerCustom.contains("golden") || lowerCustom.contains("revenant"))) {
-                    continue;
-                }
 
                 boolean nameMatch = false;
                 for (String entityName : entityNames) {
@@ -141,6 +142,22 @@ public class EntityUtil {
                             }
                         }
                     }
+                }
+            } else {
+                String entityName = living.getName().getString().toLowerCase(Locale.ROOT);
+                String customName = living.getCustomName() != null ? living.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
+                String typeName = living.getType().getDescription().getString().toLowerCase(Locale.ROOT);
+
+                boolean matches = false;
+                for (String targetName : entityNames) {
+                    String lowerTarget = targetName.toLowerCase(Locale.ROOT);
+                    if (entityName.contains(lowerTarget) || customName.contains(lowerTarget) || typeName.contains(lowerTarget)) {
+                        matches = true;
+                        break;
+                    }
+                }
+                if (matches) {
+                    entities.add(living);
                 }
             }
         }

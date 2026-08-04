@@ -23,6 +23,7 @@ public enum MineableBlock {
     TITANIUM(Blocks.POLISHED_DIORITE),
     // SkyBlock mining blocks (vanilla representations)
     GRAY_MITHRIL(Blocks.GRAY_WOOL, Blocks.CYAN_TERRACOTTA),
+    GRAY_CONCRETE_MITHRIL(Blocks.GRAY_CONCRETE, Blocks.LIGHT_GRAY_CONCRETE),
     GREEN_MITHRIL(Blocks.PRISMARINE, Blocks.DARK_PRISMARINE, Blocks.PRISMARINE_BRICKS),
     BLUE_MITHRIL(Blocks.LIGHT_BLUE_WOOL),
     // Gemstones

@@ -153,27 +153,15 @@ public class KillState implements AutoMobKillerState {
                 return new FindMobState();
             }
             
-            // Advanced Strafing
-            if (!strafeTimer.isScheduled() || strafeTimer.passed()) {
-                strafeDirectionLeft = Math.random() > 0.5;
-                strafeTimer.schedule((long) (400 + Math.random() * 800)); // strafe for 400-1200ms
-            }
-            KeyBindUtil.setKeyBindState(mc.options.keyLeft, strafeDirectionLeft);
-            KeyBindUtil.setKeyBindState(mc.options.keyRight, !strafeDirectionLeft);
-            
-            // W-Tapping (Sprint resetting)
-            if (wTapping && wTapTimer.passed()) {
-                KeyBindUtil.setKeyBindState(mc.options.keyUp, true);
-                wTapping = false;
-            } else if (!wTapping) {
-                KeyBindUtil.setKeyBindState(mc.options.keyUp, true); // Keep holding W otherwise
-            }
-            
+            // Release movement keys when in melee range to prevent spinning around mob
+            KeyBindUtil.setKeyBindState(mc.options.keyUp, false);
+            KeyBindUtil.setKeyBindState(mc.options.keyLeft, false);
+            KeyBindUtil.setKeyBindState(mc.options.keyRight, false);
+            KeyBindUtil.setKeyBindState(mc.options.keyJump, false);
         } else {
             closeRangeStuckTimer.reset();
             KeyBindUtil.setKeyBindState(mc.options.keyLeft, false);
             KeyBindUtil.setKeyBindState(mc.options.keyRight, false);
-            wTapping = false;
         }
 
         // Smooth rotation through RotationHandler anti-cheat humanized engine
@@ -183,20 +171,15 @@ public class KillState implements AutoMobKillerState {
                 null
         ));
 
-        // Crosshair Raycast Target Lock: If crosshair touches ANY valid mob, lock onto it instantly
+        // Crosshair Raycast Target Lock: If crosshair touches ANY valid mob (never players!), lock onto it instantly
         if (mc.hitResult instanceof EntityHitResult hitResult && hitResult.getEntity() instanceof LivingEntity hitLiving) {
-            if (hitLiving.isAlive() && mc.player.distanceToSqr(hitLiving) <= MELEE_RANGE_SQ) {
+            if (!(hitLiving instanceof net.minecraft.world.entity.player.Player) && hitLiving.isAlive() && mc.player.distanceToSqr(hitLiving) <= MELEE_RANGE_SQ) {
                 String hitName = ChatFormatting.stripFormatting(hitLiving.getName().getString().toLowerCase(java.util.Locale.ROOT));
                 boolean isValidTarget = mobKiller.getMobsToKill().stream().anyMatch(t -> hitName.contains(t.toLowerCase(java.util.Locale.ROOT)));
                 if (isValidTarget && !mobKiller.getBlacklistedMobs().contains(hitLiving)) {
                     mobKiller.setTargetMob(hitLiving);
                 }
             }
-        }
-
-        // Always push forward to close distance if not directly touching
-        if (distanceSq > 2.25) {
-            KeyBindUtil.setKeyBindState(mc.options.keyUp, true);
         }
 
         // Hop over 1-block obstacles when colliding
@@ -209,8 +192,12 @@ public class KillState implements AutoMobKillerState {
             return this;
         }
 
-        // Require crosshair/aim alignment on target mob (vanilla reach 3.0 blocks max)
-        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() instanceof LivingEntity living && living.isAlive())
+        // Require crosshair/aim alignment on target mob (NEVER players!)
+        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit 
+                && hit.getEntity() instanceof LivingEntity living 
+                && !(living instanceof net.minecraft.world.entity.player.Player) 
+                && living.isAlive()
+                && mobKiller.getMobsToKill().stream().anyMatch(t -> ChatFormatting.stripFormatting(living.getName().getString().toLowerCase(java.util.Locale.ROOT)).contains(t.toLowerCase(java.util.Locale.ROOT))))
                 || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 25.0f);
 
         if (!aimAlignedOnMob) {

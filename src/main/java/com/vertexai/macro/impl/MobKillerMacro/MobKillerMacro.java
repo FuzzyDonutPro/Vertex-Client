@@ -42,7 +42,7 @@ public class MobKillerMacro extends AbstractMacro {
             case 7 -> targetList.add("Sludge");
             case 9 -> {
                 targetList.add("Zombie");
-                targetList.add("Graveyard Zombie");
+                targetList.add("Zombie Villager");
             }
             case 10 -> {
                 targetList.add("Voracious Spider");
@@ -53,7 +53,7 @@ public class MobKillerMacro extends AbstractMacro {
             }
             default -> {
                 targetList.add("Zombie");
-                targetList.add("Graveyard Zombie");
+                targetList.add("Zombie Villager");
             }
         }
 
