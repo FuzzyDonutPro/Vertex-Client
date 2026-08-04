@@ -185,9 +185,9 @@
         'visitor': { catIds: ['farming'], allowedFieldIds: ['autoAcceptTrades', 'refuseUnprofitable'] },
         'pest_hunter': { catIds: ['farming'], allowedFieldIds: ['pestVacuum', 'pestBrokerTrade'] },
 
-        'commission': { catIds: ['commission'], allowedFieldIds: ['commissionLocation', 'etherwarpPath'] },
+        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'altMiningTool', 'setAltMiningToolButton', 'slayerWeapon', 'setSlayerWeaponButton', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
+        'mining_general': { catIds: ['miningMacro', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
@@ -237,6 +237,17 @@
         }
         
         return result;
+    }
+
+    function executeButtonAction(catId, fieldId) {
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: `click_button:${catId}:${fieldId}`,
+                onSuccess: function() {
+                    setTimeout(fetchConfigSchema, 250);
+                }
+            });
+        }
     }
 
     let macros = [
@@ -1097,6 +1108,11 @@
                                     <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-1.5 py-0.5 rounded">
                                         {getKeyName(setting.value)}
                                     </span>
+                                </button>
+                            {:else if setting.type === 'button'}
+                                <button class="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id)}>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <span>{setting.buttonText || setting.value || 'Set from hand'}</span>
                                 </button>
                             {/if}
                         </div>

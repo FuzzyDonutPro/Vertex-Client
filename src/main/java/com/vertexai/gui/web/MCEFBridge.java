@@ -187,6 +187,18 @@ public class MCEFBridge {
                 return "{\"status\":\"ok\"}";
             } else if ("get_config_schema".equals(action)) {
                 return ConfigSerializer.serialize(VertexClient.config).toString();
+            } else if ("click_button".equals(action)) {
+                String[] btnParts = request.split(":", 3);
+                if (btnParts.length >= 3) {
+                    String catId = btnParts[1];
+                    String fieldId = btnParts[2];
+                    Logger.sendLog("[IPC] click_button received: category=" + catId + " field=" + fieldId);
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                        ConfigSerializer.executeButton(VertexClient.config, catId, fieldId);
+                    });
+                    return "{\"status\":\"ok\"}";
+                }
+                return "{\"status\":\"error\",\"message\":\"invalid_args\"}";
             } else if ("update_config".equals(action)) {
                 String[] configParts = request.split(":", 4);
                 if (configParts.length >= 3) {

@@ -32,7 +32,8 @@ public class ConfigSerializer {
                 JsonArray settings = new JsonArray();
                 
                 for (Field field : categoryObj.getClass().getDeclaredFields()) {
-                    if (Modifier.isTransient(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) continue;
+                    if (Modifier.isStatic(field.getModifiers())) continue;
+                    if (Modifier.isTransient(field.getModifiers()) && !field.isAnnotationPresent(ConfigEditorButton.class)) continue;
                     
                     ConfigOption opt = field.getAnnotation(ConfigOption.class);
                     if (opt == null) continue;
@@ -69,6 +70,11 @@ public class ConfigSerializer {
                     } else if (field.isAnnotationPresent(io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind.class)) {
                         settingJson.addProperty("type", "keybind");
                         settingJson.addProperty("value", field.getInt(categoryObj));
+                    } else if (field.isAnnotationPresent(ConfigEditorButton.class)) {
+                        ConfigEditorButton btn = field.getAnnotation(ConfigEditorButton.class);
+                        settingJson.addProperty("type", "button");
+                        settingJson.addProperty("buttonText", btn.buttonText());
+                        settingJson.addProperty("value", btn.buttonText());
                     } else {
                         continue;
                     }
@@ -82,6 +88,50 @@ public class ConfigSerializer {
             e.printStackTrace();
         }
         return root;
+    }
+
+    public static void executeButton(VertexConfig config, String categoryId, String fieldId) {
+        if (config == null || categoryId == null || fieldId == null) return;
+        try {
+            Field catField = null;
+            for (Field f : VertexConfig.class.getDeclaredFields()) {
+                if (f.getName().equalsIgnoreCase(categoryId)) {
+                    catField = f;
+                    break;
+                }
+            }
+            if (catField == null) return;
+            catField.setAccessible(true);
+            Object categoryObj = catField.get(config);
+            if (categoryObj == null) return;
+
+            Field field = null;
+            Class<?> clazz = categoryObj.getClass();
+            while (clazz != null && clazz != Object.class) {
+                for (Field f : clazz.getDeclaredFields()) {
+                    if (f.getName().equalsIgnoreCase(fieldId)) {
+                        field = f;
+                        break;
+                    }
+                }
+                if (field != null) break;
+                clazz = clazz.getSuperclass();
+            }
+            if (field == null) return;
+            field.setAccessible(true);
+            Object val = field.get(categoryObj);
+            if (val instanceof Runnable runnable) {
+                runnable.run();
+            } else if ("setMiningToolButton".equalsIgnoreCase(fieldId) || "miningTool".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setMiningTool();
+            } else if ("setAltMiningToolButton".equalsIgnoreCase(fieldId) || "altMiningTool".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setAltMiningTool();
+            } else if ("setSlayerWeaponButton".equalsIgnoreCase(fieldId) || "slayerWeapon".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setSlayerWeapon();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void updateField(VertexConfig config, String categoryId, String fieldId, String valueStr) {
