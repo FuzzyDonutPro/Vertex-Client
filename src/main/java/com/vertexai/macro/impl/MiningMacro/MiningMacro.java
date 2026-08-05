@@ -131,6 +131,7 @@ public class MiningMacro extends AbstractMacro {
             return;
         }
 
+        setBlocksToMineBasedOnOreType();
         if (!isMining) {
             miner.setWaitThreshold(
                     Vertex.config().general.oreRespawnWaitThreshold * 1000

@@ -135,10 +135,33 @@ public class PathfindingState implements ForagingMacroState {
             }
         }
 
+        List<BlockPos> visibleLogs = validBlocks.stream()
+                .filter(pos -> hasLineOfSight(eyePos, pos))
+                .toList();
+
+        if (!visibleLogs.isEmpty()) {
+            return visibleLogs.stream()
+                    .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
+                            .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+                    .orElse(null);
+        }
+
         return validBlocks.stream()
-                .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
-                        .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+                .min(Comparator.comparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
                 .orElse(null);
+    }
+
+    private boolean hasLineOfSight(Vec3 eyePos, BlockPos targetPos) {
+        if (mc.level == null || mc.player == null) return false;
+        Vec3 targetCenter = Vec3.atCenterOf(targetPos);
+        net.minecraft.world.phys.BlockHitResult result = mc.level.clip(new net.minecraft.world.level.ClipContext(
+                eyePos,
+                targetCenter,
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE,
+                mc.player
+        ));
+        return result.getType() == net.minecraft.world.phys.HitResult.Type.MISS || result.getBlockPos().equals(targetPos);
     }
 
     private boolean isTreeCluster(BlockPos startPos, String mode) {

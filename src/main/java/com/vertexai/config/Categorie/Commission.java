@@ -33,7 +33,7 @@ public class Commission {
                 desc = "Set the alt tool name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable setAltMiningToolButton = ConfigActions::setAltMiningTool;
+        public transient Runnable altMiningToolButton = ConfigActions::setAltMiningTool;
 
         @ConfigOption(
                 name = "Swap before claiming commission",
@@ -54,7 +54,7 @@ public class Commission {
                 desc = "Set the slayer weapon name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable setSlayerWeaponButton = ConfigActions::setSlayerWeapon;
+        public transient Runnable slayerWeaponButton = ConfigActions::setSlayerWeapon;
 
         @ConfigOption(
                 name = "Sprint During MobKiller",

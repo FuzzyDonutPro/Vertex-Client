@@ -180,23 +180,11 @@ public class Pathfinder extends AbstractFeature {
     }
 
     public void stopAndRequeue(BlockPos pos) {
-        if (!this.enabled) {
-            this.queue(pos);
-            return;
-        }
-
+        this.stop("Requeuing new target path");
         this.pathQueue.clear();
+        this.pathExecutor.stop("Requeuing new target path");
         this.pathExecutor.clearQueuedPaths();
-
-        if (this.finder != null) {
-            this.finder.requestStop();
-        }
-
-        if (this.pathExecutor.getCurrentPath() != null) {
-            this.queue(this.pathExecutor.getCurrentPath().getEnd(), pos);
-        } else {
-            this.queue(PlayerUtil.getBlockStandingOn(), pos);
-        }
+        this.queue(PlayerUtil.getBlockStandingOn(), pos);
     }
 
     public void queue(BlockPos end) {

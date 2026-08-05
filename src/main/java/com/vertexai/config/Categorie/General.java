@@ -74,7 +74,7 @@ public class General {
             desc = "Set the mining tool name from your currently held item"
     )
     @ConfigEditorButton(buttonText = "Set from hand")
-    public transient Runnable setMiningToolButton = ConfigActions::setMiningTool;
+    public transient Runnable miningToolButton = ConfigActions::setMiningTool;
 
     @ConfigOption(
             name = "Slayer Weapon",
@@ -88,7 +88,7 @@ public class General {
             desc = "Set the slayer weapon name from your currently held item"
     )
     @ConfigEditorButton(buttonText = "Set from hand")
-    public transient Runnable setSlayerWeaponButton = ConfigActions::setGeneralSlayerWeapon;
+    public transient Runnable slayerWeaponButton = ConfigActions::setGeneralSlayerWeapon;
 
     @ConfigOption(name = "Sneak While Mining", desc = "")
     @ConfigEditorBoolean

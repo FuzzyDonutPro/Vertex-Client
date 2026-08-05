@@ -56,7 +56,10 @@ public class BlockMiner extends AbstractFeature {
     private PickaxeAbilityState pickaxeAbilityState = PickaxeAbilityState.AVAILABLE;
     private long pickaxeAbilityCooldownEndMs;
     private boolean blockChanged;
+    private BlockPos startPos;
 
+    public BlockPos getStartPos() { return startPos; }
+    public void setStartPos(BlockPos startPos) { this.startPos = startPos; }
     public Map<Block, Integer> getBlockPriority() { return blockPriority; }
     public long getLastAbilityUse() { return lastAbilityUse; }
     public void setLastAbilityUse(long lastAbilityUse) { this.lastAbilityUse = lastAbilityUse; }
@@ -150,6 +153,7 @@ public class BlockMiner extends AbstractFeature {
         }
 
         // Initialize parameters
+        this.startPos = com.vertexai.util.PlayerUtil.getBlockStandingOn();
         this.miningSpeed = miningSpeed - 200;  // Base adjustment to mining speed
         this.pickaxeAbility = pickaxeAbility;
         this.enabled = true;

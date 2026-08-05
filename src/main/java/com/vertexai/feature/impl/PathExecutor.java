@@ -118,10 +118,9 @@ public class PathExecutor {
         Path lastPath = (this.curr != null) ? this.curr : this.pathQueue.peekLast();
 
         if (lastPath != null && !lastPath.getGoal().isAtGoal(start.getX(), start.getY(), start.getZ())) {
-            this.stopReason = "Rejected disjoint path segment";
-            error("This path segment does not start at last path's goal. LastpathGoal: " + lastPath.getGoal() + ", ThisPathStart: " + start);
-            failed = true;
-            return;
+            log("Disjoint path segment detected (last goal " + lastPath.getGoal() + " vs new start " + start + "). Resetting queue to new segment.");
+            this.pathQueue.clear();
+            this.curr = null;
         }
 
         this.pathQueue.offer(path);
@@ -412,14 +411,9 @@ public class PathExecutor {
 
             float time = Vertex.config().debug.useFixedRotation ? Vertex.config().debug.fixedRotationTime : Math.max(220, (long) (360 - horizontalDistToTarget * Vertex.config().debug.rotationMultiplier));
 
-            if (!dynamicPitch.isScheduled() || dynamicPitch.passed()) {
-                lastPitch = 10 + (15 - 10) * random.nextDouble();
-                dynamicPitch.schedule(1000);
-            }
-
             RotationHandler.getInstance().easeTo(
                     new RotationConfiguration(
-                            new Angle(rotYaw, (float) lastPitch),
+                            new Angle(rotYaw, 0.0f),
                             (long) time, null
                     )
             );

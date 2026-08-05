@@ -136,10 +136,10 @@ public class BlockUtil {
     public static MinHeap<BlockPos> findMineableBlocksAroundPoint(Vec3 point, Map<Block, Integer> blockPriorities, Set<Long> blocksToIgnore, int miningSpeed, MiningDebugContext debugContext) {
         final MinHeap<BlockPos> blocks = new MinHeap<>(500);
 
-        final int HORIZONTAL_RADIUS = 5;
-        final int VERTICAL_LOWER = -3;
-        final int VERTICAL_UPPER = 4;
-        final double MAX_DISTANCE = 4;
+        final int HORIZONTAL_RADIUS = 12;
+        final int VERTICAL_LOWER = -4;
+        final int VERTICAL_UPPER = 6;
+        final double MAX_DISTANCE = 12;
 
         // Calculate bounds for the block
         final double baseX = point.x;
@@ -181,7 +181,7 @@ public class BlockUtil {
                     if (mc.level == null) continue;
                     final BlockState state = mc.level.getBlockState(pos);
                     final Block block = state.getBlock();
-                    if (!blockPriorities.containsKey(block))
+                    if (block == Blocks.BEDROCK || block == Blocks.AIR || !blockPriorities.containsKey(block))
                         continue;
 
                     final int blockPriority = blockPriorities.get(block);
@@ -200,10 +200,27 @@ public class BlockUtil {
                     final double hardness = getBlockStrength(state);
                     final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(pos)).lengthSqrt();
 
+                    // High pathfinder starting cost penalty for out-of-reach blocks (> 3.5 blocks reach)
+                    double pathfinderStartPenalty = 0.0;
+                    if (distSq > 12.25) { // > 3.5 blocks reach requiring pathfinder navigation
+                        if (!com.vertexai.Vertex.config().miningMacro.allowPathfinder) {
+                            continue; // Ignore out-of-reach blocks if pathfinder walking is disabled
+                        }
+                        // Minimal mode: check 5-block maximum distance limit from starting position
+                        if (com.vertexai.Vertex.config().miningMacro.pathfinderMode == 0) { // Minimal
+                            BlockPos minerStart = com.vertexai.feature.impl.BlockMiner.BlockMiner.getInstance().getStartPos();
+                            if (minerStart != null && pos.distSqr(minerStart) > 25.0) { // > 5 blocks from start position
+                                continue;
+                            }
+                        }
+                        pathfinderStartPenalty = 500.0 + (distSq * 10.0);
+                    }
+
                     // Calculate final cost and add to heap
                     double miningCost = hardness / (miningSpeed * 1.0d) * Vertex.config().debug.miningCoefficient
                             + angleChange * Vertex.config().debug.angleCoefficient
-                            + distSq * Vertex.config().debug.distanceCoefficient;
+                            + distSq * Vertex.config().debug.distanceCoefficient
+                            + pathfinderStartPenalty;
                     miningCost /= (blockPriority * 1.0d);
 
                     if (debugContext != null) debugContext.onBlockCandidate(pos, miningCost);

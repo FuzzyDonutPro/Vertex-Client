@@ -111,11 +111,24 @@ public class BreakingState implements BlockMinerState {
     @Override
     public BlockMinerState onTick(BlockMiner miner) {
         // Handle key presses for mining
-        handleKeybinds();
+        handleKeybinds(miner);
 
-        // Handle walking toward block if needed
-        if (isWalking) {
-            handleWalking();
+        // Handle Pathfinder navigation if target block is out of mining reach (> 3 blocks) and pathfinder is allowed
+        double miningDistance = this.targetPoint != null ? PlayerUtil.getPlayerEyePos().distanceTo(this.targetPoint) : 999;
+        if (miningDistance > MAX_MINE_DISTANCE && com.vertexai.Vertex.config().miningMacro.allowPathfinder) {
+            if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+                BlockPos targetPos = miner.getTargetBlockPos();
+                BlockPos walkableGoal = BlockUtil.getWalkableBlocksAround(targetPos, 2)
+                        .stream()
+                        .min(Comparator.comparingDouble(b -> b.distSqr(PlayerUtil.getBlockStandingOn())))
+                        .orElse(targetPos);
+                com.vertexai.feature.impl.Pathfinder.getInstance().stopAndRequeue(walkableGoal);
+                com.vertexai.feature.impl.Pathfinder.getInstance().start();
+            }
+        } else {
+            if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+                com.vertexai.feature.impl.Pathfinder.getInstance().stop("Reached mining distance or pathfinder disabled");
+            }
         }
 
         // Handle precision mining
@@ -127,6 +140,9 @@ public class BreakingState implements BlockMinerState {
         // Safety mechanism: if we've been trying to break for too long, reset
         if (++this.breakAttemptTime > this.miningTime + FAILSAFE_TICKS) {
             logError("Stuck while mining, return to starting state");
+            if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+                com.vertexai.feature.impl.Pathfinder.getInstance().stop("Stuck while mining");
+            }
             return new StartingState();
         }
 
@@ -139,15 +155,24 @@ public class BreakingState implements BlockMinerState {
                 wasLookingAway = true;
             } else if (lookAwayTimer.passed()) {
                 log("Player looked away from target block for too long, choosing new block");
+                if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+                    com.vertexai.feature.impl.Pathfinder.getInstance().stop("Looked away from target");
+                }
                 return new StartingState();
             }
         } else {
             wasLookingAway = false;
         }
 
-        // After breaking a block, restart the whole cycle again
+        // After breaking a block or if target block turns to Bedrock/Air, halt attack and pick new block
         Block detectedBlockType = mc.level.getBlockState(miner.getTargetBlockPos()).getBlock();
-        if (!detectedBlockType.equals(miner.getTargetBlockType())) {
+        if (detectedBlockType == net.minecraft.world.level.block.Blocks.BEDROCK ||
+            detectedBlockType == net.minecraft.world.level.block.Blocks.AIR ||
+            !detectedBlockType.equals(miner.getTargetBlockType())) {
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+                com.vertexai.feature.impl.Pathfinder.getInstance().stop("Target block broken or converted to bedrock");
+            }
             return new StartingState();
         }
 
@@ -157,43 +182,31 @@ public class BreakingState implements BlockMinerState {
     @Override
     public void onEnd(BlockMiner miner) {
         RotationHandler.getInstance().stop();
+        if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+            com.vertexai.feature.impl.Pathfinder.getInstance().stop("Exiting Breaking State");
+        }
         log("Exiting Breaking State");
     }
 
     /**
      * Handles key bindings for mining.
-     * Sets attack key to continuously mine and manages sneak state.
+     * Sets attack key to continuously mine ONLY when crosshair is locked onto target block.
      */
-    private void handleKeybinds() {
-        // Hold left-click to break blocks
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+    private void handleKeybinds(BlockMiner miner) {
+        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
+        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
 
-        if (!isWalking) {
-            KeyBindUtil.setKeyBindState(mc.options.keyShift, Vertex.config().general.sneakWhileMining);
+        // Only hold left-click attack key when crosshair is physically locked onto target block!
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, isLookingAtTarget);
+
+        if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
+            boolean shouldSneak = Vertex.config().general.sneakWhileMining;
+            // Minimal mode: force sneak for sub-block precision while standing at edges
+            if (Vertex.config().miningMacro.allowPathfinder && Vertex.config().miningMacro.pathfinderMode == 0) {
+                shouldSneak = true;
+            }
+            KeyBindUtil.setKeyBindState(mc.options.keyShift, shouldSneak);
             KeyBindUtil.setKeyBindState(mc.options.keyUp, false);
-        }
-    }
-
-    /**
-     * Handles walking mechanics when the player needs to move toward target block.
-     * Uses strafing utility to navigate toward the block.
-     */
-    private void handleWalking() {
-        // Calculate distance to walking destination and mining point
-        double walkingDistance = 999;
-        if (walkingDestinationBlock != null)
-            walkingDistance = Math.hypot(this.walkingDestinationBlock.x - mc.player.getX(),
-                    this.walkingDestinationBlock.z - mc.player.getZ());
-
-        double miningDistance = PlayerUtil.getPlayerEyePos().distanceTo(this.targetPoint);
-
-        // Move toward target if too far away
-        if (walkingDistance > MIN_WALK_DISTANCE && miningDistance > MAX_MINE_DISTANCE) {
-            KeyBindUtil.holdThese(mc.options.keyUp, mc.options.keyShift);
-        } else {
-            // Close enough, stop walking
-            isWalking = false;
-            this.walkingDestinationBlock = null;
         }
     }
 

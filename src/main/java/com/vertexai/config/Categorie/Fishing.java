@@ -32,7 +32,7 @@ public class Fishing {
                 desc = "Set the fishing rod name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable setFishingRodButton = ConfigActions::setFishingRod;
+        public transient Runnable fishingRodButton = ConfigActions::setFishingRod;
 
         @ConfigOption(
                 name = "Cast Delay (ms)",
@@ -77,7 +77,7 @@ public class Fishing {
                 desc = "Set the Galatea axe from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable setGalateaAxeButton = ConfigActions::setGalateaAxe;
+        public transient Runnable galateaAxeButton = ConfigActions::setGalateaAxe;
 
         @ConfigOption(
                 name = "Fishing Weapon",
@@ -91,7 +91,7 @@ public class Fishing {
                 desc = "Set the optional secondary weapon from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable setGalateaFishingWeaponButton = ConfigActions::setGalateaFishingWeapon;
+        public transient Runnable galateaFishingWeaponButton = ConfigActions::setGalateaFishingWeapon;
 
         @ConfigOption(
                 name = "Kill Mode",

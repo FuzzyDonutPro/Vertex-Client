@@ -146,9 +146,54 @@ public class ConfigSerializer {
         return null;
     }
 
-    public static void executeButton(VertexConfig config, String categoryId, String fieldId) {
-        if (config == null || categoryId == null || fieldId == null) return;
+    public static JsonObject executeButton(VertexConfig config, String categoryId, String fieldId) {
+        if (config == null || fieldId == null) return serialize(config);
+        if (categoryId == null || "undefined".equalsIgnoreCase(categoryId) || categoryId.isEmpty()) {
+            categoryId = "general";
+        }
+        
         try {
+            String cleanId = fieldId.toLowerCase();
+            
+            // 1. Direct Item Hand Set Handlers (independent of category & pair lookup)
+            Runnable handSetAction = null;
+            if (cleanId.equals("fishingrod") || cleanId.equals("fishingrodbutton")) {
+                handSetAction = ConfigActions::setFishingRod;
+            } else if (cleanId.equals("galateafishingweapon") || cleanId.equals("galateafishingweaponbutton")) {
+                handSetAction = ConfigActions::setGalateaFishingWeapon;
+            } else if (cleanId.equals("miningtool") || cleanId.equals("miningtoolbutton")) {
+                handSetAction = ConfigActions::setMiningTool;
+            } else if (cleanId.equals("altminingtool") || cleanId.equals("altminingtoolbutton")) {
+                handSetAction = ConfigActions::setAltMiningTool;
+            } else if (cleanId.equals("slayerweapon") || cleanId.equals("slayerweaponbutton")) {
+                handSetAction = ConfigActions::setGeneralSlayerWeapon;
+            } else if (cleanId.equals("galateaaxe") || cleanId.equals("galateaaxebutton")) {
+                handSetAction = ConfigActions::setGalateaAxe;
+            }
+
+            if (handSetAction != null) {
+                Runnable finalAction = handSetAction;
+                java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
+                Runnable task = () -> {
+                    try {
+                        finalAction.run();
+                        VertexClient.configManager.saveConfig();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        future.complete(null);
+                    }
+                };
+                if (net.minecraft.client.Minecraft.getInstance().isSameThread()) {
+                    task.run();
+                } else {
+                    net.minecraft.client.Minecraft.getInstance().execute(task);
+                    future.join();
+                }
+                return serialize(config);
+            }
+
+            // 2. Reflective Runnable field execution
             Field catField = null;
             for (Field f : VertexConfig.class.getDeclaredFields()) {
                 if (f.getName().equalsIgnoreCase(categoryId)) {
@@ -156,27 +201,38 @@ public class ConfigSerializer {
                     break;
                 }
             }
-            if (catField == null) return;
+            if (catField == null) return serialize(config);
             catField.setAccessible(true);
             Object categoryObj = catField.get(config);
-            if (categoryObj == null) return;
+            if (categoryObj == null) return serialize(config);
 
             FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
-            if (pair == null) return;
-
-            Object val = pair.field.get(pair.owner);
-            if (val instanceof Runnable runnable) {
-                runnable.run();
-            } else if ("setMiningToolButton".equalsIgnoreCase(fieldId) || "miningTool".equalsIgnoreCase(fieldId)) {
-                ConfigActions.setMiningTool();
-            } else if ("setAltMiningToolButton".equalsIgnoreCase(fieldId) || "altMiningTool".equalsIgnoreCase(fieldId)) {
-                ConfigActions.setAltMiningTool();
-            } else if ("setSlayerWeaponButton".equalsIgnoreCase(fieldId) || "slayerWeapon".equalsIgnoreCase(fieldId)) {
-                ConfigActions.setSlayerWeapon();
+            if (pair != null) {
+                Object val = pair.field.get(pair.owner);
+                if (val instanceof Runnable runnable) {
+                    java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
+                    Runnable task = () -> {
+                        try {
+                            runnable.run();
+                            VertexClient.configManager.saveConfig();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            future.complete(null);
+                        }
+                    };
+                    if (net.minecraft.client.Minecraft.getInstance().isSameThread()) {
+                        task.run();
+                    } else {
+                        net.minecraft.client.Minecraft.getInstance().execute(task);
+                        future.join();
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return serialize(config);
     }
 
     public static void updateField(VertexConfig config, String categoryId, String fieldId, String valueStr) {

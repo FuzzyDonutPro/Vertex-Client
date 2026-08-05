@@ -36,19 +36,18 @@ public class ChoosingBlockState implements BlockMinerState {
         // Handle case where no blocks are found
         if (blocks.isEmpty()) {
             if (!timer.isScheduled()) {
-                log("No blocks found, waiting " + blockMiner.getWaitThreshold() + "ms for respawn (ignorePrevPos=" + blockMiner.getTargetBlockPos() + ")");
-                timer.schedule(blockMiner.getWaitThreshold());
+                log("No blocks found, fast re-scanning every 100ms...");
+                timer.schedule(3000L); // 3 second total search window before declaring area empty
             }
 
-            // If the timer has ended and still no blocks, stop mining
+            // Retry scan every tick, if timer passed stop mining
             if (timer.isScheduled() && timer.passed()) {
-                logError("Still no blocks after " + blockMiner.getWaitThreshold() + "ms, stopping miner");
+                logError("No blocks found after 3000ms scan window, stopping miner");
                 blockMiner.stop();
                 blockMiner.setError(BlockMiner.BlockMinerError.NOT_ENOUGH_BLOCKS);
                 return null;
             }
 
-            // Wait for the timer to expire
             return this;
         }
 

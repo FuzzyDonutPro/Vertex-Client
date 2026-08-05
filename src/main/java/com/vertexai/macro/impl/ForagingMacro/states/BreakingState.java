@@ -17,14 +17,18 @@ public class BreakingState implements ForagingMacroState {
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock breakDelay = new Clock();
     private final Clock postBreakTimer = new Clock();
+    private final Clock preMiningTimer = new Clock();
     private boolean logBroken = false;
+    private boolean preMiningScheduled = false;
 
     @Override
     public void onStart(ForagingMacro macro) {
         log("Aiming and breaking target tree...");
         breakDelay.reset();
         postBreakTimer.reset();
+        preMiningTimer.reset();
         logBroken = false;
+        preMiningScheduled = false;
     }
 
     @Override
@@ -79,6 +83,21 @@ public class BreakingState implements ForagingMacroState {
         if (axeSlot == -1) axeSlot = InventoryUtil.getHotbarSlotOfItem("Axe");
         if (axeSlot != -1 && mc.player.getInventory().getSelectedSlot() != axeSlot) {
             mc.player.getInventory().setSelectedSlot(axeSlot);
+        }
+
+        // Enforce user-configured Pre-Mining Delay before attacking (convert seconds to ms)
+        float preMiningDelaySec = com.vertexai.Vertex.config().foraging.logBreakDelay;
+        long preMiningDelayMs = (long) (preMiningDelaySec * 1000L);
+        if (preMiningDelayMs > 0) {
+            if (!preMiningScheduled) {
+                preMiningTimer.schedule(preMiningDelayMs);
+                preMiningScheduled = true;
+            }
+            if (!preMiningTimer.passed()) {
+                // Wait during configured pre-mining delay
+                KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+                return this;
+            }
         }
 
         // Regular Mining / Breaking logic (Hold left click)

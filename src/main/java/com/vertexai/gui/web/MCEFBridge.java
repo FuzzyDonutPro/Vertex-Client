@@ -193,10 +193,7 @@ public class MCEFBridge {
                     String catId = btnParts[1];
                     String fieldId = btnParts[2];
                     Logger.sendLog("[IPC] click_button received: category=" + catId + " field=" + fieldId);
-                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
-                        ConfigSerializer.executeButton(VertexClient.config, catId, fieldId);
-                    });
-                    return "{\"status\":\"ok\"}";
+                    return ConfigSerializer.executeButton(VertexClient.config, catId, fieldId).toString();
                 }
                 return "{\"status\":\"error\",\"message\":\"invalid_args\"}";
             } else if ("update_config".equals(action)) {

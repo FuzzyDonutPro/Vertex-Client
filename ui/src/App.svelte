@@ -185,9 +185,9 @@
         'visitor': { catIds: ['farming'], allowedFieldIds: ['autoAcceptTrades', 'refuseUnprofitable'] },
         'pest_hunter': { catIds: ['farming'], allowedFieldIds: ['pestVacuum', 'pestBrokerTrade'] },
 
-        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'altMiningTool', 'setAltMiningToolButton', 'slayerWeapon', 'setSlayerWeaponButton', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
+        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'miningToolButton', 'altMiningTool', 'altMiningToolButton', 'slayerWeapon', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
+        'mining_general': { catIds: ['miningMacro', 'general', 'commission'], allowedFieldIds: ['miningTool', 'altMiningTool', 'miningToolButton', 'altMiningToolButton', 'oreType', 'allowPathfinder', 'pathfinderMode', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
@@ -198,10 +198,10 @@
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
         'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
 
-        'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
+        'fishing': { catIds: ['fishing'], allowedFieldIds: ['fishingRod', 'fishingRodButton', 'galateaFishingWeapon', 'galateaFishingWeaponButton', 'rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
 
-        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'foragingPark', 'foragingHub', 'foragingFig'] },
+        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'logBreakDelay', 'foragingPark', 'foragingHub', 'foragingFig'] },
         'alchemy': { catIds: ['misc'], allowedFieldIds: ['potionRecipe', 'batchSize'] },
         'flip': { catIds: ['bazaarFlipper'], allowedFieldIds: ['bazaarMargin', 'orderAutoUpdate'] },
         'diana': { catIds: ['combat'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
@@ -239,15 +239,64 @@
         return result;
     }
 
-    function executeButtonAction(catId, fieldId) {
+    function fetchConfigSchema() {
         if (window.cefQuery) {
             window.cefQuery({
-                request: `click_button:${catId}:${fieldId}`,
-                onSuccess: function() {
-                    setTimeout(fetchConfigSchema, 250);
+                request: 'get_config_schema',
+                onSuccess: function(response) {
+                    try {
+                        let data = JSON.parse(response);
+                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+                            dynamicConfigSchema = dynamicConfigSchema;
+                        }
+                    } catch (e) {}
                 }
             });
         }
+        fetch('/api/config/schema')
+            .then(res => res.json())
+            .then(data => {
+                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                    dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+                    dynamicConfigSchema = dynamicConfigSchema;
+                }
+            })
+            .catch(() => {});
+    }
+
+    function executeButtonAction(catId, fieldId) {
+        playUiSound();
+        let targetCat = catId && catId !== 'undefined' ? catId : 'general';
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: `click_button:${targetCat}:${fieldId}`,
+                onSuccess: function(response) {
+                    try {
+                        let data = JSON.parse(response);
+                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+                            dynamicConfigSchema = dynamicConfigSchema;
+                        } else {
+                            fetchConfigSchema();
+                        }
+                    } catch (e) {
+                        fetchConfigSchema();
+                    }
+                }
+            });
+        }
+        fetch(`/api/config/button?catId=${encodeURIComponent(targetCat)}&fieldId=${encodeURIComponent(fieldId)}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                    dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+                    dynamicConfigSchema = dynamicConfigSchema;
+                } else {
+                    fetchConfigSchema();
+                }
+            })
+            .catch(() => fetchConfigSchema());
     }
 
     let macros = [
@@ -757,7 +806,12 @@
                                                     <span class="text-[9px] text-sky-400 font-mono w-7 text-right">{setting.value}</span>
                                                 </div>
                                             {:else if setting.type === 'text'}
-                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
+                                                <div class="flex items-center gap-1 w-full">
+                                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none flex-1 min-w-0" />
+                                                    <button title="Set from currently held item in hand" class="px-1.5 py-1 rounded text-[8px] font-bold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id + 'Button')}>
+                                                        Hand
+                                                    </button>
+                                                </div>
                                             {:else if setting.type === 'dropdown'}
                                                 <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
                                                     {#each setting.options as opt, i}
@@ -768,6 +822,10 @@
                                                 <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
                                                     <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Rebind'}</span>
                                                     <span class="text-sky-400 font-bold bg-sky-500/10 px-1 rounded">{getKeyName(setting.value)}</span>
+                                                </button>
+                                            {:else if setting.type === 'button'}
+                                                <button class="px-2 py-1 rounded text-[9px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer w-full text-center active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id)}>
+                                                    <span>{setting.buttonText || setting.name || 'Set from hand'}</span>
                                                 </button>
                                             {/if}
                                         </div>
@@ -848,19 +906,29 @@
                                                 <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                             </div>
                                         {:else if setting.type === 'text'}
-                                            <input type="text" bind:value={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
+                                            <div class="flex items-center gap-2 w-full">
+                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none flex-1 focus:border-sky-500/50 transition-colors" />
+                                                <button title="Set from currently held item in hand" class="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1" on:click={() => executeButtonAction(catId, setting.id + 'Button')}>
+                                                    <span>Set from hand</span>
+                                                </button>
+                                            </div>
                                         {:else if setting.type === 'dropdown'}
-                                            <select bind:value={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                            <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, e.target.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
                                                 {#each setting.options as opt, i}
                                                     <option value={i}>{opt}</option>
                                                 {/each}
                                             </select>
                                         {:else if setting.type === 'keybind'}
-                                            <button class="bg-slate-900 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-[10px] w-full hover:text-white hover:border-sky-500/50 transition-colors shadow-sm font-mono flex items-center justify-between" on:click={openConfigGui}>
-                                                <span>Change Keybind</span>
+                                            <button class="bg-slate-900 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-[10px] w-full hover:text-white hover:border-sky-500/50 transition-colors shadow-sm font-mono flex items-center justify-between" on:click={(e) => { e.stopPropagation(); startKeybindListen(catId, setting); }}>
+                                                <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Change Keybind'}</span>
                                                 <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-2 py-0.5 rounded">
                                                     {getKeyName(setting.value)}
                                                 </span>
+                                            </button>
+                                        {:else if setting.type === 'button'}
+                                            <button class="px-4 py-2 rounded-lg text-[11px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer w-full text-center active:scale-95 flex items-center justify-center gap-2" on:click={() => executeButtonAction(catId, setting.id)}>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                <span>{setting.buttonText || setting.name || 'Set from hand'}</span>
                                             </button>
                                         {/if}
                                     </div>
@@ -1095,7 +1163,12 @@
                                     <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-[100px] accent-sky-400 cursor-pointer" />
                                 </div>
                             {:else if setting.type === 'text'}
-                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
+                                <div class="flex items-center gap-1.5">
+                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
+                                    <button title="Set from currently held item in hand" class="px-2 py-1 rounded-lg text-[9px] font-semibold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1" on:click={() => executeButtonAction(setting.catId, setting.id + 'Button')}>
+                                        <span>Hand</span>
+                                    </button>
+                                </div>
                             {:else if setting.type === 'dropdown'}
                                 <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]">
                                     {#each setting.options as opt, i}

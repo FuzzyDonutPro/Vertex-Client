@@ -54,6 +54,19 @@ public class MiningMacro {
     @ConfigEditorSlider(minValue = 0, maxValue = 30, minStep = 1)
     public int mithrilPriorityBlueDefault = 6;
 
+    @ConfigOption(name = "Allow Pathfinder Walking", desc = "Use A* pathfinder to walk toward blocks that are out of immediate mining reach (> 3.5 blocks distance)")
+    @ConfigEditorBoolean
+    public boolean allowPathfinder = true;
+
+    @ConfigOption(name = "Pathfinder Mode", desc = "Minimal: Max 5-block distance limit from starting position + sub-block sneak precision. Normal: Standard pathfinder.")
+    @ConfigEditorDropdown(
+            values = {
+                    "Minimal",
+                    "Normal"
+            }
+    )
+    public int pathfinderMode = 0; // 0 = Minimal, 1 = Normal
+
     @ConfigOption(name = "Default Priority - Titanium", desc = "")
     @ConfigEditorSlider(minValue = 0, maxValue = 30, minStep = 1)
     public int mithrilPriorityTitaniumDefault = 10;

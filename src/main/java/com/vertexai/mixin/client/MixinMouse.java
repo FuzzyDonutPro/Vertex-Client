@@ -10,6 +10,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MouseHandler.class)
 public class MixinMouse {
 
+    @Inject(method = "grabMouse", at = @At("HEAD"), cancellable = true)
+    private void onGrabMouse(CallbackInfo ci) {
+        if (com.vertexai.macro.MacroManager.getInstance().isRunning() || com.vertexai.feature.impl.MouseUngrab.getInstance().isEnabled()) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void onScroll(long window, double xoffset, double yoffset, CallbackInfo ci) {
         PerspectiveMod mod = PerspectiveMod.getInstance();

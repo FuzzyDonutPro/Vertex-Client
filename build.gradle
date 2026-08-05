@@ -131,8 +131,12 @@ tasks.named("sourcesJar") {
 task copyToModrinth(type: Copy) {
     dependsOn remapJar
     doFirst {
-        delete fileTree("${System.getProperty('user.home')}/AppData/Roaming/ModrinthApp/profiles/vertex/mods") {
-            include "Vertex*1.0*.jar"
+        try {
+            delete fileTree("${System.getProperty('user.home')}/AppData/Roaming/ModrinthApp/profiles/vertex/mods") {
+                include "Vertex*1.0*.jar"
+            }
+        } catch (Throwable t) {
+            println "Notice: Modrinth profile jar is locked (Minecraft running). Will attempt copy directly."
         }
     }
     from remapJar.archiveFile
