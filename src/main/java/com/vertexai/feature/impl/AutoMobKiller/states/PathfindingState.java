@@ -21,7 +21,6 @@ public class PathfindingState implements AutoMobKillerState {
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock timeout = new Clock();
     private final Clock repathDelay = new Clock();
-    private final Clock rogueTimer = new Clock();
     private int pathAttempts = 0;
     private BlockPos lastQueuedTarget = null;
 
@@ -32,7 +31,6 @@ public class PathfindingState implements AutoMobKillerState {
         timeout.reset();
         timeout.schedule(PATHING_TIMEOUT_MS);
         repathDelay.reset();
-        rogueTimer.reset();
         lastQueuedTarget = null;
 
         Pathfinder.getInstance().setSprintState(Vertex.config().commission.dwarvenCommission.mobKillerSprint);
@@ -56,13 +54,13 @@ public class PathfindingState implements AutoMobKillerState {
 
         // Auto Rogue Sword Speed Boost
         if (com.vertexai.Vertex.config().combat.autoRogueSword) {
-            if (!rogueTimer.isScheduled() || rogueTimer.passed()) {
+            if (!mobKiller.getRogueTimer().isScheduled() || mobKiller.getRogueTimer().passed()) {
                 int rogueSlot = com.vertexai.util.InventoryUtil.getHotbarSlotOfItem("Rogue");
                 if (rogueSlot != -1) {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
                         if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 150)) {
-                            rogueTimer.schedule(3000L);
+                            mobKiller.getRogueTimer().schedule(35000L);
                             log("Auto Rogue Sword speed boost! Mana: " + mana);
                         }
                     }

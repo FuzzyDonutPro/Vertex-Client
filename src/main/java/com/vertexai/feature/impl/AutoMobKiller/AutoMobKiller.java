@@ -44,6 +44,8 @@ public class AutoMobKiller extends AbstractFeature {
     
     private int pathAttempts = 0;
     private Set<LivingEntity> blacklistedMobs = new HashSet<>();
+    @Getter
+    private final com.vertexai.util.helper.Clock rogueTimer = new com.vertexai.util.helper.Clock();
 
     public Set<String> getMobsToKill() { return mobsToKill; }
     public MKError getError() { return error; }
@@ -123,6 +125,7 @@ public class AutoMobKiller extends AbstractFeature {
         resetApproachBlockCache();
 
         this.currentState = new StartingState();
+        this.rogueTimer.reset();
         super.start();
         log("MobKiller started");
     }
@@ -130,6 +133,7 @@ public class AutoMobKiller extends AbstractFeature {
     @Override
     public void stop() {
         super.stop();
+        this.rogueTimer.reset();
 
         this.mobsToKill.clear();
         this.blacklistedMobs.clear();

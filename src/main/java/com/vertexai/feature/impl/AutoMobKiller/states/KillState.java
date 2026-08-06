@@ -32,7 +32,6 @@ public class KillState implements AutoMobKillerState {
     private final Clock reaimTimer = new Clock();
     private final Clock chaseRepathTimer = new Clock();
     private final Clock strafeTimer = new Clock();
-    private final Clock rogueTimer = new Clock();
     private final Clock rogueActiveTimer = new Clock();
     private boolean strafeDirectionLeft = true;
     private final Clock wTapTimer = new Clock();
@@ -48,7 +47,6 @@ public class KillState implements AutoMobKillerState {
         closeRangeStuckTimer.reset();
         reaimTimer.reset();
         chaseRepathTimer.reset();
-        rogueTimer.reset();
         rogueActiveTimer.reset();
         lastChaseTarget = null;
     }
@@ -89,13 +87,13 @@ public class KillState implements AutoMobKillerState {
 
         // Auto Rogue Sword Speed Boost
         if (com.vertexai.Vertex.config().combat.autoRogueSword) {
-            if (!rogueTimer.isScheduled() || rogueTimer.passed()) {
+            if (!mobKiller.getRogueTimer().isScheduled() || mobKiller.getRogueTimer().passed()) {
                 int rogueSlot = InventoryUtil.getHotbarSlotOfItem("Rogue");
                 if (rogueSlot != -1) {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
                         if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 150)) {
-                            rogueTimer.schedule(3000L);
+                            mobKiller.getRogueTimer().schedule(35000L);
                             rogueActiveTimer.schedule(200L);
                             log("Auto Rogue Sword speed boost! Mana: " + mana);
                         }
