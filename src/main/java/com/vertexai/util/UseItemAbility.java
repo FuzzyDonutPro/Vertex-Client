@@ -43,6 +43,9 @@ public class UseItemAbility {
 
         int previousSlot = mc.player.getInventory().getSelectedSlot();
         mc.player.getInventory().setSelectedSlot(hotbarSlot);
+        if (mc.gameMode != null) {
+            mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
+        }
         KeyBindUtil.resetRightClickDelayTimer();
         KeyBindUtil.rightClick();
 

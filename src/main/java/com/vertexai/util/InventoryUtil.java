@@ -146,7 +146,8 @@ public class InventoryUtil {
                 continue;
             }
 
-            if (slot.getHoverName().getString().contains(items)) {
+            String name = ChatFormatting.stripFormatting(slot.getHoverName().getString());
+            if (name != null && name.toLowerCase().contains(items.toLowerCase())) {
                 return i;
             }
         }
