@@ -33,6 +33,7 @@ public class KillState implements AutoMobKillerState {
     private final Clock chaseRepathTimer = new Clock();
     private final Clock strafeTimer = new Clock();
     private final Clock rogueTimer = new Clock();
+    private final Clock rogueActiveTimer = new Clock();
     private boolean strafeDirectionLeft = true;
     private final Clock wTapTimer = new Clock();
     private boolean wTapping = false;
@@ -47,6 +48,8 @@ public class KillState implements AutoMobKillerState {
         closeRangeStuckTimer.reset();
         reaimTimer.reset();
         chaseRepathTimer.reset();
+        rogueTimer.reset();
+        rogueActiveTimer.reset();
         lastChaseTarget = null;
     }
 
@@ -91,13 +94,18 @@ public class KillState implements AutoMobKillerState {
                 if (rogueSlot != -1) {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
-                        InventoryUtil.holdItem("Rogue");
-                        KeyBindUtil.rightClick();
-                        rogueTimer.schedule(3000L);
-                        log("Auto Rogue Sword speed boost! Mana: " + mana);
+                        if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 150)) {
+                            rogueTimer.schedule(3000L);
+                            rogueActiveTimer.schedule(200L);
+                            log("Auto Rogue Sword speed boost! Mana: " + mana);
+                        }
                     }
                 }
             }
+        }
+
+        if (rogueActiveTimer.isScheduled() && !rogueActiveTimer.passed()) {
+            return this;
         }
 
         // Dynamic Weapon Swapping

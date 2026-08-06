@@ -129,6 +129,8 @@ public class PathExecutor {
     public void start() {
         this.state = State.STARTING_PATH;
         this.enabled = true;
+        this.succeeded = false;
+        this.failed = false;
         this.stopReason = "Running";
     }
 
@@ -280,13 +282,23 @@ public class PathExecutor {
             this.pendingStuckRecoveryJump = false;
             this.stuckRecoveryWindow.reset();
             if (this.pathQueue.isEmpty()) {
-                return true;
+                if (this.state == State.STARTING_PATH || Pathfinder.getInstance().isPathfinding()) {
+                    return true;
+                }
+                log("Reached final destination");
+                this.succeeded = true;
+                this.failed = false;
+                this.stop("Reached destination");
+                return false;
             }
         }
 
         if (this.curr == null || this.target == this.blockPath.size()) {
             log("Path traversed");
             if (this.pathQueue.isEmpty()) {
+                if (this.state == State.STARTING_PATH || Pathfinder.getInstance().isPathfinding()) {
+                    return true;
+                }
                 log("Reached final destination");
                 this.succeeded = true;
                 this.failed = false;
@@ -511,7 +523,7 @@ public class PathExecutor {
     }
 
     public boolean ended() {
-        return !this.enabled && this.succeeded;
+        return !this.enabled || this.state == State.END;
     }
 
     private boolean shouldJumpOneBlock(BlockPos playerPos, BlockPos targetPos, double horizontalDistToTarget) {

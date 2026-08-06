@@ -14,8 +14,11 @@ import java.util.List;
  */
 public class KuudraMacro extends AbstractMacro {
 
-    @Getter
     private static final KuudraMacro instance = new KuudraMacro();
+
+    public static KuudraMacro getInstance() {
+        return instance;
+    }
 
     public final SupplyPhaseState supplyState = new SupplyPhaseState();
     public final BuildPhaseState buildState = new BuildPhaseState();

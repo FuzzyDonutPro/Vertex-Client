@@ -123,17 +123,13 @@ public class AutoMobKiller extends AbstractFeature {
         resetApproachBlockCache();
 
         this.currentState = new StartingState();
-        this.enabled = true;
+        super.start();
         log("MobKiller started");
     }
 
     @Override
     public void stop() {
-        if (!this.enabled) {
-            return;
-        }
-
-        this.enabled = false;
+        super.stop();
 
         this.mobsToKill.clear();
         this.blacklistedMobs.clear();

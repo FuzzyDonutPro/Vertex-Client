@@ -14,8 +14,11 @@ import java.util.List;
  */
 public class MobKillerMacro extends AbstractMacro {
 
-    @Getter
     private static final MobKillerMacro instance = new MobKillerMacro();
+
+    public static MobKillerMacro getInstance() {
+        return instance;
+    }
 
     @Override
     public String getName() {

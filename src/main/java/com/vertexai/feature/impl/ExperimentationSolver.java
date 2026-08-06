@@ -14,8 +14,11 @@ import java.util.List;
 
 public class ExperimentationSolver extends AbstractFeature {
 
-    @Getter
-    public static final ExperimentationSolver instance = new ExperimentationSolver();
+    private static final ExperimentationSolver instance = new ExperimentationSolver();
+
+    public static ExperimentationSolver getInstance() {
+        return instance;
+    }
 
     public enum GameType { NONE, CHRONOMATRON, ULTRASEQUENCE, SUPERPAIRS }
 

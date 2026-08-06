@@ -10,8 +10,11 @@ import com.vertexai.util.helper.DiscordWebhookUtil;
 
 public class SessionAnalytics extends AbstractFeature {
 
-    @Getter
-    public static final SessionAnalytics instance = new SessionAnalytics();
+    private static final SessionAnalytics instance = new SessionAnalytics();
+
+    public static SessionAnalytics getInstance() {
+        return instance;
+    }
 
     private long sessionStartTime = 0;
     private long totalItemsHarvested = 0;

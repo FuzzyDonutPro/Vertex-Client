@@ -93,7 +93,7 @@ public class Pathfinder extends AbstractFeature {
             return;
         }
 
-        this.enabled = true;
+        super.start();
         this.succeeded = false;
         this.failed = false;
         this.renderOnlyMode = false;
@@ -141,7 +141,7 @@ public class Pathfinder extends AbstractFeature {
             mc.execute(() -> this.stop(stopReason));
             return;
         }
-        this.enabled = false;
+        super.stop();
         this.pathfinding = false;
         this.skipTick = false;
         this.renderOnlyMode = false;
@@ -211,6 +211,10 @@ public class Pathfinder extends AbstractFeature {
         pathExecutor.setAllowInterpolation(interpolate);
     }
 
+    public boolean isPathfinding() {
+        return this.pathfinding;
+    }
+
     @Override
     protected void onTick() {
         if (mc.player == null || mc.level == null) {
@@ -237,12 +241,8 @@ public class Pathfinder extends AbstractFeature {
             return;
         }
 
-        if (!okToPath) {
-            return;
-        }
-
         if (this.pathQueue.isEmpty()) {
-            if (!this.renderOnlyMode && this.pathExecutor.getState() == State.WAITING && !this.pathfinding) {
+            if (!this.renderOnlyMode && this.pathExecutor.ended() && !this.pathfinding) {
                 this.succeeded = true;
                 this.stop("Completed path queue");
                 log("pathqueue empty stopping");
@@ -312,7 +312,7 @@ public class Pathfinder extends AbstractFeature {
                     
                     searchMs = (System.nanoTime() - searchStartNs) / 1_000_000.0;
                     searchTelemetry = null;
-                    log("done pathfinding using new 8-Way Engine");
+                    log("done pathfinding using new 8-Way Engine. rawPath: " + (rawPath != null ? rawPath.size() : "null"));
                 }
                 if (path != null) {
                     List<BlockPos> smoothedPath = path.getSmoothedPath();

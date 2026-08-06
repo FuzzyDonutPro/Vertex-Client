@@ -61,10 +61,10 @@ public class PathfindingState implements AutoMobKillerState {
                 if (rogueSlot != -1) {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
-                        com.vertexai.util.InventoryUtil.holdItem("Rogue");
-                        com.vertexai.util.KeyBindUtil.rightClick();
-                        rogueTimer.schedule(3000L);
-                        log("Auto Rogue Sword speed boost! Mana: " + mana);
+                        if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 150)) {
+                            rogueTimer.schedule(3000L);
+                            log("Auto Rogue Sword speed boost! Mana: " + mana);
+                        }
                     }
                 }
             }

@@ -10,8 +10,11 @@ import java.util.Map;
 
 public class DungeonSolver extends AbstractFeature {
 
-    @Getter
-    public static final DungeonSolver instance = new DungeonSolver();
+    private static final DungeonSolver instance = new DungeonSolver();
+
+    public static DungeonSolver getInstance() {
+        return instance;
+    }
 
     private final Map<String, String> triviaAnswers = new HashMap<>();
 
