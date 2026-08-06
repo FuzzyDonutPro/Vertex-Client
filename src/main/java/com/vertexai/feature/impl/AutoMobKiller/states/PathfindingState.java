@@ -86,11 +86,13 @@ public class PathfindingState implements AutoMobKillerState {
             }
         }
 
-        // Dynamic live tracking: Update target position instantly on every tick if mob moves
-        BlockPos currentMobPos = target.blockPosition();
-        if (lastQueuedTarget == null || !currentMobPos.equals(lastQueuedTarget)) {
-            mobKiller.setTargetMobOriginalPos(target.position());
-            queuePathToTarget(mobKiller, true);
+        // Dynamic live tracking: Only repath if the mob moves significantly (>= 2.2 blocks) from last queued target position
+        BlockPos approachTarget = mobKiller.getApproachBlockForTarget(false);
+        if (approachTarget != null) {
+            if (lastQueuedTarget == null || lastQueuedTarget.distSqr(approachTarget) >= 5.0) {
+                mobKiller.setTargetMobOriginalPos(target.position());
+                queuePathToTarget(mobKiller, true);
+            }
         }
 
         // Auto-reroute if Pathfinder engine cancels or fails a route
@@ -107,7 +109,7 @@ public class PathfindingState implements AutoMobKillerState {
         }
 
         // Ensure Pathfinder engine is active
-        if (!Pathfinder.getInstance().isRunning()) {
+        if (!Pathfinder.getInstance().isRunning() && !Pathfinder.getInstance().failed()) {
             if (!repathDelay.isScheduled() || repathDelay.passed()) {
                 queuePathToTarget(mobKiller, false);
             }

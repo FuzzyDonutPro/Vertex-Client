@@ -42,6 +42,8 @@ public class StaffDetector extends AbstractFeature {
     @Override
     protected void onTick() {
         if (mc.player == null || mc.getConnection() == null) return;
+        var config = com.vertexai.Vertex.config();
+        if (config != null && config.failsafe != null && !config.failsafe.enableStaffDetector) return;
         if (checkClock.isScheduled() && !checkClock.passed()) return;
 
         checkClock.schedule(2000); // Check tablist every 2s

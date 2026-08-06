@@ -104,6 +104,27 @@ public class FeatureManager {
         });
     }
 
+    private AbstractFeature[] activeCache = new AbstractFeature[0];
+    private boolean activeDirty = true;
+
+    public void markActiveDirty() {
+        this.activeDirty = true;
+    }
+
+    public AbstractFeature[] getActiveFeatures() {
+        if (activeDirty) {
+            java.util.List<AbstractFeature> list = new java.util.ArrayList<>();
+            for (AbstractFeature feature : allFeatures) {
+                if (feature.isRunning()) {
+                    list.add(feature);
+                }
+            }
+            activeCache = list.toArray(new AbstractFeature[0]);
+            activeDirty = false;
+        }
+        return activeCache;
+    }
+
     public boolean shouldNotCheckForFailsafe() {
         return this.allFeatures.stream().filter(AbstractFeature::isRunning).anyMatch(AbstractFeature::shouldNotCheckForFailsafe);
     }

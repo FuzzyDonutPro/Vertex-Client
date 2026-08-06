@@ -88,12 +88,24 @@ public class BreakingState implements BlockMinerState {
      */
     private boolean isWalking;
 
+    /**
+     * Latches to true once the player looks at the target block, preventing attack key flickering.
+     */
+    private boolean hasStartedMining = false;
+
+    /**
+     * Tracks if startDestroyBlock has been called for the current target block in 1.21.11.
+     */
+    private boolean hasSentStartPacket = false;
+
 
     @Override
     public void onStart(BlockMiner miner) {
         log("Entering Breaking State");
         breakAttemptTime = 0;
         isWalking = false;
+        hasStartedMining = false;
+        hasSentStartPacket = false;
 
         lookAwayTimer = new Clock();
         wasLookingAway = false;
@@ -140,28 +152,13 @@ public class BreakingState implements BlockMinerState {
         // Safety mechanism: if we've been trying to break for too long, reset
         if (++this.breakAttemptTime > this.miningTime + FAILSAFE_TICKS) {
             logError("Stuck while mining, return to starting state");
+            if (mc.gameMode != null) {
+                mc.gameMode.stopDestroyBlock();
+            }
             if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
                 com.vertexai.feature.impl.Pathfinder.getInstance().stop("Stuck while mining");
             }
             return new StartingState();
-        }
-
-        // Safety mechanism: if we're looking away from target block, reset
-        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = miner.getTargetBlockPos().equals(currentLookingAt);
-        if (!isLookingAtTarget) {
-            if (!wasLookingAway) {
-                lookAwayTimer.schedule(LOOK_AWAY_THRESHOLD_MS);
-                wasLookingAway = true;
-            } else if (lookAwayTimer.passed()) {
-                log("Player looked away from target block for too long, choosing new block");
-                if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
-                    com.vertexai.feature.impl.Pathfinder.getInstance().stop("Looked away from target");
-                }
-                return new StartingState();
-            }
-        } else {
-            wasLookingAway = false;
         }
 
         // After breaking a block or if target block turns to Bedrock/Air, halt attack and pick new block
@@ -170,10 +167,27 @@ public class BreakingState implements BlockMinerState {
             detectedBlockType == net.minecraft.world.level.block.Blocks.AIR ||
             !detectedBlockType.equals(miner.getTargetBlockType())) {
             KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            if (mc.gameMode != null) {
+                mc.gameMode.stopDestroyBlock();
+            }
             if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
                 com.vertexai.feature.impl.Pathfinder.getInstance().stop("Target block broken or converted to bedrock");
             }
             return new StartingState();
+        }
+
+        // Drive continuous mining via Vanilla keybinding and gameMode.continueDestroyBlock
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
+            BlockPos targetPos = miner.getTargetBlockPos();
+            net.minecraft.core.Direction direction = BlockUtil.getClosestVisibleSide(targetPos);
+            if (direction == null) direction = net.minecraft.core.Direction.UP;
+
+            if (!hasSentStartPacket) {
+                mc.gameMode.startDestroyBlock(targetPos, direction);
+                hasSentStartPacket = true;
+            } else {
+                mc.gameMode.continueDestroyBlock(targetPos, direction);
+            }
         }
 
         return this;
@@ -182,6 +196,9 @@ public class BreakingState implements BlockMinerState {
     @Override
     public void onEnd(BlockMiner miner) {
         RotationHandler.getInstance().stop();
+        if (mc.gameMode != null) {
+            mc.gameMode.stopDestroyBlock();
+        }
         if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             com.vertexai.feature.impl.Pathfinder.getInstance().stop("Exiting Breaking State");
         }
@@ -190,14 +207,18 @@ public class BreakingState implements BlockMinerState {
 
     /**
      * Handles key bindings for mining.
-     * Sets attack key to continuously mine ONLY when crosshair is locked onto target block.
+     * Sets attack key to continuously mine ONLY when crosshair is locked onto target block,
+     * and holds it down to prevent mining progress resets.
      */
     private void handleKeybinds(BlockMiner miner) {
         BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
         boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
 
-        // Only hold left-click attack key when crosshair is physically locked onto target block!
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, isLookingAtTarget);
+        if (isLookingAtTarget) {
+            hasStartedMining = true;
+        }
+
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, hasStartedMining);
 
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             boolean shouldSneak = Vertex.config().general.sneakWhileMining;

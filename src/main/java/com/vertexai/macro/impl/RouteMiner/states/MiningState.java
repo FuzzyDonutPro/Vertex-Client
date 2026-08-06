@@ -15,7 +15,9 @@ public class MiningState implements RouteMinerMacroState {
     @Override
     public void onStart(RouteMinerMacro macro) {
         log("Entering Mining State");
-        InventoryUtil.holdItem(Vertex.config().general.miningTool);
+        int slot = Vertex.config().general.miningToolSlot;
+        String tool = (slot >= 1 && slot <= 9) ? String.valueOf(slot) : Vertex.config().general.miningTool;
+        InventoryUtil.holdItem(tool);
         startMining(macro);
     }
 

@@ -61,32 +61,24 @@ public abstract class AbstractFeature {
      * NOTE: This does NOT automatically set 'enabled' to true.
      */
     public void start() {
+        this.enabled = true;
+        FeatureManager.getInstance().markActiveDirty();
     }
 
-    /**
-     * Stops the feature and resets internal state.
-     * This also disables the feature by setting 'enabled' to false.
-     */
     public void stop() {
         this.enabled = false;
+        FeatureManager.getInstance().markActiveDirty();
         this.resetStatesAfterStop();
     }
 
-    /**
-     * Temporarily disables the feature without resetting internal state.
-     * Can be resumed later with {@link #resume()}.
-     */
-    // Temporarily disables the feature
     public void pause() {
         this.enabled = false;
+        FeatureManager.getInstance().markActiveDirty();
     }
 
-    /**
-     * Resumes a paused feature by setting 'enabled' to true.
-     */
-    // Re-enables a previously paused feature
     public void resume() {
         this.enabled = true;
+        FeatureManager.getInstance().markActiveDirty();
     }
 
     /**

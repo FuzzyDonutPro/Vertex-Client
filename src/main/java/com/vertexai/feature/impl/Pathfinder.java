@@ -58,19 +58,21 @@ public class Pathfinder extends AbstractFeature {
         if (pathExecutor.getCurrentPath() != null) paths.add(pathExecutor.getCurrentPath());
         paths.addAll(renderOnlyPathQueue);
 
+        boolean seeThrough = Vertex.config() != null && Vertex.config().utilities != null && Vertex.config().utilities.renderPathfinderThroughWalls;
+
         if (!paths.isEmpty()) {
-            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150));
+            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150), seeThrough);
             for (Path path : paths) {
                 List<BlockPos> bpath = path.getSmoothedPath();
                 for (int i = 0; i < bpath.size(); i++) {
                     BlockPos p = bpath.get(i);
                     if (i != 0) {
-                        RenderUtil.drawBlock(p, new Color(0, 255, 0, 150));
+                        RenderUtil.drawBlock(p, new Color(0, 255, 0, 150), seeThrough);
                         RenderUtil.drawThinLine(
                                 new Vec3(bpath.get(i).getX() + 0.5, bpath.get(i).getY() + 1.0, bpath.get(i).getZ() + 0.5),
                                 new Vec3(bpath.get(i - 1).getX() + 0.5, bpath.get(i - 1).getY() + 1.0, bpath.get(i - 1).getZ() + 0.5),
                                 new Color(0, 255, 0, 150),
-                                true
+                                seeThrough
                         );
                     }
                 }
@@ -402,19 +404,21 @@ public class Pathfinder extends AbstractFeature {
         }
         paths.addAll(this.renderOnlyPathQueue);
 
+        boolean seeThrough = Vertex.config() != null && Vertex.config().utilities != null && Vertex.config().utilities.renderPathfinderThroughWalls;
+
         if (!paths.isEmpty()) {
-            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150));
+            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150), seeThrough);
 
             for (Path path : paths) {
                 List<BlockPos> bpath = path.getSmoothedPath();
 
                 for (int i = 1; i < bpath.size(); i++) {
-                    RenderUtil.drawBlock(bpath.get(i), new Color(0, 255, 0, 150));
+                    RenderUtil.drawBlock(bpath.get(i), new Color(0, 255, 0, 150), seeThrough);
                     RenderUtil.drawThinLine(
                             new Vec3(bpath.get(i).getX() + 0.5, bpath.get(i).getY() + 1, bpath.get(i).getZ() + 0.5),
                             new Vec3(bpath.get(i - 1).getX() + 0.5, bpath.get(i - 1).getY() + 1, bpath.get(i - 1).getZ() + 0.5),
                             new Color(0, 255, 0, 150),
-                            true
+                            seeThrough
                     );
                 }
             }

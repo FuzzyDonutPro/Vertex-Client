@@ -10,6 +10,7 @@ import com.vertexai.feature.impl.AutoGetStats.tasks.impl.PickaxeAbilityRetrieval
 import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.util.InventoryUtil;
+import com.vertexai.util.helper.Clock;
 import com.vertexai.util.helper.MineableBlock;
 
 import java.util.ArrayList;
@@ -81,17 +82,23 @@ public class MiningMacro extends AbstractMacro {
         return necessaryItems;
     }
 
+    private Clock statsTimer = new Clock();
+
     @Override
     public void onEnable() {
         log("Enabling Mining Macro");
         resetVariables();
         setBlocksToMineBasedOnOreType();
+        statsTimer.schedule(2500);
 
         if (miningSpeed == 0) {
             miningSpeedRetrievalTask = new MiningSpeedRetrievalTask();
-            pickaxeAbilityRetrievalTask = new PickaxeAbilityRetrievalTask();
             AutoGetStats.getInstance().startTask(miningSpeedRetrievalTask);
-            AutoGetStats.getInstance().startTask(pickaxeAbilityRetrievalTask);
+
+            if (Vertex.config().general.usePickaxeAbility) {
+                pickaxeAbilityRetrievalTask = new PickaxeAbilityRetrievalTask();
+                AutoGetStats.getInstance().startTask(pickaxeAbilityRetrievalTask);
+            }
         }
     }
 
@@ -124,7 +131,7 @@ public class MiningMacro extends AbstractMacro {
     public void onTick() {
         if (miningSpeed == 0) {
             handleGettingStats();
-            return;
+            if (miningSpeed == 0) return;
         }
 
         if (handleRefuelIfNeeded()) {
@@ -136,12 +143,17 @@ public class MiningMacro extends AbstractMacro {
             miner.setWaitThreshold(
                     Vertex.config().general.oreRespawnWaitThreshold * 1000
             );
+            // Use slot if set, otherwise use item name string
+            String miningTool = Vertex.config().general.miningTool;
+            int miningToolSlot = Vertex.config().general.miningToolSlot;
+            String effectiveTool = (miningToolSlot >= 1 && miningToolSlot <= 9) ? String.valueOf(miningToolSlot) : miningTool;
+
             miner.start(
                     blocksToMine,
                     miningSpeed,
                     pickaxeAbility,
                     determinePriority(),
-                    Vertex.config().general.miningTool
+                    effectiveTool
             );
 
             isMining = true;
@@ -155,28 +167,24 @@ public class MiningMacro extends AbstractMacro {
     }
 
     private void handleGettingStats() {
-        if (!AutoGetStats.getInstance().hasFinishedAllTasks()) return;
+        boolean finished = AutoGetStats.getInstance().hasFinishedAllTasks();
+        boolean timedOut = statsTimer.passed();
 
-        if (miningSpeedRetrievalTask.getError() != null) {
-            super.disable(
-                    "Failed to get stats with the following error: " +
-                            miningSpeedRetrievalTask.getError()
-            );
-            return;
+        if (!finished && !timedOut) return;
+
+        if (miningSpeedRetrievalTask != null && miningSpeedRetrievalTask.getResult() != null) {
+            miningSpeed = miningSpeedRetrievalTask.getResult();
+        } else {
+            miningSpeed = 2000;
         }
 
-        if (pickaxeAbilityRetrievalTask.getError() != null) {
-            super.disable(
-                    "Failed to get pickaxe ability with the following error: " +
-                            pickaxeAbilityRetrievalTask.getError()
-            );
-            return;
+        if (Vertex.config().general.usePickaxeAbility && pickaxeAbilityRetrievalTask != null && pickaxeAbilityRetrievalTask.getResult() != null) {
+            pickaxeAbility = pickaxeAbilityRetrievalTask.getResult();
+        } else {
+            pickaxeAbility = BlockMiner.PickaxeAbility.NONE;
         }
 
-        miningSpeed = miningSpeedRetrievalTask.getResult();
-        pickaxeAbility = Vertex.config().general.usePickaxeAbility
-                ? pickaxeAbilityRetrievalTask.getResult()
-                : BlockMiner.PickaxeAbility.NONE;
+        log("Finished getting stats (Speed: " + miningSpeed + ", Ability: " + pickaxeAbility + ")");
     }
 
     private void handleMining() {

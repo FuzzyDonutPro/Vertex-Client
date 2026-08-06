@@ -21,17 +21,6 @@ public class MixinTitleScreen {
         }
         TitleScreen screen = (TitleScreen) (Object) this;
         plexusRenderer.init(screen.width, screen.height);
-        
-        try {
-            for (java.lang.reflect.Field field : TitleScreen.class.getDeclaredFields()) {
-                if (field.getType().getSimpleName().contains("Panorama") || field.getType().getSimpleName().contains("CubeMap")) {
-                    field.setAccessible(true);
-                    field.set(this, null);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
     
     @Inject(method = "tick", at = @At("TAIL"))
@@ -41,15 +30,12 @@ public class MixinTitleScreen {
         }
     }
     
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    @Inject(method = "render", at = @At("HEAD"))
     private void onRender(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (plexusRenderer != null) {
+            TitleScreen screen = (TitleScreen) (Object) this;
+            plexusRenderer.init(screen.width, screen.height);
             plexusRenderer.render(context, delta);
         }
-    }
-
-    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
-    private void onRenderBackground(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        ci.cancel();
     }
 }

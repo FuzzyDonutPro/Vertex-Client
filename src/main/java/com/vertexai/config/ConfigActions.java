@@ -148,9 +148,7 @@ public class ConfigActions {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        ItemStack currentItem = mc.player
-                .getInventory()
-                .getItem(mc.player.getInventory().getSelectedSlot());
+        ItemStack currentItem = mc.player.getMainHandItem();
 
         if (currentItem.isEmpty()) {
             Logger.sendMessage("Don't hold an empty hand.");

@@ -15,12 +15,16 @@ public class StartingState implements CommissionMacroState {
 
     @Override
     public CommissionMacroState onTick(CommissionMacro macro) {
-        if (Objects.equals(Vertex.config().general.miningTool, "")) {
-            macro.disable("Please set a Mining Tool in the config");
+        String miningTool = Vertex.config().general.miningTool;
+        int miningToolSlot = Vertex.config().general.miningToolSlot;
+        if ((miningTool == null || miningTool.trim().isEmpty()) && miningToolSlot <= 0) {
+            macro.disable("Please set a Mining Tool (name or slot 1-9) in the config");
             return null;
         }
-        if (Objects.equals(Vertex.config().commission.dwarvenCommission.slayerWeapon, "")) {
-            macro.disable("Please set a Slayer Weapon in the config");
+        String slayerWeapon = Vertex.config().commission.dwarvenCommission.slayerWeapon;
+        int slayerWeaponSlot = Vertex.config().commission.dwarvenCommission.slayerWeaponSlot;
+        if ((slayerWeapon == null || slayerWeapon.trim().isEmpty()) && slayerWeaponSlot <= 0) {
+            macro.disable("Please set a Slayer Weapon (name or slot 1-9) in the config");
             return null;
         }
         if (!InventoryUtil.areItemsInHotbar(macro.getNecessaryItems())) {

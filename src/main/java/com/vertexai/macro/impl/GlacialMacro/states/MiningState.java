@@ -26,7 +26,9 @@ public class MiningState implements GlacialMacroState {
     @Override
     public void onStart(GlacialMacro macro) {
         log("Starting to mine at vein: " + (macro.getCurrentVein() != null ? macro.getCurrentVein().first() : "Unknown"));
-        InventoryUtil.holdItem(Vertex.config().general.miningTool);
+        int slot = Vertex.config().general.miningToolSlot;
+        String tool = (slot >= 1 && slot <= 9) ? String.valueOf(slot) : Vertex.config().general.miningTool;
+        InventoryUtil.holdItem(tool);
         this.miningRetries = 0;
         startMining(macro);
     }

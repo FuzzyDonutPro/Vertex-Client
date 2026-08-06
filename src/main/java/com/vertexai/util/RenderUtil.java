@@ -250,18 +250,30 @@ public final class RenderUtil {
     }
 
     public static void outlineBlock(BlockPos pos, Color color) {
-        drawAABB(new AABB(pos), color, false);
+        drawAABB(new AABB(pos), color, false, false);
+    }
+
+    public static void outlineBlock(BlockPos pos, Color color, boolean seeThrough) {
+        drawAABB(new AABB(pos), color, false, seeThrough);
     }
 
     public static void drawBlock(BlockPos blockPos, Color color) {
-        drawAABB(new AABB(blockPos), color, true);
+        drawAABB(new AABB(blockPos), color, true, false);
+    }
+
+    public static void drawBlock(BlockPos blockPos, Color color, boolean seeThrough) {
+        drawAABB(new AABB(blockPos), color, true, seeThrough);
     }
 
     public static void drawAABB(AABB box, Color color) {
-        drawAABB(box, color, true);
+        drawAABB(box, color, true, false);
     }
 
     public static void drawAABB(AABB box, Color color, boolean filled) {
+        drawAABB(box, color, filled, false);
+    }
+
+    public static void drawAABB(AABB box, Color color, boolean filled, boolean seeThrough) {
         if (mc.level == null || mc.player == null) return;
         if (activePoseStack == null || activeMultiBufferSource == null) return;
 
@@ -270,16 +282,16 @@ public final class RenderUtil {
         int b = color.getBlue();
         int a = color.getAlpha();
 
+        RenderType layer = seeThrough ? com.vertexai.util.render.VFRenderLayers.QUADS_NO_DEPTH : com.vertexai.util.render.VFRenderLayers.QUADS_DEPTH;
+
         if (filled) {
-            VertexConsumer consumer = activeMultiBufferSource.getBuffer(com.vertexai.util.render.VFRenderLayers.QUADS_DEPTH);
-            
-                addFilledAABBVertices(consumer, activePoseStack.last(), box, r, g, b, a);
-            
+            VertexConsumer consumer = activeMultiBufferSource.getBuffer(layer);
+            addFilledAABBVertices(consumer, activePoseStack.last(), box, r, g, b, a);
         } else {
             // Draw 6 faces as thin ribbons for outlines to avoid LINE_STRIP and LINES issues
             double thickness = 0.02;
             AABB outer = box.inflate(thickness);
-            VertexConsumer consumer = activeMultiBufferSource.getBuffer(com.vertexai.util.render.VFRenderLayers.QUADS_DEPTH);
+            VertexConsumer consumer = activeMultiBufferSource.getBuffer(layer);
             addFilledAABBVertices(consumer, activePoseStack.last(), outer, r, g, b, (int)(a * 0.5));
         }
     }

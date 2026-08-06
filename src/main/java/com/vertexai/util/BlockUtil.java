@@ -525,14 +525,11 @@ public class BlockUtil {
     }
 
     public static boolean hasVisibleSide(BlockPos block) {
-        if (!isFullCube(block)) {
-            return false;
-        }
+        if (mc.level == null) return false;
         for (Direction side : Direction.values()) {
-            if (side != null && !shouldRenderSide(block, side)) {
-                continue;
-            }
-            if (canSeeSide(block, side)) {
+            BlockPos adj = block.relative(side);
+            BlockState adjState = mc.level.getBlockState(adj);
+            if (adjState.isAir() || !adjState.isSolidRender()) {
                 return true;
             }
         }
@@ -540,18 +537,7 @@ public class BlockUtil {
     }
 
     public static boolean hasVisibleSide(Vec3 from, BlockPos block) {
-        if (!isFullCube(block)) {
-            return false;
-        }
-        for (Direction side : Direction.values()) {
-            if (!shouldRenderSide(block, side)) {
-                continue;
-            }
-            if (canSeeSide(from, block, side)) {
-                return true;
-            }
-        }
-        return false;
+        return hasVisibleSide(block);
     }
 
     public static List<Vec3> bestPointsOnBestSide(final BlockPos block) {

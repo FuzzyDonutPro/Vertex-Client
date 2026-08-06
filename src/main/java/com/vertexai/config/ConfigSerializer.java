@@ -154,44 +154,6 @@ public class ConfigSerializer {
         
         try {
             String cleanId = fieldId.toLowerCase();
-            
-            // 1. Direct Item Hand Set Handlers (independent of category & pair lookup)
-            Runnable handSetAction = null;
-            if (cleanId.equals("fishingrod") || cleanId.equals("fishingrodbutton")) {
-                handSetAction = ConfigActions::setFishingRod;
-            } else if (cleanId.equals("galateafishingweapon") || cleanId.equals("galateafishingweaponbutton")) {
-                handSetAction = ConfigActions::setGalateaFishingWeapon;
-            } else if (cleanId.equals("miningtool") || cleanId.equals("miningtoolbutton")) {
-                handSetAction = ConfigActions::setMiningTool;
-            } else if (cleanId.equals("altminingtool") || cleanId.equals("altminingtoolbutton")) {
-                handSetAction = ConfigActions::setAltMiningTool;
-            } else if (cleanId.equals("slayerweapon") || cleanId.equals("slayerweaponbutton")) {
-                handSetAction = ConfigActions::setGeneralSlayerWeapon;
-            } else if (cleanId.equals("galateaaxe") || cleanId.equals("galateaaxebutton")) {
-                handSetAction = ConfigActions::setGalateaAxe;
-            }
-
-            if (handSetAction != null) {
-                Runnable finalAction = handSetAction;
-                java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
-                Runnable task = () -> {
-                    try {
-                        finalAction.run();
-                        VertexClient.configManager.saveConfig();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        future.complete(null);
-                    }
-                };
-                if (net.minecraft.client.Minecraft.getInstance().isSameThread()) {
-                    task.run();
-                } else {
-                    net.minecraft.client.Minecraft.getInstance().execute(task);
-                    future.join();
-                }
-                return serialize(config);
-            }
 
             // 2. Reflective Runnable field execution
             Field catField = null;

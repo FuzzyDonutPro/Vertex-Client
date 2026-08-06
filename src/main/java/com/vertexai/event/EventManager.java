@@ -41,7 +41,10 @@ public class EventManager {
             TabListParser.updateCache();
             GameStateHandler.getInstance().onTablistUpdate(event);
             MacroManager.getInstance().onTablistUpdate(event);
-            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleTablistUpdate(event));
+            AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
+            for (int i = 0; i < active.length; i++) {
+                active[i].handleTablistUpdate(event);
+            }
         });
 
         UpdateTablistFooterEvent.register(GameStateHandler.getInstance()::onTablistFooterUpdate);
@@ -58,8 +61,11 @@ public class EventManager {
             MacroManager.getInstance().onTick();
             FailsafeManager.getInstance().onTick();
 
-            // Tick all features
-            FeatureManager.getInstance().allFeatures.forEach(AbstractFeature::handleTick);
+            // Tick active features with zero-allocation loop
+            AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
+            for (int i = 0; i < active.length; i++) {
+                active[i].handleTick();
+            }
 
             // Update utilities
             ScoreboardUtil.update();
@@ -78,7 +84,12 @@ public class EventManager {
             RouteHandler.getInstance().onWorldRender(context);
             GraphHandler.instance.onWorldRender(context);
             MacroManager.getInstance().onWorldRender(context);
-            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+
+            AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
+            for (int i = 0; i < active.length; i++) {
+                active[i].handleWorldRender(context);
+            }
+
             RenderUtil.endWorldRender();
         });
 
@@ -89,7 +100,11 @@ public class EventManager {
 
             HUDManager.getInstance().onHudRender(guiGraphics);
             MacroManager.getInstance().onHudRender(guiGraphics);
-            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));
+
+            AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
+            for (int i = 0; i < active.length; i++) {
+                active[i].handleHudRender(guiGraphics);
+            }
 
             RenderUtil.renderQueuedLineOverlays(guiGraphics);
         });

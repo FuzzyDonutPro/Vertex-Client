@@ -41,6 +41,8 @@ public class PlayerFailsafe extends AbstractFailsafe {
     @Override
     public boolean onTick() {
         if (mc.level == null || mc.player == null) return false;
+        var config = com.vertexai.Vertex.config();
+        if (config != null && config.failsafe != null && !config.failsafe.enablePlayerStareFailsafe) return false;
 
         List<Entity> players = StreamSupport.stream(mc.level.entitiesForRendering().spliterator(), false).filter(
                 (entity) -> entity instanceof AbstractClientPlayer && entity != mc.player && !EntityUtil.isNpc(entity)
@@ -49,6 +51,8 @@ public class PlayerFailsafe extends AbstractFailsafe {
         boolean playerBlocking = false;
         long currentTime = System.currentTimeMillis();
         playerStaringTimes.keySet().removeIf(player -> !players.contains(player));
+
+        int thresholdMs = (config != null && config.failsafe != null) ? config.failsafe.playerStareThresholdMs : 1000;
 
         for (Entity player : players) {
             double distanceSquared = player.blockPosition().distSqr(mc.player.blockPosition());
@@ -63,7 +67,7 @@ public class PlayerFailsafe extends AbstractFailsafe {
 
                 long staringDuration = currentTime - playerStaringTimes.get(player);
 
-                if (staringDuration > 1000) {
+                if (staringDuration > thresholdMs) {
                     playerBlocking = true;
                     break;
                 }

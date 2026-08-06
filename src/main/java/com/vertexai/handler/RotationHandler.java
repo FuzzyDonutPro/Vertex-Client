@@ -248,6 +248,15 @@ public class RotationHandler {
 
         float clampedYaw = Mth.clamp(desiredDelta.getYaw(), -maxYawDelta, maxYawDelta);
         float clampedPitch = Mth.clamp(desiredDelta.getPitch(), -maxPitchDelta, maxPitchDelta);
+
+        // Add subtle human micro-tremor and organic yaw/pitch drift to prevent zero-noise anticheat flags
+        if (Vertex.config() != null && Vertex.config().general.randomizedRotations) {
+            float yawJitter = (random.nextFloat() - 0.5f) * 0.05f;
+            float pitchJitter = (random.nextFloat() - 0.5f) * 0.035f;
+            clampedYaw += yawJitter;
+            clampedPitch += pitchJitter;
+        }
+
         return new Angle(clampedYaw, clampedPitch);
     }
 

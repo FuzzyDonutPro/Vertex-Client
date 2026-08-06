@@ -177,9 +177,11 @@ public class AutoCommissionClaim extends AbstractFeature {
                 }
 
                 if (Vertex.config().commission.dwarvenCommission.commSwapBeforeClaiming) {
-                    if (!InventoryUtil.holdItem(Vertex.config().commission.dwarvenCommission.altMiningTool)) {
+                    int altSlot = Vertex.config().commission.dwarvenCommission.altMiningToolSlot;
+                    String altTool = (altSlot >= 1 && altSlot <= 9) ? String.valueOf(altSlot) : Vertex.config().commission.dwarvenCommission.altMiningTool;
+                    if (!InventoryUtil.holdItem(altTool)) {
                         this.stop(ClaimError.NO_ITEMS);
-                        sendError("Cannot hold Alt Mining Tool: " + Vertex.config().commission.dwarvenCommission.altMiningTool);
+                        sendError("Cannot hold Alt Mining Tool: " + altTool);
                         break;
                     }
                     this.swapState(State.OPENING, 0);
@@ -305,9 +307,11 @@ public class AutoCommissionClaim extends AbstractFeature {
                     return;
                 }
                 if (Vertex.config().commission.dwarvenCommission.commSwapBeforeClaiming) {
-                    if (!InventoryUtil.holdItem(Vertex.config().general.miningTool)) {
+                    int toolSlot = Vertex.config().general.miningToolSlot;
+                    String tool = (toolSlot >= 1 && toolSlot <= 9) ? String.valueOf(toolSlot) : Vertex.config().general.miningTool;
+                    if (!InventoryUtil.holdItem(tool)) {
                         this.stop(ClaimError.NO_ITEMS);
-                        sendError("Cannot hold Mining Tool: " + Vertex.config().general.miningTool);
+                        sendError("Cannot hold Mining Tool: " + tool);
                         break;
                     }
                 }

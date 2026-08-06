@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import './app.css';
     import SpotifyWidget from './lib/components/SpotifyWidget.svelte';
+    import PlexusBackground from './lib/components/PlexusBackground.svelte';
 
     let currentTab = 'farming';
     let searchQuery = '';
@@ -185,23 +186,23 @@
         'visitor': { catIds: ['farming'], allowedFieldIds: ['autoAcceptTrades', 'refuseUnprofitable'] },
         'pest_hunter': { catIds: ['farming'], allowedFieldIds: ['pestVacuum', 'pestBrokerTrade'] },
 
-        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'miningToolButton', 'altMiningTool', 'altMiningToolButton', 'slayerWeapon', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
+        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'miningToolSlot', 'miningToolButton', 'altMiningTool', 'altMiningToolSlot', 'altMiningToolButton', 'slayerWeapon', 'slayerWeaponSlot', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro', 'general', 'commission'], allowedFieldIds: ['miningTool', 'altMiningTool', 'miningToolButton', 'altMiningToolButton', 'oreType', 'allowPathfinder', 'pathfinderMode', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
+        'mining_general': { catIds: ['miningMacro', 'general', 'commission'], allowedFieldIds: ['miningTool', 'miningToolSlot', 'altMiningTool', 'altMiningToolSlot', 'miningToolButton', 'altMiningToolButton', 'oreType', 'allowPathfinder', 'pathfinderMode', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
 
-        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
-        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'slayer': { catIds: ['combat', 'general'], allowedFieldIds: ['slayerTarget', 'slayerWeapon', 'slayerWeaponSlot', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'mob_killer': { catIds: ['combat', 'general'], allowedFieldIds: ['mobKillerTarget', 'slayerWeapon', 'slayerWeaponSlot', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
         'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
 
-        'fishing': { catIds: ['fishing'], allowedFieldIds: ['fishingRod', 'fishingRodButton', 'galateaFishingWeapon', 'galateaFishingWeaponButton', 'rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
+        'fishing': { catIds: ['fishing'], allowedFieldIds: ['fishingRod', 'fishingRodSlot', 'fishingRodButton', 'galateaFishingWeapon', 'galateaFishingWeaponSlot', 'galateaFishingWeaponButton', 'galateaAxe', 'galateaAxeSlot', 'rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
 
-        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'logBreakDelay', 'foragingPark', 'foragingHub', 'foragingFig'] },
+        'foraging': { catIds: ['foraging', 'fishing'], allowedFieldIds: ['foragingTreeType', 'galateaAxe', 'galateaAxeSlot', 'logBreakDelay', 'foragingPark', 'foragingHub', 'foragingFig'] },
         'alchemy': { catIds: ['misc'], allowedFieldIds: ['potionRecipe', 'batchSize'] },
         'flip': { catIds: ['bazaarFlipper'], allowedFieldIds: ['bazaarMargin', 'orderAutoUpdate'] },
         'diana': { catIds: ['combat'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
@@ -632,7 +633,7 @@
 </script>
 
 <div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-screen h-screen flex items-center justify-center bg-black/60 select-none overflow-hidden relative">
-    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
+    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative z-10">
     
     <!-- Sidebar Navigation -->
     <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-4 flex flex-col justify-between shrink-0 select-none overflow-y-auto max-h-full custom-scrollbar">
@@ -806,11 +807,8 @@
                                                     <span class="text-[9px] text-sky-400 font-mono w-7 text-right">{setting.value}</span>
                                                 </div>
                                             {:else if setting.type === 'text'}
-                                                <div class="flex items-center gap-1 w-full">
-                                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none flex-1 min-w-0" />
-                                                    <button title="Set from currently held item in hand" class="px-1.5 py-1 rounded text-[8px] font-bold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id + 'Button')}>
-                                                        Hand
-                                                    </button>
+                                                <div class="flex items-center w-full">
+                                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
                                                 </div>
                                             {:else if setting.type === 'dropdown'}
                                                 <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
@@ -822,10 +820,6 @@
                                                 <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
                                                     <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Rebind'}</span>
                                                     <span class="text-sky-400 font-bold bg-sky-500/10 px-1 rounded">{getKeyName(setting.value)}</span>
-                                                </button>
-                                            {:else if setting.type === 'button'}
-                                                <button class="px-2 py-1 rounded text-[9px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer w-full text-center active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id)}>
-                                                    <span>{setting.buttonText || setting.name || 'Set from hand'}</span>
                                                 </button>
                                             {/if}
                                         </div>
@@ -902,15 +896,12 @@
                                             </label>
                                         {:else if setting.type === 'slider'}
                                             <div class="flex items-center gap-3 w-full">
-                                                <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
+                                                <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
                                                 <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                             </div>
                                         {:else if setting.type === 'text'}
-                                            <div class="flex items-center gap-2 w-full">
-                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none flex-1 focus:border-sky-500/50 transition-colors" />
-                                                <button title="Set from currently held item in hand" class="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1" on:click={() => executeButtonAction(catId, setting.id + 'Button')}>
-                                                    <span>Set from hand</span>
-                                                </button>
+                                            <div class="flex items-center w-full">
+                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
                                             </div>
                                         {:else if setting.type === 'dropdown'}
                                             <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, e.target.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
@@ -924,11 +915,6 @@
                                                 <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-2 py-0.5 rounded">
                                                     {getKeyName(setting.value)}
                                                 </span>
-                                            </button>
-                                        {:else if setting.type === 'button'}
-                                            <button class="px-4 py-2 rounded-lg text-[11px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer w-full text-center active:scale-95 flex items-center justify-center gap-2" on:click={() => executeButtonAction(catId, setting.id)}>
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                                <span>{setting.buttonText || setting.name || 'Set from hand'}</span>
                                             </button>
                                         {/if}
                                     </div>
@@ -976,7 +962,7 @@
                                     </label>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.value)} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('failsafe', setting.id, setting.value); }} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
                                         <span class="text-[10px] text-red-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-red-500/20">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
@@ -1065,7 +1051,7 @@
                                     </div>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('gui', setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
@@ -1108,7 +1094,7 @@
                                     </div>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} bind:value={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.value)} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('animations', setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
@@ -1185,7 +1171,7 @@
                             {:else if setting.type === 'button'}
                                 <button class="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id)}>
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    <span>{setting.buttonText || setting.value || 'Set from hand'}</span>
+                                    <span>{setting.buttonText || 'Action'}</span>
                                 </button>
                             {/if}
                         </div>

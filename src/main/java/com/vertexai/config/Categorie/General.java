@@ -64,10 +64,17 @@ public class General {
 
     @ConfigOption(
             name = "Mining Tool",
-            desc = "Mining tool that you use to mine blocks (and kill Ice/Glacite Walkers)"
+            desc = "Mining tool item name OR hotbar slot (1-9) to hold while mining"
     )
     @ConfigEditorText
     public String miningTool = "";
+
+    @ConfigOption(
+            name = "Mining Tool Hotbar Slot (1-9)",
+            desc = "Hotbar slot number (1-9) for mining tool. Set to 0 to use item name string."
+    )
+    @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
+    public int miningToolSlot = 0;
 
     @ConfigOption(
             name = "Set Mining Tool Button",
@@ -78,10 +85,17 @@ public class General {
 
     @ConfigOption(
             name = "Slayer Weapon",
-            desc = "Main weapon for killing normal mobs (Treasure Hoarders, Goblins, etc.)"
+            desc = "Main weapon item name OR hotbar slot (1-9) for killing normal mobs"
     )
     @ConfigEditorText
     public String slayerWeapon = "";
+
+    @ConfigOption(
+            name = "Slayer Weapon Hotbar Slot (1-9)",
+            desc = "Hotbar slot number (1-9) for slayer weapon. Set to 0 to use item name string."
+    )
+    @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
+    public int slayerWeaponSlot = 0;
 
     @ConfigOption(
             name = "Set Slayer Weapon Button",

@@ -51,10 +51,15 @@ public class StartingState implements SlayerMacroState {
         }
         
         String weapon = Vertex.config().general.slayerWeapon;
+        int weaponSlot = Vertex.config().general.slayerWeaponSlot;
         String pickaxe = Vertex.config().general.miningTool;
+        int pickaxeSlot = Vertex.config().general.miningToolSlot;
         
-        if ((weapon == null || weapon.trim().isEmpty()) && (pickaxe == null || pickaxe.trim().isEmpty())) {
-            macro.disable("Please set a Slayer Weapon or Mining Tool in the config!");
+        boolean hasWeapon = (weapon != null && !weapon.trim().isEmpty()) || weaponSlot >= 1;
+        boolean hasPickaxe = (pickaxe != null && !pickaxe.trim().isEmpty()) || pickaxeSlot >= 1;
+        
+        if (!hasWeapon && !hasPickaxe) {
+            macro.disable("Please set a Slayer Weapon or Mining Tool (name or slot 1-9) in the config!");
             return this;
         }
         

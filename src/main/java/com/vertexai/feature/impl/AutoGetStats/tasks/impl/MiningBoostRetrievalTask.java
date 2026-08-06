@@ -23,7 +23,9 @@ public class MiningBoostRetrievalTask extends AbstractInventoryTask<Integer> {
     public void init() {
         taskStatus = TaskStatus.RUNNING;
 
-        InventoryUtil.holdItem(Vertex.config().general.miningTool);
+        int slot = Vertex.config().general.miningToolSlot;
+        String tool = (slot >= 1 && slot <= 9) ? String.valueOf(slot) : Vertex.config().general.miningTool;
+        InventoryUtil.holdItem(tool);
 
         if (mc.screen != null) {
             InventoryUtil.closeScreen();
