@@ -166,8 +166,7 @@ public class BreakingState implements BlockMinerState {
         // After breaking a block or if target block turns to Bedrock/Air, halt attack and pick new block
         Block detectedBlockType = mc.level.getBlockState(miner.getTargetBlockPos()).getBlock();
         if (detectedBlockType == net.minecraft.world.level.block.Blocks.BEDROCK ||
-            detectedBlockType == net.minecraft.world.level.block.Blocks.AIR ||
-            !detectedBlockType.equals(miner.getTargetBlockType())) {
+            detectedBlockType == net.minecraft.world.level.block.Blocks.AIR) {
             KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
             if (mc.gameMode != null) {
                 mc.gameMode.stopDestroyBlock();
