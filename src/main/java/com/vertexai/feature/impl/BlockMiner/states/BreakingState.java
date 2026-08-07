@@ -201,7 +201,23 @@ public class BreakingState implements BlockMinerState {
     private void handleKeybinds(BlockMiner miner) {
         // Clear attack cooldown so vanilla processes the held click immediately
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
+        // Check if crosshair is currently on target block
+        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
+        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
+
+        if (isLookingAtTarget && !hasStartedMining) {
+            // First time crosshair lands on target: fire one click so vanilla's
+            // consumeClick() triggers startDestroyBlock on next handleKeybinds
+            hasStartedMining = true;
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+            com.mojang.blaze3d.platform.InputConstants.Key boundKey =
+                    ((com.vertexai.mixin.client.KeyMappingAccessor) mc.options.keyAttack).getBoundKey();
+            net.minecraft.client.KeyMapping.click(boundKey);
+        } else if (hasStartedMining) {
+            // Keep held down so vanilla fires continueDestroyBlock each tick
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        }
 
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             boolean shouldSneak = Vertex.config().general.sneakWhileMining;
