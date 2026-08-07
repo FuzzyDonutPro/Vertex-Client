@@ -200,23 +200,14 @@ public class BreakingState implements BlockMinerState {
      * Sets attack key to continuously mine ONLY when crosshair is locked onto target block,
      * and holds it down to prevent mining progress resets.
      */
-    private int tickCount = 0;
-
     private void handleKeybinds(BlockMiner miner) {
         if (mc.gameMode == null || mc.player == null) return;
-        tickCount++;
 
-        // Reset attack cooldown to prevent vanilla from delaying mining
+        // Reset attack cooldown
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
 
         BlockPos targetPos = miner.getTargetBlockPos();
-        if (targetPos == null) {
-            if (tickCount % 20 == 0) logError("[Debug] targetPos is NULL!");
-            return;
-        }
-
-        // Hold attack keybind down continuously while in BreakingState
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        if (targetPos == null) return;
 
         // Get targeted face direction, defaulting to closest visible side or UP
         net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
@@ -224,24 +215,15 @@ public class BreakingState implements BlockMinerState {
                 : BlockUtil.getClosestVisibleSide(targetPos);
         if (direction == null) direction = net.minecraft.core.Direction.UP;
 
-        boolean hitResultMatches = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos));
+        // Meteor Client Packet Mining sequence:
+        // 1. START_DESTROY_BLOCK packet via gameMode
+        mc.gameMode.startDestroyBlock(targetPos, direction);
 
-        if (tickCount % 20 == 0 || !hasStartedMining) {
-            log("[Debug Tick #" + tickCount + "] Target: " + targetPos + " | hitResultMatches=" + hitResultMatches +
-                " | hitResult=" + (mc.hitResult != null ? mc.hitResult.getType() : "null") +
-                " | keyAttack.isDown=" + mc.options.keyAttack.isDown() +
-                " | hasStartedMining=" + hasStartedMining);
-        }
-
-        if (!hasStartedMining) {
-            hasStartedMining = true;
-            log("[Debug] Calling startDestroyBlock on target: " + targetPos + " side: " + direction);
-            mc.gameMode.startDestroyBlock(targetPos, direction);
-        } else {
-            // Also call continueDestroyBlock every tick to drive block damage
-            mc.gameMode.continueDestroyBlock(targetPos, direction);
-        }
+        // 2. Swing hand
         mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+
+        // 3. STOP_DESTROY_BLOCK packet directly
+        com.vertexai.util.PacketUtil.sendStopDestroyBlock(targetPos, direction);
 
         // Handle shift/sneak requirements
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
