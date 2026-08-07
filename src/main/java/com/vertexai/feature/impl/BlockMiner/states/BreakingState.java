@@ -151,8 +151,8 @@ public class BreakingState implements BlockMinerState {
             miner.setTargetParticlePos(null);
         }
 
-        // Safety mechanism: if we've been trying to break for too long, reset
-        if (++this.breakAttemptTime > this.miningTime + FAILSAFE_TICKS) {
+        // Safety mechanism: if we've been actively mining for too long without block breaking, reset
+        if (hasStartedMining && ++this.breakAttemptTime > Math.max(200, this.miningTime * 4)) {
             logError("Stuck while mining, return to starting state");
             if (mc.gameMode != null) {
                 mc.gameMode.stopDestroyBlock();
