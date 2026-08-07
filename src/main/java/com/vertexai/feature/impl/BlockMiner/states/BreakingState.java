@@ -223,11 +223,6 @@ public class BreakingState implements BlockMinerState {
         }
 
         if (isLookingAtTarget && blockHitResult != null) {
-            // Reset destroy delay in gameMode so continuous breaking is uninterrupted
-            if (mc.gameMode instanceof com.vertexai.mixin.MultiPlayerGameModeAccessor accessor) {
-                accessor.setDestroyDelay(0);
-            }
-
             if (!hasSentStartPacket) {
                 // Initiate destruction on server and client game mode
                 com.vertexai.util.PacketUtil.sendStartDestroyBlock(targetPos, blockHitResult.getDirection());
