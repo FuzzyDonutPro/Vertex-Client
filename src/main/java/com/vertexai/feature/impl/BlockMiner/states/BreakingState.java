@@ -224,23 +224,27 @@ public class BreakingState implements BlockMinerState {
         }
 
         if (isLookingAtTarget && blockHitResult != null) {
-            // MUST hold keyAttack down so vanilla's continueDestroyBlock doesn't abort
+            // Hold attack keybind state so client key mappings stay active
             KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+            net.minecraft.core.Direction direction = blockHitResult.getDirection();
 
             if (!hasSentStartPacket) {
-                // Initiate block destruction via vanilla game mode (sends START_DESTROY_BLOCK packet)
-                mc.gameMode.startDestroyBlock(targetPos, blockHitResult.getDirection());
+                // Initiate block destruction on server and client game mode
+                mc.gameMode.startDestroyBlock(targetPos, direction);
                 hasSentStartPacket = true;
                 hasStartedMining = true;
             } else {
-                // Continuously update block destruction via vanilla game mode
-                mc.gameMode.continueDestroyBlock(targetPos, blockHitResult.getDirection());
+                // Continuously update block destruction on client game mode
+                mc.gameMode.continueDestroyBlock(targetPos, direction);
             }
             // Swing main hand for visual animation and server swing packet sync
             mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         } else {
             // Cleanly reset if player's crosshair shifts off target
             if (hasStartedMining) {
+                if (miner.getTargetBlockPos() != null) {
+                    com.vertexai.util.PacketUtil.sendAbortDestroyBlock(miner.getTargetBlockPos(), net.minecraft.core.Direction.UP);
+                }
                 mc.gameMode.stopDestroyBlock();
             }
             hasSentStartPacket = false;
