@@ -187,6 +187,8 @@ public class BreakingState implements BlockMinerState {
         if (mc.gameMode != null) {
             mc.gameMode.stopDestroyBlock();
         }
+        hasSentStartPacket = false;
+        hasStartedMining = false;
         if (com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             com.vertexai.feature.impl.Pathfinder.getInstance().stop("Exiting Breaking State");
         }
@@ -201,17 +203,16 @@ public class BreakingState implements BlockMinerState {
     private void handleKeybinds(BlockMiner miner) {
         if (mc.gameMode == null || mc.player == null) return;
 
-        // Reset attack cooldown to prevent vanilla from blocking our mining
+        // Reset attack cooldown to prevent vanilla from delaying mining
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
 
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) return;
 
-        // Do a fresh pick() so hitResult reflects the rotation we just set this tick
-        // (vanilla pick() ran at tick start before RotationHandler updated yaw/pitch)
+        // Do a fresh pick() so hitResult reflects the rotation set this tick
         mc.gameRenderer.pick(1.0f);
 
-        // Check if player's crosshair hit result is currently targeting the block
+        // Check if player's crosshair is currently targeting the block
         boolean isLookingAtTarget = false;
         net.minecraft.world.phys.BlockHitResult blockHitResult = null;
 
@@ -223,26 +224,28 @@ public class BreakingState implements BlockMinerState {
         }
 
         if (isLookingAtTarget && blockHitResult != null) {
+            // MUST hold keyAttack down so vanilla's continueDestroyBlock doesn't abort
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
             if (!hasSentStartPacket) {
-                // Initiate destruction on server and client game mode
-                com.vertexai.util.PacketUtil.sendStartDestroyBlock(targetPos, blockHitResult.getDirection());
+                // Initiate block destruction via vanilla game mode (sends START_DESTROY_BLOCK packet)
                 mc.gameMode.startDestroyBlock(targetPos, blockHitResult.getDirection());
                 hasSentStartPacket = true;
                 hasStartedMining = true;
             } else {
-                // Continuously update block destruction on server and client
+                // Continuously update block destruction via vanilla game mode
                 mc.gameMode.continueDestroyBlock(targetPos, blockHitResult.getDirection());
             }
-            // Swing arm for visual animation and server swing packet sync
+            // Swing main hand for visual animation and server swing packet sync
             mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         } else {
             // Cleanly reset if player's crosshair shifts off target
-            if (hasStartedMining && blockHitResult != null) {
-                com.vertexai.util.PacketUtil.sendAbortDestroyBlock(targetPos, blockHitResult.getDirection());
+            if (hasStartedMining) {
                 mc.gameMode.stopDestroyBlock();
             }
             hasSentStartPacket = false;
             hasStartedMining = false;
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
         }
 
         // Handle shift/sneak requirements
