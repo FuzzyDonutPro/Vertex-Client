@@ -97,6 +97,7 @@ public class BreakingState implements BlockMinerState {
      * Tracks if startDestroyBlock has been called for the current target block in 1.21.11.
      */
     private boolean hasSentStartPacket = false;
+    private net.minecraft.core.Direction miningDirection = null;
 
 
     @Override
@@ -106,6 +107,7 @@ public class BreakingState implements BlockMinerState {
         isWalking = false;
         hasStartedMining = false;
         hasSentStartPacket = false;
+        miningDirection = null;
 
         lookAwayTimer = new Clock();
         wasLookingAway = false;
@@ -212,17 +214,19 @@ public class BreakingState implements BlockMinerState {
         // Hold attack keybind down continuously while breaking block
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
-        // Get targeted face direction, defaulting to closest visible side or UP
-        net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
-                ? bhr.getDirection()
-                : BlockUtil.getClosestVisibleSide(targetPos);
-        if (direction == null) direction = net.minecraft.core.Direction.UP;
+        if (!hasSentStartPacket || miningDirection == null) {
+            // Lock initial direction face on first tick
+            miningDirection = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
+                    ? bhr.getDirection()
+                    : BlockUtil.getClosestVisibleSide(targetPos);
+            if (miningDirection == null) miningDirection = net.minecraft.core.Direction.UP;
 
-        if (!hasSentStartPacket) {
-            // First tick: send START_DESTROY_BLOCK via gameMode
-            mc.gameMode.startDestroyBlock(targetPos, direction);
+            mc.gameMode.startDestroyBlock(targetPos, miningDirection);
             hasSentStartPacket = true;
             hasStartedMining = true;
+        } else {
+            // Drive continuous block destruction with the LOCKED direction face
+            mc.gameMode.continueDestroyBlock(targetPos, miningDirection);
         }
 
         // Swing hand for visual animation and server swing packet sync
