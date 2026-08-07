@@ -201,10 +201,15 @@ public class BreakingState implements BlockMinerState {
     private void handleKeybinds(BlockMiner miner) {
         if (mc.gameMode == null || mc.player == null) return;
 
-        // Reset attack cooldown so Vanilla processes breaking progress immediately each tick
+        // Reset attack cooldown to prevent vanilla from blocking our mining
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
 
         BlockPos targetPos = miner.getTargetBlockPos();
+        if (targetPos == null) return;
+
+        // Do a fresh pick() so hitResult reflects the rotation we just set this tick
+        // (vanilla pick() ran at tick start before RotationHandler updated yaw/pitch)
+        mc.gameRenderer.pick(1.0f);
 
         // Check if player's crosshair hit result is currently targeting the block
         boolean isLookingAtTarget = false;
@@ -212,15 +217,12 @@ public class BreakingState implements BlockMinerState {
 
         if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
             blockHitResult = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
-            if (targetPos != null && blockHitResult.getBlockPos().equals(targetPos)) {
+            if (blockHitResult.getBlockPos().equals(targetPos)) {
                 isLookingAtTarget = true;
             }
         }
 
         if (isLookingAtTarget && blockHitResult != null) {
-            // Hold attack keybind down
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
-
             if (!hasSentStartPacket) {
                 // First tick crosshair hits the block: initiate destruction
                 mc.gameMode.startDestroyBlock(targetPos, blockHitResult.getDirection());
@@ -230,6 +232,8 @@ public class BreakingState implements BlockMinerState {
                 // Subsequent ticks: continue breaking progress
                 mc.gameMode.continueDestroyBlock(targetPos, blockHitResult.getDirection());
             }
+            // Swing arm for visual feedback (startDestroyBlock swings once, but continue doesn't)
+            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         } else {
             // Cleanly reset if player's crosshair shifts off target
             if (hasStartedMining) {
@@ -237,7 +241,6 @@ public class BreakingState implements BlockMinerState {
             }
             hasSentStartPacket = false;
             hasStartedMining = false;
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
         }
 
         // Handle shift/sneak requirements
