@@ -218,14 +218,10 @@ public class BreakingState implements BlockMinerState {
                 : BlockUtil.getClosestVisibleSide(targetPos);
         if (direction == null) direction = net.minecraft.core.Direction.UP;
 
-        if (!hasSentStartPacket) {
-            mc.gameMode.startDestroyBlock(targetPos, direction);
-            hasSentStartPacket = true;
+        if (!hasStartedMining) {
             hasStartedMining = true;
-        } else {
-            mc.gameMode.continueDestroyBlock(targetPos, direction);
+            mc.gameMode.startDestroyBlock(targetPos, direction);
         }
-        mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
 
         // Handle shift/sneak requirements
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
