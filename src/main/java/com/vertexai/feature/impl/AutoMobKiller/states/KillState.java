@@ -211,7 +211,7 @@ public class KillState implements AutoMobKillerState {
                 && !(living instanceof net.minecraft.world.entity.player.Player) 
                 && living.isAlive()
                 && mobKiller.getMobsToKill().stream().anyMatch(t -> ChatFormatting.stripFormatting(living.getName().getString().toLowerCase(java.util.Locale.ROOT)).contains(t.toLowerCase(java.util.Locale.ROOT))))
-                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 5.0f);
+                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 25.0f);
 
         if (!aimAlignedOnMob) {
             return this;
