@@ -199,29 +199,50 @@ public class BreakingState implements BlockMinerState {
      * and holds it down to prevent mining progress resets.
      */
     private void handleKeybinds(BlockMiner miner) {
-        // Clear attack cooldown so vanilla processes the held click immediately
+        if (mc.gameMode == null || mc.player == null) return;
+
+        // Reset attack cooldown so Vanilla processes breaking progress immediately each tick
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
 
-        // Check if crosshair is currently on target block
-        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
+        BlockPos targetPos = miner.getTargetBlockPos();
 
-        if (isLookingAtTarget && !hasStartedMining) {
-            // First time crosshair lands on target: fire one click so vanilla's
-            // consumeClick() triggers startDestroyBlock on next handleKeybinds
-            hasStartedMining = true;
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
-            com.mojang.blaze3d.platform.InputConstants.Key boundKey =
-                    ((com.vertexai.mixin.client.KeyMappingAccessor) mc.options.keyAttack).getBoundKey();
-            net.minecraft.client.KeyMapping.click(boundKey);
-        } else if (hasStartedMining) {
-            // Keep held down so vanilla fires continueDestroyBlock each tick
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        // Check if player's crosshair hit result is currently targeting the block
+        boolean isLookingAtTarget = false;
+        net.minecraft.world.phys.BlockHitResult blockHitResult = null;
+
+        if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            blockHitResult = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
+            if (targetPos != null && blockHitResult.getBlockPos().equals(targetPos)) {
+                isLookingAtTarget = true;
+            }
         }
 
+        if (isLookingAtTarget && blockHitResult != null) {
+            // Hold attack keybind down
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
+            if (!hasSentStartPacket) {
+                // First tick crosshair hits the block: initiate destruction
+                mc.gameMode.startDestroyBlock(targetPos, blockHitResult.getDirection());
+                hasSentStartPacket = true;
+                hasStartedMining = true;
+            } else {
+                // Subsequent ticks: continue breaking progress
+                mc.gameMode.continueDestroyBlock(targetPos, blockHitResult.getDirection());
+            }
+        } else {
+            // Cleanly reset if player's crosshair shifts off target
+            if (hasStartedMining) {
+                mc.gameMode.stopDestroyBlock();
+            }
+            hasSentStartPacket = false;
+            hasStartedMining = false;
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+        }
+
+        // Handle shift/sneak requirements
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             boolean shouldSneak = Vertex.config().general.sneakWhileMining;
-            // Minimal mode: force sneak for sub-block precision while standing at edges
             if (Vertex.config().miningMacro.allowPathfinder && Vertex.config().miningMacro.pathfinderMode == 0) {
                 shouldSneak = true;
             }
