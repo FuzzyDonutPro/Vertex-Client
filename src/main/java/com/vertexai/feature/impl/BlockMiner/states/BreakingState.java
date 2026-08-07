@@ -179,12 +179,9 @@ public class BreakingState implements BlockMinerState {
         }
 
         // Drive continuous mining via gameMode.startDestroyBlock / continueDestroyBlock
-        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
-
-        if (mc.gameMode != null && miner.getTargetBlockPos() != null && isLookingAtTarget) {
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
             BlockPos targetPos = miner.getTargetBlockPos();
-            net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr) ? bhr.getDirection() : BlockUtil.getClosestVisibleSide(targetPos);
+            net.minecraft.core.Direction direction = BlockUtil.getClosestVisibleSide(targetPos);
             if (direction == null) direction = net.minecraft.core.Direction.UP;
 
             if (!hasSentStartPacket) {
