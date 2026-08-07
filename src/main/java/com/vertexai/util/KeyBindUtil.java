@@ -68,11 +68,11 @@ public class KeyBindUtil {
     }
 
     public static int getRightClickDelayTimer() {
-        return 0; // mc.rightClickDelay
+        return ((com.vertexai.mixin.client.MinecraftAccessor) mc).getRightClickDelayTimer();
     }
 
     public static void resetRightClickDelayTimer() {
-        // 0 = 0;
+        ((com.vertexai.mixin.client.MinecraftAccessor) mc).setRightClickDelayTimer(0);
     }
 
     public static void setKeyBindState(KeyMapping key, boolean pressed) {

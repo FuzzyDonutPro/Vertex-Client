@@ -93,9 +93,9 @@ public class KillState implements AutoMobKillerState {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
                         log("Attempting to use Rogue Sword from slot " + rogueSlot + " (Mana: " + mana + ")");
-                        if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 150)) {
+                        if (com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 200)) {
                             mobKiller.getRogueTimer().schedule(35000L);
-                            rogueActiveTimer.schedule(200L);
+                            rogueActiveTimer.schedule(300L);
                             log("Auto Rogue Sword speed boost! Mana: " + mana);
                         } else {
                             log("UseItemAbility failed for Rogue Sword");
