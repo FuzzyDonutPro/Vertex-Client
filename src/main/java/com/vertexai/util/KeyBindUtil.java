@@ -87,7 +87,13 @@ public class KeyBindUtil {
 
     private static void realSetKeyBindState(KeyMapping key, boolean pressed) {
         if (key == null) return;
+        boolean wasDown = key.isDown();
         ((KeyMappingAccessor) key).setDown(pressed);
+        // On rising edge (false -> true), fire one click so vanilla's consumeClick() processes it
+        if (pressed && !wasDown) {
+            InputConstants.Key boundKey = ((KeyMappingAccessor) key).getBoundKey();
+            KeyMapping.click(boundKey);
+        }
     }
 
     public static void stopMovement() {

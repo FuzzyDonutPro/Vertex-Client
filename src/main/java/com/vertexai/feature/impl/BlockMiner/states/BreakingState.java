@@ -177,22 +177,6 @@ public class BreakingState implements BlockMinerState {
             return new StartingState();
         }
 
-        // Drive continuous mining via gameMode.startDestroyBlock / continueDestroyBlock
-        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
-            BlockPos targetPos = miner.getTargetBlockPos();
-            net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
-                    ? bhr.getDirection()
-                    : BlockUtil.getClosestVisibleSide(targetPos);
-            if (direction == null) direction = net.minecraft.core.Direction.UP;
-
-            if (!hasSentStartPacket) {
-                mc.gameMode.startDestroyBlock(targetPos, direction);
-                hasSentStartPacket = true;
-            } else {
-                mc.gameMode.continueDestroyBlock(targetPos, direction);
-            }
-        }
-
         return this;
     }
 
@@ -215,6 +199,8 @@ public class BreakingState implements BlockMinerState {
      * and holds it down to prevent mining progress resets.
      */
     private void handleKeybinds(BlockMiner miner) {
+        // Clear attack cooldown so vanilla processes the held click immediately
+        ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
