@@ -176,12 +176,27 @@ public class BreakingState implements BlockMinerState {
             return new StartingState();
         }
 
+        // Drive continuous mining via gameMode.startDestroyBlock / continueDestroyBlock
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
+            BlockPos targetPos = miner.getTargetBlockPos();
+            net.minecraft.core.Direction direction = BlockUtil.getClosestVisibleSide(targetPos);
+            if (direction == null) direction = net.minecraft.core.Direction.UP;
+
+            if (!hasSentStartPacket) {
+                mc.gameMode.startDestroyBlock(targetPos, direction);
+                hasSentStartPacket = true;
+            } else {
+                mc.gameMode.continueDestroyBlock(targetPos, direction);
+            }
+        }
+
         return this;
     }
 
     @Override
     public void onEnd(BlockMiner miner) {
         RotationHandler.getInstance().stop();
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
         if (mc.gameMode != null) {
             mc.gameMode.stopDestroyBlock();
         }
@@ -197,14 +212,7 @@ public class BreakingState implements BlockMinerState {
      * and holds it down to prevent mining progress resets.
      */
     private void handleKeybinds(BlockMiner miner) {
-        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
-
-        if (isLookingAtTarget) {
-            hasStartedMining = true;
-        }
-
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, hasStartedMining);
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             boolean shouldSneak = Vertex.config().general.sneakWhileMining;
