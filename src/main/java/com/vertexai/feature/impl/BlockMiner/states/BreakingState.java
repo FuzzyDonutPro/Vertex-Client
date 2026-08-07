@@ -209,21 +209,24 @@ public class BreakingState implements BlockMinerState {
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) return;
 
+        // Hold attack keybind down continuously while breaking block
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
         // Get targeted face direction, defaulting to closest visible side or UP
         net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
                 ? bhr.getDirection()
                 : BlockUtil.getClosestVisibleSide(targetPos);
         if (direction == null) direction = net.minecraft.core.Direction.UP;
 
-        // Meteor Client Packet Mining sequence:
-        // 1. START_DESTROY_BLOCK packet via gameMode
-        mc.gameMode.startDestroyBlock(targetPos, direction);
+        if (!hasSentStartPacket) {
+            // First tick: send START_DESTROY_BLOCK via gameMode
+            mc.gameMode.startDestroyBlock(targetPos, direction);
+            hasSentStartPacket = true;
+            hasStartedMining = true;
+        }
 
-        // 2. Swing hand
+        // Swing hand for visual animation and server swing packet sync
         mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-
-        // 3. STOP_DESTROY_BLOCK packet directly
-        com.vertexai.util.PacketUtil.sendStopDestroyBlock(targetPos, direction);
 
         // Handle shift/sneak requirements
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
