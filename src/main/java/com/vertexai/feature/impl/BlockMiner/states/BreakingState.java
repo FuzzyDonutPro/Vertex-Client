@@ -214,7 +214,14 @@ public class BreakingState implements BlockMinerState {
      * and holds it down to prevent mining progress resets.
      */
     private void handleKeybinds(BlockMiner miner) {
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
+        boolean isLookingAtTarget = miner.getTargetBlockPos() != null && miner.getTargetBlockPos().equals(currentLookingAt);
+
+        if (isLookingAtTarget) {
+            hasStartedMining = true;
+        }
+
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, hasStartedMining);
 
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
             boolean shouldSneak = Vertex.config().general.sneakWhileMining;
