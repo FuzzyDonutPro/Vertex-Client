@@ -87,12 +87,11 @@ public class KeyBindUtil {
 
     private static void realSetKeyBindState(KeyMapping key, boolean pressed) {
         if (key == null) return;
-        InputConstants.Key boundKey = ((KeyMappingAccessor) key).getBoundKey();
+        boolean wasDown = key.isDown();
         ((KeyMappingAccessor) key).setDown(pressed);
-        if (pressed) {
-            KeyMapping.set(boundKey, true);
-        } else {
-            KeyMapping.set(boundKey, false);
+        if (pressed != wasDown) {
+            InputConstants.Key boundKey = ((KeyMappingAccessor) key).getBoundKey();
+            KeyMapping.set(boundKey, pressed);
         }
     }
 
