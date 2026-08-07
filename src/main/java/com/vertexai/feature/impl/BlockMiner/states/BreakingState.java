@@ -223,20 +223,27 @@ public class BreakingState implements BlockMinerState {
         }
 
         if (isLookingAtTarget && blockHitResult != null) {
+            // Reset destroy delay in gameMode so continuous breaking is uninterrupted
+            if (mc.gameMode instanceof com.vertexai.mixin.MultiPlayerGameModeAccessor accessor) {
+                accessor.setDestroyDelay(0);
+            }
+
             if (!hasSentStartPacket) {
-                // First tick crosshair hits the block: initiate destruction
+                // Initiate destruction on server and client game mode
+                com.vertexai.util.PacketUtil.sendStartDestroyBlock(targetPos, blockHitResult.getDirection());
                 mc.gameMode.startDestroyBlock(targetPos, blockHitResult.getDirection());
                 hasSentStartPacket = true;
                 hasStartedMining = true;
             } else {
-                // Subsequent ticks: continue breaking progress
+                // Continuously update block destruction on server and client
                 mc.gameMode.continueDestroyBlock(targetPos, blockHitResult.getDirection());
             }
-            // Swing arm for visual feedback (startDestroyBlock swings once, but continue doesn't)
+            // Swing arm for visual animation and server swing packet sync
             mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         } else {
             // Cleanly reset if player's crosshair shifts off target
-            if (hasStartedMining) {
+            if (hasStartedMining && blockHitResult != null) {
+                com.vertexai.util.PacketUtil.sendAbortDestroyBlock(targetPos, blockHitResult.getDirection());
                 mc.gameMode.stopDestroyBlock();
             }
             hasSentStartPacket = false;
