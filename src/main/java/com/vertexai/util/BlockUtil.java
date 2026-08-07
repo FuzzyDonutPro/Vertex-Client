@@ -479,27 +479,18 @@ public class BlockUtil {
     }
 
     public static Direction getClosestVisibleSide(BlockPos block) {
-        if (!isFullCube(block)) {
-            return null;
-        }
-        if (mc.player == null) return null;
+        if (mc.player == null) return Direction.UP;
         final Vec3 eyePos = mc.player.getEyePosition();
         double dist = Double.MAX_VALUE;
         Direction face = null;
-        for (Direction side : BLOCK_SIDES.keySet()) {
-            if (side != null && !shouldRenderSide(block, side)) {
-                continue;
-            }
+        for (Direction side : Direction.values()) {
             final double distanceToThisSide = eyePos.distanceTo(getSidePos(block, side));
-            if (canSeeSide(block, side) && distanceToThisSide < dist) {
-                if (side == null && face != null) {
-                    continue;
-                }
+            if (distanceToThisSide < dist) {
                 dist = distanceToThisSide;
                 face = side;
             }
         }
-        return face;
+        return face != null ? face : Direction.UP;
     }
 
     public static Direction getClosestVisibleSide(Vec3 from, BlockPos block) {
