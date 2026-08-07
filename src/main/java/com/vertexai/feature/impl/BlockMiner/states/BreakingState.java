@@ -209,48 +209,23 @@ public class BreakingState implements BlockMinerState {
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) return;
 
-        // Do a fresh pick() so hitResult reflects the rotation set this tick
-        mc.gameRenderer.pick(1.0f);
+        // Hold attack keybind down continuously while in BreakingState
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
-        // Check if player's crosshair is currently targeting the block
-        boolean isLookingAtTarget = false;
-        net.minecraft.world.phys.BlockHitResult blockHitResult = null;
+        // Get targeted face direction, defaulting to closest visible side or UP
+        net.minecraft.core.Direction direction = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
+                ? bhr.getDirection()
+                : BlockUtil.getClosestVisibleSide(targetPos);
+        if (direction == null) direction = net.minecraft.core.Direction.UP;
 
-        if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
-            blockHitResult = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
-            if (blockHitResult.getBlockPos().equals(targetPos)) {
-                isLookingAtTarget = true;
-            }
-        }
-
-        if (isLookingAtTarget && blockHitResult != null) {
-            // Hold attack keybind state so client key mappings stay active
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
-            net.minecraft.core.Direction direction = blockHitResult.getDirection();
-
-            if (!hasSentStartPacket) {
-                // Initiate block destruction on server and client game mode
-                mc.gameMode.startDestroyBlock(targetPos, direction);
-                hasSentStartPacket = true;
-                hasStartedMining = true;
-            } else {
-                // Continuously update block destruction on client game mode
-                mc.gameMode.continueDestroyBlock(targetPos, direction);
-            }
-            // Swing main hand for visual animation and server swing packet sync
-            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        if (!hasSentStartPacket) {
+            mc.gameMode.startDestroyBlock(targetPos, direction);
+            hasSentStartPacket = true;
+            hasStartedMining = true;
         } else {
-            // Cleanly reset if player's crosshair shifts off target
-            if (hasStartedMining) {
-                if (miner.getTargetBlockPos() != null) {
-                    com.vertexai.util.PacketUtil.sendAbortDestroyBlock(miner.getTargetBlockPos(), net.minecraft.core.Direction.UP);
-                }
-                mc.gameMode.stopDestroyBlock();
-            }
-            hasSentStartPacket = false;
-            hasStartedMining = false;
-            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            mc.gameMode.continueDestroyBlock(targetPos, direction);
         }
+        mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
 
         // Handle shift/sneak requirements
         if (!com.vertexai.feature.impl.Pathfinder.getInstance().isRunning()) {
