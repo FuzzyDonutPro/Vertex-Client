@@ -79,9 +79,8 @@ public class BreakingState implements BlockMinerState {
             miner.setMiningDirection(miningDirection);
         }
 
-        // Reset attack cooldown and destroy delay every tick
+        // Reset attack cooldown every tick
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
-        ((com.vertexai.mixin.MultiPlayerGameModeAccessor) mc.gameMode).setDestroyDelay(0);
 
         // Ensure keyAttack stays false to prevent vanilla startAttack() racing
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);

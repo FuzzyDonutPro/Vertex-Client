@@ -160,7 +160,7 @@ public class BlockMiner extends AbstractFeature {
 
         // Initialize parameters
         this.startPos = com.vertexai.util.PlayerUtil.getBlockStandingOn();
-        this.miningSpeed = miningSpeed - 200;  // Base adjustment to mining speed
+        this.miningSpeed = miningSpeed;
         this.pickaxeAbility = pickaxeAbility;
         this.enabled = true;
         this.error = BlockMinerError.NONE;
