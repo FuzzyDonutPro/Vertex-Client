@@ -205,7 +205,12 @@ public class RotationHandler {
 
     private void handleRotationEnd() {
         if (!this.stopRequested) {
-            if (this.configuration.followTarget()) {
+            if (this.configuration != null && this.configuration.rotationType() == RotationConfiguration.RotationType.CLIENT && this.target != null && this.target.getTargetAngle() != null) {
+                mc.player.setYRot(this.target.getTargetAngle().getYaw());
+                mc.player.setXRot(this.target.getTargetAngle().getPitch());
+            }
+
+            if (this.configuration != null && this.configuration.followTarget()) {
                 System.out.println("Following Target");
                 this.easeTo(configuration);
                 this.followingTarget = true;

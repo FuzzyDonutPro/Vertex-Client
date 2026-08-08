@@ -211,23 +211,24 @@ public class BreakingState implements BlockMinerState {
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) return;
 
-        // Do a fresh pick() so hitResult reflects the rotation set by RotationHandler
+        // Do a fresh pick() so hitResult reflects the updated camera rotation
         mc.gameRenderer.pick(1.0f);
 
-        // Check if player's crosshair has arrived on the target block
+        // Check if player's crosshair has arrived on the target block or rotation has completed
         boolean arrivedOnTarget = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos));
+        boolean rotationFinished = !RotationHandler.getInstance().isEnabled();
 
-        // 1. AIM & ARRIVE: Wait until crosshair arrives on target before starting block destruction (no first mine tick glide)
+        // 1. AIM & ARRIVE: Wait until rotation finishes or crosshair arrives on target before initiating destruction
         if (!hasSentStartPacket) {
-            if (!arrivedOnTarget) {
-                // Still aiming/gliding rotation toward target block — do not press keyAttack or send start packets yet
+            if (!arrivedOnTarget && !rotationFinished) {
+                // Still aiming rotation toward target block
                 KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
                 return;
             }
 
-            // Crosshair has arrived on target block! Lock initial direction face and start destruction
-            net.minecraft.world.phys.BlockHitResult bhr = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
-            miningDirection = bhr.getDirection();
+            // Crosshair arrived or rotation completed! Lock direction face and start block destruction
+            net.minecraft.world.phys.BlockHitResult bhr = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult b) ? b : null;
+            miningDirection = (bhr != null && bhr.getBlockPos().equals(targetPos)) ? bhr.getDirection() : BlockUtil.getClosestVisibleSide(targetPos);
             if (miningDirection == null) miningDirection = net.minecraft.core.Direction.UP;
 
             mc.gameMode.startDestroyBlock(targetPos, miningDirection);
@@ -235,7 +236,7 @@ public class BreakingState implements BlockMinerState {
             hasStartedMining = true;
         }
 
-        // 2. MINE: Crosshair arrived and mining initiated — hold keyAttack and continue destruction
+        // 2. MINE: Mining initiated — hold keyAttack and continue destruction with locked face
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
         mc.gameMode.continueDestroyBlock(targetPos, miningDirection != null ? miningDirection : net.minecraft.core.Direction.UP);
         mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
