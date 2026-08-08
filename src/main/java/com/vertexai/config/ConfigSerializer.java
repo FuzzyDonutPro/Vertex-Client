@@ -198,26 +198,40 @@ public class ConfigSerializer {
     }
 
     public static void updateField(VertexConfig config, String categoryId, String fieldId, String valueStr) {
-        if (config == null || categoryId == null || fieldId == null) return;
+        if (config == null || fieldId == null) return;
         try {
-            Field catField = null;
-            for (Field f : VertexConfig.class.getDeclaredFields()) {
-                if (f.getName().equalsIgnoreCase(categoryId)) {
-                    catField = f;
-                    break;
+            FieldOwnerPair pair = null;
+            if (categoryId != null && !categoryId.isEmpty() && !"undefined".equalsIgnoreCase(categoryId)) {
+                for (Field f : VertexConfig.class.getDeclaredFields()) {
+                    if (f.getName().equalsIgnoreCase(categoryId)) {
+                        f.setAccessible(true);
+                        try {
+                            Object categoryObj = f.get(config);
+                            if (categoryObj != null) {
+                                pair = findFieldAndOwner(categoryObj, fieldId);
+                            }
+                        } catch (Exception ignored) {}
+                        break;
+                    }
                 }
             }
-            if (catField == null) {
-                com.vertexai.util.Logger.sendError("[Config] Category not found: " + categoryId);
-                return;
-            }
-            catField.setAccessible(true);
-            Object categoryObj = catField.get(config);
-            if (categoryObj == null) return;
 
-            FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
             if (pair == null) {
-                com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " in " + categoryId);
+                for (Field f : VertexConfig.class.getDeclaredFields()) {
+                    if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) continue;
+                    f.setAccessible(true);
+                    try {
+                        Object categoryObj = f.get(config);
+                        if (categoryObj != null) {
+                            pair = findFieldAndOwner(categoryObj, fieldId);
+                            if (pair != null) break;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (pair == null) {
+                com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " (category: " + categoryId + ")");
                 return;
             }
 

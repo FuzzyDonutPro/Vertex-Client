@@ -10,7 +10,7 @@ public class MiningMacro {
     @ConfigOption(name = "Ore Type", desc = "")
     @ConfigEditorDropdown(
             values = {
-                    "Mithril",
+                    "Mithril & Titanium",
                     "Diamond",
                     "Emerald",
                     "Redstone",
@@ -18,6 +18,11 @@ public class MiningMacro {
                     "Gold",
                     "Iron",
                     "Coal",
+                    "Hardstone",
+                    "Gemstones",
+                    "Glacite",
+                    "Tungsten",
+                    "Umber"
             }
     )
     public int oreType = 0;

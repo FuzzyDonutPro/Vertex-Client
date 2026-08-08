@@ -2,7 +2,7 @@ package com.vertexai.failsafe.impl;
 
 import lombok.Getter;
 import com.vertexai.failsafe.AbstractFailsafe;
-import com.vertexai.feature.impl.AutoWarp;
+import com.vertexai.macro.features.misc.AutoWarp;
 import com.vertexai.macro.MacroManager;
 
 public class WorldChangeFailsafe extends AbstractFailsafe {

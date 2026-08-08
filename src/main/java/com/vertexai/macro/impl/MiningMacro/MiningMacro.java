@@ -2,12 +2,12 @@ package com.vertexai.macro.impl.MiningMacro;
 
 import lombok.Getter;
 import com.vertexai.Vertex;
-import com.vertexai.feature.FeatureManager;
-import com.vertexai.feature.impl.AutoDrillRefuel.AutoDrillRefuel;
-import com.vertexai.feature.impl.AutoGetStats.AutoGetStats;
-import com.vertexai.feature.impl.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
-import com.vertexai.feature.impl.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
-import com.vertexai.feature.impl.BlockMiner.BlockMiner;
+import com.vertexai.macro.FeatureManager;
+import com.vertexai.macro.features.mining.AutoDrillRefuel.AutoDrillRefuel;
+import com.vertexai.macro.features.misc.AutoGetStats.AutoGetStats;
+import com.vertexai.macro.features.misc.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
+import com.vertexai.macro.features.misc.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
+import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.util.InventoryUtil;
 import com.vertexai.util.helper.Clock;
@@ -250,6 +250,26 @@ public class MiningMacro extends AbstractMacro {
                 break;
             case 7:
                 blocksToMine = new MineableBlock[]{MineableBlock.COAL};
+                break;
+            case 8:
+                blocksToMine = new MineableBlock[]{MineableBlock.HARDSTONE};
+                break;
+            case 9:
+                blocksToMine = new MineableBlock[]{
+                        MineableBlock.RUBY, MineableBlock.OPAL, MineableBlock.SAPPHIRE,
+                        MineableBlock.TOPAZ, MineableBlock.AMBER, MineableBlock.JADE,
+                        MineableBlock.AMETHYST, MineableBlock.JASPER, MineableBlock.AQUAMARINE,
+                        MineableBlock.PERIDOT, MineableBlock.ONYX, MineableBlock.CITRINE
+                };
+                break;
+            case 10:
+                blocksToMine = new MineableBlock[]{MineableBlock.GLACITE};
+                break;
+            case 11:
+                blocksToMine = new MineableBlock[]{MineableBlock.TUNGSTEN};
+                break;
+            case 12:
+                blocksToMine = new MineableBlock[]{MineableBlock.UMBER};
                 break;
             default:
                 blocksToMine = new MineableBlock[]{};

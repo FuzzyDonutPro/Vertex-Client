@@ -3,8 +3,8 @@ package com.vertexai.macro;
 import com.vertexai.Vertex;
 import com.vertexai.event.PacketEvent;
 import com.vertexai.event.UpdateTablistEvent;
-import com.vertexai.feature.FeatureManager;
-import com.vertexai.feature.impl.MouseUngrab;
+import com.vertexai.macro.FeatureManager;
+import com.vertexai.macro.features.misc.MouseUngrab;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
@@ -85,7 +85,7 @@ public class MacroManager {
         this.currentMacro = macro;
         send(this.currentMacro.getName() + " Enabled");
         com.vertexai.util.DiscordWebhookNotifier.sendWebhookNotification(
-                "🟢 Macro Started",
+                "ðŸŸ¢ Macro Started",
                 "Enabled macro: **" + this.currentMacro.getName() + "**",
                 0x22C55E // Emerald Green
         );
@@ -122,7 +122,7 @@ public class MacroManager {
         String summaryMsg = "Disabled macro: **" + this.currentMacro.getName() + "**";
 
         com.vertexai.util.DiscordWebhookNotifier.sendWebhookNotification(
-                "📊 SESSION SUMMARY REPORT",
+                "ðŸ“Š SESSION SUMMARY REPORT",
                 summaryMsg,
                 0xEF4444 // Red
         );

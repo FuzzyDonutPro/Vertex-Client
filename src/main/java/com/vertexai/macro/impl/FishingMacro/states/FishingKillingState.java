@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.FishingMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
 import com.vertexai.handler.RotationHandler;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.util.AngleUtil;

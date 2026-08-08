@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.MobKillerMacro;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
 import com.vertexai.macro.AbstractMacro;
 import lombok.Getter;
 
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MobKillerMacro — Dedicated macro for farming general combat mobs (Zealots, Ghosts, Goblins, etc.).
+ * MobKillerMacro â€” Dedicated macro for farming general combat mobs (Zealots, Ghosts, Goblins, etc.).
  * Fully separated from Slayer Boss Quests.
  */
 public class MobKillerMacro extends AbstractMacro {

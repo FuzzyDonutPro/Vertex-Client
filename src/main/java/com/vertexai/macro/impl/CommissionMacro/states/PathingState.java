@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.CommissionMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.RouteNavigator;
+import com.vertexai.macro.features.navigation.RouteNavigator;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.macro.impl.CommissionMacro.Commission;

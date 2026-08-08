@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.CommissionMacro.states;
 
-import com.vertexai.feature.impl.AutoWarp;
+import com.vertexai.macro.features.misc.AutoWarp;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.util.helper.location.SubLocation;
 

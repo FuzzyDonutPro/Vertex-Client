@@ -1,7 +1,7 @@
 package com.vertexai.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.vertexai.feature.impl.RouteAutoRecorder;
+import com.vertexai.macro.features.navigation.RouteAutoRecorder;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.util.Logger;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;

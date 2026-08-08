@@ -200,15 +200,15 @@ public class BlockUtil {
                     final double hardness = getBlockStrength(state);
                     final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(pos)).lengthSqrt();
 
-                    // High pathfinder starting cost penalty for out-of-reach blocks (> 3.5 blocks reach)
+                    // High pathfinder starting cost penalty for out-of-reach blocks (> 3.0 blocks reach)
                     double pathfinderStartPenalty = 0.0;
-                    if (distSq > 12.25) { // > 3.5 blocks reach requiring pathfinder navigation
+                    if (distSq > 9.0) { // > 3.0 blocks reach requiring pathfinder navigation
                         if (!com.vertexai.Vertex.config().miningMacro.allowPathfinder) {
                             continue; // Ignore out-of-reach blocks if pathfinder walking is disabled
                         }
                         // Minimal mode: check 5-block maximum distance limit from starting position
                         if (com.vertexai.Vertex.config().miningMacro.pathfinderMode == 0) { // Minimal
-                            BlockPos minerStart = com.vertexai.feature.impl.BlockMiner.BlockMiner.getInstance().getStartPos();
+                            BlockPos minerStart = com.vertexai.macro.features.mining.BlockMiner.BlockMiner.getInstance().getStartPos();
                             if (minerStart != null && pos.distSqr(minerStart) > 25.0) { // > 5 blocks from start position
                                 continue;
                             }
@@ -479,10 +479,25 @@ public class BlockUtil {
     }
 
     public static Direction getClosestVisibleSide(BlockPos block) {
-        if (mc.player == null) return Direction.UP;
+        if (mc.player == null || mc.level == null) return Direction.UP;
         final Vec3 eyePos = mc.player.getEyePosition();
         double dist = Double.MAX_VALUE;
         Direction face = null;
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = block.relative(side);
+            BlockState neighborState = mc.level.getBlockState(neighbor);
+            // Face is exposed if neighbor is air, non-solid, or non-occluding
+            if (neighborState.isAir() || !neighborState.isSolidRender() || !neighborState.canOcclude()) {
+                final double distanceToThisSide = eyePos.distanceTo(getSidePos(block, side));
+                if (distanceToThisSide < dist) {
+                    dist = distanceToThisSide;
+                    face = side;
+                }
+            }
+        }
+        if (face != null) return face;
+        
+        // Fallback if fully enclosed: pick geometrically closest side
         for (Direction side : Direction.values()) {
             final double distanceToThisSide = eyePos.distanceTo(getSidePos(block, side));
             if (distanceToThisSide < dist) {

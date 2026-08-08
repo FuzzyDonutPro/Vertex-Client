@@ -186,33 +186,35 @@
         'visitor': { catIds: ['farming'], allowedFieldIds: ['autoAcceptTrades', 'refuseUnprofitable'] },
         'pest_hunter': { catIds: ['farming'], allowedFieldIds: ['pestVacuum', 'pestBrokerTrade'] },
 
-        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'miningToolSlot', 'miningToolButton', 'altMiningTool', 'altMiningToolSlot', 'altMiningToolButton', 'slayerWeapon', 'slayerWeaponSlot', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
+        'commission': { catIds: ['commission'], allowedFieldIds: ['commClaimMethod', 'prioritiseTitanium', 'altMiningTool', 'altMiningToolSlot', 'altMiningToolButton', 'commSwapBeforeClaiming', 'slayerWeapon', 'slayerWeaponSlot', 'slayerWeaponButton', 'forgePathing'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro', 'general', 'commission'], allowedFieldIds: ['miningTool', 'miningToolSlot', 'altMiningTool', 'altMiningToolSlot', 'miningToolButton', 'altMiningToolButton', 'oreType', 'allowPathfinder', 'pathfinderMode', 'mineTarget', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'rotationSpeed', 'autoPickaxeAbility'] },
-        'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
-        'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
-        'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
+        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['oreType', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'allowPathfinder', 'pathfinderMode'] },
+        'powder': { catIds: ['powderMacro'], allowedFieldIds: ['powderType', 'powderLocation', 'chestSolver'] },
+        'glacial': { catIds: ['miningMacro', 'commission'], allowedFieldIds: ['coldThreshold', 'allowPathfinder'] },
+        'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['oreType', 'allowPathfinder'] },
 
-        'slayer': { catIds: ['combat', 'general'], allowedFieldIds: ['slayerTarget', 'slayerWeapon', 'slayerWeaponSlot', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
-        'mob_killer': { catIds: ['combat', 'general'], allowedFieldIds: ['mobKillerTarget', 'slayerWeapon', 'slayerWeaponSlot', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoWeaponSwap', 'autoRogueSword', 'killAuraRange', 'autoHealEnabled', 'autoHealThreshold'] },
+        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoWeaponSwap', 'autoRogueSword', 'killAuraRange', 'autoHealEnabled', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
         'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
 
-        'fishing': { catIds: ['fishing'], allowedFieldIds: ['fishingRod', 'fishingRodSlot', 'fishingRodButton', 'galateaFishingWeapon', 'galateaFishingWeaponSlot', 'galateaFishingWeaponButton', 'galateaAxe', 'galateaAxeSlot', 'rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
+        'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
 
-        'foraging': { catIds: ['foraging', 'fishing'], allowedFieldIds: ['foragingTreeType', 'galateaAxe', 'galateaAxeSlot', 'logBreakDelay', 'foragingPark', 'foragingHub', 'foragingFig'] },
+        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'treecapitatorSwap', 'logBreakDelay'] },
         'alchemy': { catIds: ['misc'], allowedFieldIds: ['potionRecipe', 'batchSize'] },
         'flip': { catIds: ['bazaarFlipper'], allowedFieldIds: ['bazaarMargin', 'orderAutoUpdate'] },
-        'diana': { catIds: ['combat'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
+        'diana': { catIds: ['combat', 'misc'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
     };
 
     function getMacroSettingsList(macro) {
         if (!macro || !dynamicConfigSchema) return [];
         
         let filter = macroSettingFilters[macro.id];
-        let catIds = filter ? filter.catIds : (categoryMapping[macro.category] || [macro.category]);
+        let catIds = filter && filter.catIds && filter.catIds.length > 0 
+            ? filter.catIds 
+            : (categoryMapping[macro.category] || [macro.category]);
         
         let result = [];
         for (let catId of catIds) {
@@ -226,13 +228,13 @@
             }
         }
         
+        // If specific allowedFieldIds returned nothing, fallback to all settings in the macro's primary category
         if (result.length === 0 && catIds.length > 0) {
-            for (let catId of catIds) {
-                let catObj = dynamicConfigSchema[catId];
-                if (catObj && catObj.settings) {
-                    for (let setting of catObj.settings) {
-                        result.push({ catId, ...setting });
-                    }
+            let primaryCatId = catIds[0];
+            let catObj = dynamicConfigSchema[primaryCatId];
+            if (catObj && catObj.settings) {
+                for (let setting of catObj.settings) {
+                    result.push({ catId: primaryCatId, ...setting });
                 }
             }
         }
@@ -312,7 +314,7 @@
         // Mining & Commissions
         { id: 'commission', category: 'mining', title: 'Commission Auto-Miner', desc: 'Dwarven Mines & Crystal Hollows commission route solver with Etherwarp.', running: false, target: 'Dwarven Mines', options: ['Dwarven Mines', 'Crystal Hollows', 'Glacite Mineshafts'] },
         { id: 'gemstone', category: 'mining', title: 'Gemstone Etherwarp Route Miner', desc: 'Follows custom JSON waypoint routes with 0-tick Etherwarp & Pickaxe swap.', running: false, target: 'Ruby Route #1', options: ['Ruby Route #1', 'Jasper Route #1', 'Sapphire Route #2', 'Topaz Magma Fields'] },
-        { id: 'mining_general', category: 'mining', title: 'Mithril & Ore Miner', desc: 'Auto-mines Mithril & Titanium ores with smooth head rotation.', running: false, target: 'Titanium & Mithril' },
+        { id: 'mining_general', category: 'mining', title: 'Mithril & Ore Miner', desc: 'Auto-mines Mithril, Titanium, Gemstones & All Ores with smooth head rotation.', running: false, target: 'Mithril & Titanium', options: ['Mithril & Titanium', 'Diamond', 'Emerald', 'Redstone', 'Lapis', 'Gold', 'Iron', 'Coal', 'Hardstone', 'Gemstones', 'Glacite', 'Tungsten', 'Umber'] },
         { id: 'powder', category: 'mining', title: 'Chest & Mithril Powder Miner', desc: 'Uncovers and loots buried treasure chests in Crystal Hollows for Powder.', running: false, target: 'Chest Solver + Mining' },
         { id: 'glacial', category: 'mining', title: 'Glacial Cave Ice/Mithril Miner', desc: 'Auto-mines Glacite & Glacial Ice in Mineshafts with pathfinder.', running: false, target: 'Glacial Ice' },
         { id: 'nuker', category: 'mining', title: 'Custom Block & Ore Nuker', desc: 'High-speed block nuker with range & FOV filters.', running: false, target: 'Mithril Ores' },
@@ -390,6 +392,16 @@
                             }
                         }
                     }
+                    if (data.miningMacro && data.miningMacro.settings) {
+                        let oreTypeSetting = data.miningMacro.settings.find(s => s.id === 'oreType');
+                        if (oreTypeSetting) {
+                            let card = macros.find(m => m.id === 'mining_general');
+                            let idx = parseInt(oreTypeSetting.value);
+                            if (card && card.options && !isNaN(idx) && card.options[idx]) {
+                                card.target = card.options[idx];
+                            }
+                        }
+                    }
                     macros = [...macros];
                 }
             })
@@ -443,6 +455,16 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
+                    macros = [...macros];
+                }
+            }
+        }
+        if (fieldId === 'oreType') {
+            let card = macros.find(m => m.id === 'mining_general');
+            if (card && card.options) {
+                let idx = parseInt(value);
+                if (!isNaN(idx) && card.options[idx]) {
+                    card.target = card.options[idx];
                     macros = [...macros];
                 }
             }
@@ -552,6 +574,14 @@
                     updateConfigValue('foraging', 'foragingTreeType', idx);
                 }
             }
+        } else if (id === 'mining_general') {
+            let macro = macros.find(m => m.id === 'mining_general');
+            if (macro && macro.options) {
+                let idx = macro.options.indexOf(target);
+                if (idx !== -1) {
+                    updateConfigValue('miningMacro', 'oreType', idx);
+                }
+            }
         }
 
         if (window.cefQuery) {
@@ -560,8 +590,22 @@
         fetch(`/api/macro/target?id=${encodeURIComponent(id)}&target=${encodeURIComponent(target)}`).catch(() => {});
     }
 
+    function saveConfig() {
+        playUiSound();
+        if (window.cefQuery) {
+            window.cefQuery({ request: 'save_config' });
+        }
+        fetch('/api/config/save', { method: 'POST' }).catch(() => {});
+    }
+
     function openMacroSettings(macro) {
+        playUiSound();
         activeMacroSettingsModal = macro;
+    }
+
+    function closeMacroSettings() {
+        saveConfig();
+        activeMacroSettingsModal = null;
     }
 
     function openConfigGui() {
@@ -743,16 +787,16 @@
             <div class="grid grid-cols-2 gap-3">
                 {#each filteredMacros as macro}
                 <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-300 hover:border-sky-400/40 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] min-w-0 relative group {macro.expanded ? 'col-span-2 border-sky-400/60 bg-slate-900/95 shadow-[0_0_25px_rgba(56,189,248,0.2)]' : ''}" 
-                     on:contextmenu|preventDefault={() => { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; }}
-                     on:auxclick={(e) => { if (e.button === 2) { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; } }}
-                     on:mousedown={(e) => { if (e.button === 2) { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; } }}>
+                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-300 hover:border-sky-400/40 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] min-w-0 relative group" 
+                     on:contextmenu|preventDefault={() => { playUiSound(); openMacroSettings(macro); }}
+                     on:auxclick={(e) => { if (e.button === 2) { playUiSound(); openMacroSettings(macro); } }}
+                     on:mousedown={(e) => { if (e.button === 2) { playUiSound(); openMacroSettings(macro); } }}>
                     <div class="flex justify-between items-start gap-2">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-[12px] font-semibold text-white truncate flex-1">{macro.title}</div>
-                                <button title="Configure Settings" class="text-slate-400 hover:text-sky-400 text-[12px] px-1.5 py-0.5 bg-white/5 rounded transition-colors cursor-pointer shrink-0" on:click|stopPropagation={() => { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; }}>
-                                    {macro.expanded ? 'Close' : 'Config'}
+                                <button title="Configure Settings" class="text-slate-400 hover:text-sky-400 text-[12px] px-1.5 py-0.5 bg-white/5 rounded transition-colors cursor-pointer shrink-0" on:click|stopPropagation={() => { playUiSound(); openMacroSettings(macro); }}>
+                                    Config
                                 </button>
                             </div>
                             <div class="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">{macro.desc}</div>
@@ -780,54 +824,6 @@
                             <button class="px-3 py-1 rounded-lg text-[10px] font-semibold bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-[0_2px_8px_rgba(56,189,248,0.3)] transition-all cursor-pointer whitespace-nowrap shrink-0" on:click|stopPropagation={() => { playUiSound(); toggleMacro(macro.id); }}>Start Macro</button>
                         {/if}
                     </div>
-
-                    <!-- Embedded Inline Settings Drawer (Renders on Right Click) -->
-                    {#if macro.expanded}
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2.5" on:click|stopPropagation>
-                            <div class="flex justify-between items-center mb-0.5">
-                                <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">{macro.title} Fine-Tuning</span>
-                                <button class="text-[9px] text-slate-400 hover:text-white" on:click={() => { macro.expanded = false; macros = [...macros]; }}>✕ Close</button>
-                            </div>
-
-                            {#if dynamicConfigSchema}
-                                <div class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
-                                    {#each getMacroSettingsList(macro) as setting}
-                                        <div class="bg-slate-950/80 p-2 rounded-lg border border-white/5 flex flex-col justify-between gap-1.5">
-                                            <div class="text-[10px] font-medium text-slate-200 truncate">{setting.name}</div>
-                                            
-                                            {#if setting.type === 'boolean'}
-                                                <label class="flex items-center gap-2 cursor-pointer select-none">
-                                                    <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
-                                                    <span class="text-[9px] text-slate-300">{setting.value ? 'Enabled' : 'Disabled'}</span>
-                                                </label>
-                                            {:else if setting.type === 'slider'}
-                                                <div class="flex items-center gap-1.5">
-                                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer h-1" />
-                                                    <span class="text-[9px] text-sky-400 font-mono w-7 text-right">{setting.value}</span>
-                                                </div>
-                                            {:else if setting.type === 'text'}
-                                                <div class="flex items-center w-full">
-                                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
-                                                </div>
-                                            {:else if setting.type === 'dropdown'}
-                                                <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
-                                                    {#each setting.options as opt, i}
-                                                        <option value={i}>{opt}</option>
-                                                    {/each}
-                                                </select>
-                                            {:else if setting.type === 'keybind'}
-                                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
-                                                    <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Rebind'}</span>
-                                                    <span class="text-sky-400 font-bold bg-sky-500/10 px-1 rounded">{getKeyName(setting.value)}</span>
-                                                </button>
-                                            {/if}
-                                        </div>
-                                    {/each}
-                                </div>
-                            {/if}
-                        </div>
-                    {/if}
                 </div>
                 {/each}
             </div>
@@ -876,7 +872,7 @@
                 </div>
                 
                 {#if dynamicConfigSchema}
-                    {#each ['delays'] as catId}
+                    {#each ['general', 'delays', 'miningMacro', 'farming', 'combat', 'fishing', 'foraging', 'gui'] as catId}
                         {#if dynamicConfigSchema[catId]}
                             <div class="mt-3 mb-1 pl-1">
                                 <h4 class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">{dynamicConfigSchema[catId].name}</h4>

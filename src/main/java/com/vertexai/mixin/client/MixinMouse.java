@@ -1,6 +1,6 @@
 package com.vertexai.mixin.client;
 
-import com.vertexai.feature.impl.PerspectiveMod;
+import com.vertexai.macro.features.misc.PerspectiveMod;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +12,7 @@ public class MixinMouse {
 
     @Inject(method = "grabMouse", at = @At("HEAD"), cancellable = true)
     private void onGrabMouse(CallbackInfo ci) {
-        if (com.vertexai.macro.MacroManager.getInstance().isRunning() || com.vertexai.feature.impl.MouseUngrab.getInstance().isEnabled()) {
+        if (com.vertexai.macro.MacroManager.getInstance().isRunning() || com.vertexai.macro.features.misc.MouseUngrab.getInstance().isEnabled()) {
             ci.cancel();
         }
     }

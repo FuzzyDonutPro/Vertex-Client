@@ -3,7 +3,7 @@ package com.vertexai.macro.impl.SlayerMacro.states;
 import com.vertexai.Vertex;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacro;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacroState;
-import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.GlacialMacro.states;
 
-import com.vertexai.feature.impl.AutoCommissionClaim;
+import com.vertexai.macro.features.misc.AutoCommissionClaim;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
 import com.vertexai.util.helper.Clock;
 

@@ -1,7 +1,7 @@
 package com.vertexai.command;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.PathfinderRouteBuilder;
+import com.vertexai.macro.features.navigation.PathfinderRouteBuilder;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.util.KeyPressUtil;
 import com.vertexai.util.Logger;

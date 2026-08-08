@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.RouteMiner.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.BlockMiner.BlockMiner;
+import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.RouteMiner.RouteMinerMacro;
 import com.vertexai.util.InventoryUtil;
 import com.vertexai.util.helper.MineableBlock;

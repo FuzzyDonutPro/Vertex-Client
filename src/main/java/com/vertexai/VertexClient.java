@@ -9,7 +9,7 @@ import com.vertexai.config.ConfigManager;
 import com.vertexai.config.VertexConfig;
 import com.vertexai.event.*;
 import com.vertexai.failsafe.FailsafeManager;
-import com.vertexai.feature.FeatureManager;
+import com.vertexai.macro.FeatureManager;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RotationHandler;

@@ -2,9 +2,9 @@ package com.vertexai.event;
 
 import com.vertexai.Vertex;
 import com.vertexai.failsafe.FailsafeManager;
-import com.vertexai.feature.AbstractFeature;
-import com.vertexai.feature.FeatureManager;
-import com.vertexai.feature.impl.RouteBuilder;
+import com.vertexai.macro.AbstractFeature;
+import com.vertexai.macro.FeatureManager;
+import com.vertexai.macro.features.navigation.RouteBuilder;
 import com.vertexai.gui.VertexAIScreen;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;

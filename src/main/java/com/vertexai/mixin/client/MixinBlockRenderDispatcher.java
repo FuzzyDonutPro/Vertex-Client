@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BlockRenderDispatcher.class)
 public class MixinBlockRenderDispatcher {
 
-    @Inject(method = "renderBatched", at = @At("HEAD"), cancellable = true)
-    private void Vertex$onRenderBatched(BlockState state, BlockPos pos, BlockAndTintGetter level, PoseStack poseStack, VertexConsumer buffer, boolean checkSides, RandomSource random, CallbackInfo ci) {
+    @Inject(method = "renderBatched", at = @At("HEAD"), cancellable = true, require = 0)
+    private void Vertex$onRenderBatched(BlockState state, BlockPos pos, BlockAndTintGetter level, PoseStack poseStack, VertexConsumer buffer, boolean checkSides, java.util.List random, CallbackInfo ci) {
         var config = Vertex.config();
         if (config != null && config.misc.noRenderMode && MacroManager.getInstance().isRunning()) {
             Minecraft mc = Minecraft.getInstance();

@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.SlayerMacro.states;
 
-import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacro;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacroState;
 

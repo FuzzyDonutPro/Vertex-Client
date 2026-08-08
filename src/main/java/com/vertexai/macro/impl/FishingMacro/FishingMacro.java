@@ -5,7 +5,7 @@ import lombok.Setter;
 import com.vertexai.Vertex;
 import com.vertexai.failsafe.FailsafeManager;
 import com.vertexai.failsafe.impl.NameMentionFailsafe;
-import com.vertexai.feature.FeatureManager;
+import com.vertexai.macro.FeatureManager;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.macro.AbstractMacro;

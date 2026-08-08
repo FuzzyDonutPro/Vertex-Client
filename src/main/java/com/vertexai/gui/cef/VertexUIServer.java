@@ -98,15 +98,19 @@ public class VertexUIServer {
                         String val = "";
                         if (query != null) {
                             for (String param : query.split("&")) {
-                                String[] pair = param.split("=");
+                                String[] pair = param.split("=", 2);
                                 if (pair.length == 2) {
-                                    if ("categoryId".equals(pair[0])) categoryId = pair[1];
-                                    if ("fieldId".equals(pair[0])) fieldId = pair[1];
-                                    if ("value".equals(pair[0])) val = pair[1];
+                                    String k = java.net.URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+                                    String v = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                                    if ("categoryId".equals(k)) categoryId = v;
+                                    if ("fieldId".equals(k)) fieldId = v;
+                                    if ("value".equals(k)) val = v;
                                 }
                             }
                         }
                         response = MCEFBridge.handleJsQuery("update_config:" + categoryId + ":" + fieldId + ":" + val);
+                    } else if (path.endsWith("/config/save")) {
+                        response = MCEFBridge.handleJsQuery("save_config");
                     } else if (path.endsWith("/status")) {
                         response = MCEFBridge.handleJsQuery("get_status");
                     }

@@ -4,7 +4,7 @@ import com.vertexai.Vertex;
 import com.vertexai.event.BlockChangeEvent;
 import com.vertexai.failsafe.AbstractFailsafe.Failsafe;
 import com.vertexai.failsafe.impl.*;
-import com.vertexai.feature.FeatureManager;
+import com.vertexai.macro.FeatureManager;
 import com.vertexai.macro.MacroManager;
 import com.vertexai.util.Logger;
 import com.vertexai.util.StrafeUtil;
@@ -57,7 +57,7 @@ public class FailsafeManager {
         failsafes.forEach(AbstractFailsafe::resetStates);
         StrafeUtil.forceStop = false;
         com.vertexai.failsafe.reaction.RecordedReactionManager.getInstance().stopPlayback();
-        Logger.sendMessage("§a[Failsafe] Stopped active failsafe and reaction playback via keybind.");
+        Logger.sendMessage("Â§a[Failsafe] Stopped active failsafe and reaction playback via keybind.");
     }
 
     public boolean isFailsafeActiveOrTriggered() {

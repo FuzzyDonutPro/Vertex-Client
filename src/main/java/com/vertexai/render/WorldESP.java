@@ -1,8 +1,8 @@
 package com.vertexai.render;
 
 import lombok.Getter;
-import com.vertexai.feature.AbstractFeature;
-import com.vertexai.feature.impl.BlockMiner.BlockMiner;
+import com.vertexai.macro.AbstractFeature;
+import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
 import com.vertexai.util.RenderUtil;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.core.BlockPos;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 
 /**
- * WorldESP — Renders 3D ESP boxes for:
+ * WorldESP â€” Renders 3D ESP boxes for:
  * 1. Target block currently being mined by the Mining Macro
  * 2. Secret & Dungeon Chests
  * 3. Garden Visitors & NPCs

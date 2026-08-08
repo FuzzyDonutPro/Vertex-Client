@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.FarmBuilderMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.feature.impl.Pathfinder;
+import com.vertexai.macro.features.navigation.Pathfinder;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.macro.impl.FarmBuilderMacro.config.FarmPatternConfig;
 import com.vertexai.macro.impl.FarmBuilderMacro.config.FarmPatternManager;
@@ -46,10 +46,10 @@ public class CarveTurnsState extends FarmBuilderState {
 
     @Override
     public void onEnable() {
-        Logger.sendMessage("§a[FarmBuilder] Commencing S-Shape carving phase...");
+        Logger.sendMessage("Â§a[FarmBuilder] Commencing S-Shape carving phase...");
         
         if (pattern == null || pattern.columns == null) {
-            Logger.sendError("§c[FarmBuilder] No valid pattern found for carving! Stopping macro.");
+            Logger.sendError("Â§c[FarmBuilder] No valid pattern found for carving! Stopping macro.");
             macro.toggle();
             return;
         }
@@ -68,7 +68,7 @@ public class CarveTurnsState extends FarmBuilderState {
             }
         }
         
-        Logger.sendMessage("§a[FarmBuilder] Calculated " + blocksToBreak.size() + " blocks to break.");
+        Logger.sendMessage("Â§a[FarmBuilder] Calculated " + blocksToBreak.size() + " blocks to break.");
         currentTargetIndex = 0;
         delayClock.schedule(1000);
     }
@@ -87,7 +87,7 @@ public class CarveTurnsState extends FarmBuilderState {
         if (!delayClock.passed()) return;
 
         if (currentTargetIndex >= blocksToBreak.size()) {
-            Logger.sendMessage("§a[FarmBuilder] S-Shape carving complete! Farm is ready!");
+            Logger.sendMessage("Â§a[FarmBuilder] S-Shape carving complete! Farm is ready!");
             macro.toggle();
             return;
         }
@@ -129,7 +129,7 @@ public class CarveTurnsState extends FarmBuilderState {
             pathfinder.queue(standPos);
             pathfinder.start();
         } else if (pathfinder.failed()) {
-            Logger.sendError("§c[FarmBuilder] Pathfinder failed to reach end block. Skipping...");
+            Logger.sendError("Â§c[FarmBuilder] Pathfinder failed to reach end block. Skipping...");
             pathfinder.stop();
             currentTargetIndex++;
         }

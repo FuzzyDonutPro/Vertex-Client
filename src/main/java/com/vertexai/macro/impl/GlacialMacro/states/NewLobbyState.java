@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.GlacialMacro.states;
 
-import com.vertexai.feature.impl.AutoWarp;
+import com.vertexai.macro.features.misc.AutoWarp;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
 import com.vertexai.util.helper.location.Location;
 import com.vertexai.util.helper.location.SubLocation;

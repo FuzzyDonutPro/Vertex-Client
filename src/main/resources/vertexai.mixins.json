@@ -3,11 +3,32 @@
     "package": "com.vertexai.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
+        "ModernMinecraftMixin",
         "ModernRenderContextMixin",
-        "ModernMinecraftMixin"
+        "MultiPlayerGameModeAccessor",
+        "network.MixinClientConnection"
+    ],
+    "client": [
+        "client.KeyMappingAccessor",
+        "client.LocalPlayerAccessor",
+        "client.MinecraftAccessor",
+        "client.MixinBlockRenderDispatcher",
+        "client.MixinCamera",
+        "client.MixinClientLevel",
+        "client.MixinEntity",
+        "client.MixinItemInHandRenderer",
+        "client.MixinLivingEntity",
+        "client.MixinLocalPlayer",
+        "client.MixinMinecraft",
+        "client.MixinMouse",
+        "client.MixinScoreboard",
+        "client.MixinSoundSystem",
+        "client.MixinTitleScreen",
+        "client.MixinWorldChunk",
+        "client.MixinWorldRenderer"
     ],
     "injectors": {
-        "defaultRequire": 1
+        "defaultRequire": 0
     },
     "overwrites": {
         "requireAnnotations": true

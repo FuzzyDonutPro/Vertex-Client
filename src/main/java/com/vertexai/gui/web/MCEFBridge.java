@@ -196,6 +196,12 @@ public class MCEFBridge {
                     return ConfigSerializer.executeButton(VertexClient.config, catId, fieldId).toString();
                 }
                 return "{\"status\":\"error\",\"message\":\"invalid_args\"}";
+            } else if ("save_config".equals(action)) {
+                Logger.sendLog("[IPC] save_config received, persisting config to disk");
+                net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                    com.vertexai.VertexClient.configManager.saveConfig();
+                });
+                return "{\"status\":\"ok\"}";
             } else if ("update_config".equals(action)) {
                 String[] configParts = request.split(":", 4);
                 if (configParts.length >= 3) {

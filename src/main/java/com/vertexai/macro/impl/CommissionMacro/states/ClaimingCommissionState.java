@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.CommissionMacro.states;
 
-import com.vertexai.feature.impl.AutoCommissionClaim;
+import com.vertexai.macro.features.misc.AutoCommissionClaim;
 import com.vertexai.macro.impl.CommissionMacro.Commission;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 
