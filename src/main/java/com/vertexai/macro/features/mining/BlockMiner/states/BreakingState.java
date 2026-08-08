@@ -39,7 +39,6 @@ public class BreakingState implements BlockMinerState {
     private Clock lookAwayTimer;
     private boolean wasLookingAway = false;
     private int breakAttemptTime;
-    private int miningTime;
     private boolean hasStartedDestroy;
     private Vec3 targetPoint;
 
@@ -59,11 +58,6 @@ public class BreakingState implements BlockMinerState {
             miningDirection = BlockUtil.getClosestVisibleSide(targetPos);
             miner.setMiningDirection(miningDirection);
         }
-
-        miningTime = BlockUtil.getMiningTime(
-                mc.level.getBlockState(targetPos),
-                miner.getMiningSpeed()
-        );
 
         // Ensure keyAttack stays false so vanilla Minecraft.tick() startAttack() does not race
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
@@ -157,8 +151,8 @@ public class BreakingState implements BlockMinerState {
             }
         }
 
-        // Safety mechanism 1: if we've been trying to break for too long, reset
-        if (++this.breakAttemptTime > Math.max(600, this.miningTime * 10)) {
+        // Safety mechanism 1: if we've been trying to break for too long (30s), reset
+        if (++this.breakAttemptTime > 600) {
             logError("Stuck while mining, returning to StartingState");
             if (mc.gameMode != null) {
                 mc.gameMode.stopDestroyBlock();
