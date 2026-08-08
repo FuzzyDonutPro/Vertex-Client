@@ -11,56 +11,66 @@ import java.util.List;
 /**
  * ChoosingBlockState
  * <p>
- * State responsible for finding the next block to mine.
- * Uses priority settings to determine the best block to target.
- * Includes wait logic if no blocks are immediately available.
+ * Scans for accessible mineable blocks around the player based on block priorities.
+ * Transitions directly to AimState as soon as a target is selected.
  */
 public class ChoosingBlockState implements BlockMinerState {
-    private final Clock timer = new Clock();
+
+    private final Clock searchTimer = new Clock();
 
     @Override
-    public void onStart(BlockMiner blockMiner) {
-        log("Entering Choosing Block State");
-        timer.reset();
+    public void onStart(BlockMiner miner) {
+        log("Entering ChoosingBlockState");
+        searchTimer.reset();
+        miner.setTargetBlockPos(null);
+        miner.setTargetPoint(null);
+        miner.setMiningDirection(null);
+        miner.setBlockChanged(false);
     }
 
     @Override
-    public BlockMinerState onTick(BlockMiner blockMiner) {
-        // Try to find mineable blocks around the player based on priorities
+    public BlockMinerState onTick(BlockMiner miner) {
+        if (miner.getBlockPriority().isEmpty()) {
+            logError("No block priorities defined, stopping miner");
+            miner.stop();
+            miner.setError(BlockMiner.BlockMinerError.NO_TARGET_BLOCKS);
+            return null;
+        }
+
         List<BlockPos> blocks = BlockUtil.findMineableBlocksFromAccessiblePositions(
-                blockMiner.getBlockPriority(),
-                blockMiner.getTargetBlockPos(),
-                blockMiner.getMiningSpeed()
+                miner.getBlockPriority(),
+                miner.getTargetBlockPos(),
+                miner.getMiningSpeed()
         );
 
-        // Handle case where no blocks are found
         if (blocks.isEmpty()) {
-            if (!timer.isScheduled()) {
-                log("No blocks found, fast re-scanning every 100ms...");
-                timer.schedule(3000L); // 3 second total search window before declaring area empty
+            if (!searchTimer.isScheduled()) {
+                log("Scanning area for target blocks...");
+                searchTimer.schedule(3000L);
             }
 
-            // Retry scan every tick, if timer passed stop mining
-            if (timer.isScheduled() && timer.passed()) {
-                logError("No blocks found after 3000ms scan window, stopping miner");
-                blockMiner.stop();
-                blockMiner.setError(BlockMiner.BlockMinerError.NOT_ENOUGH_BLOCKS);
+            if (searchTimer.isScheduled() && searchTimer.passed()) {
+                logError("No target blocks found in 3000ms window, stopping miner");
+                miner.stop();
+                miner.setError(BlockMiner.BlockMinerError.NOT_ENOUGH_BLOCKS);
                 return null;
             }
-
             return this;
         }
 
-        // Found blocks - select the best one (first in list) and transition to AimState
-        blockMiner.setTargetBlockPos(blocks.get(0));
-        blockMiner.setTargetBlockType(Minecraft.getInstance().level.getBlockState(blocks.get(0)).getBlock());
-        blockMiner.setBlockChanged(false);
-        log("Found " + blocks.size() + " blocks, selecting " + blocks.get(0) + " (" + blockMiner.getTargetBlockType() + ")");
+        BlockPos selected = blocks.get(0);
+        miner.setTargetBlockPos(selected);
+        if (Minecraft.getInstance().level != null) {
+            miner.setTargetBlockType(Minecraft.getInstance().level.getBlockState(selected).getBlock());
+        }
+        miner.setBlockChanged(false);
+
+        log("Selected target block: " + selected + " (" + miner.getTargetBlockType() + ")");
         return new AimState();
     }
 
     @Override
-    public void onEnd(BlockMiner blockMiner) {
-        log("Exiting Choosing Block State");
+    public void onEnd(BlockMiner miner) {
+        log("Exiting ChoosingBlockState");
     }
 }

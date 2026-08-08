@@ -9,6 +9,7 @@ import com.vertexai.util.helper.RotationConfiguration;
 import com.vertexai.util.helper.Target;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -17,9 +18,8 @@ import java.util.List;
 /**
  * AimState
  * <p>
- * Step 2 of 4-step mining lifecycle: Smooth Aim.
- * Rotates camera toward target block point while keeping left click released.
- * Prevents sending destruction packets or starting attack while gliding camera.
+ * Rotates camera smoothly toward the selected target block.
+ * Captures the un-occluded Direction face and transitions to BreakingState.
  */
 public class AimState implements BlockMinerState {
 
@@ -28,22 +28,20 @@ public class AimState implements BlockMinerState {
 
     @Override
     public void onStart(BlockMiner miner) {
-        log("Entering Aim State");
+        log("Entering AimState");
         aimTicks = 0;
 
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) {
-            logError("No target block pos in AimState");
+            logError("No target position set in AimState");
             return;
         }
 
-        // Release left click during aiming phase
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
 
-        // Find best target point on block face
         List<Vec3> points = BlockUtil.bestPointsOnBestSide(targetPos);
         if (points.isEmpty()) {
-            logError("Cannot find points to look at. Returning to STARTING state.");
+            logError("No targetable points on block face. Stopping miner.");
             miner.setError(BlockMiner.BlockMinerError.NO_POINTS_FOUND);
             miner.stop();
             return;
@@ -52,7 +50,6 @@ public class AimState implements BlockMinerState {
         Vec3 targetPoint = points.get(0);
         miner.setTargetPoint(targetPoint);
 
-        // Queue camera rotation
         RotationHandler.getInstance().stop();
         RotationHandler.getInstance().queueRotation(
                 new RotationConfiguration(
@@ -66,30 +63,36 @@ public class AimState implements BlockMinerState {
 
     @Override
     public BlockMinerState onTick(BlockMiner miner) {
-        if (miner.getTargetBlockPos() == null || mc.level == null) {
+        BlockPos targetPos = miner.getTargetBlockPos();
+        if (targetPos == null || mc.level == null) {
             return new StartingState();
         }
 
-        // Keep left click strictly released while aiming
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
         aimTicks++;
 
-        // Pick raycast with current camera angles
         mc.gameRenderer.pick(1.0f);
 
-        boolean arrivedOnTarget = (mc.hitResult instanceof BlockHitResult bhr && bhr.getBlockPos().equals(miner.getTargetBlockPos()));
-        boolean rotationFinished = !RotationHandler.getInstance().isEnabled();
+        BlockHitResult bhr = (mc.hitResult instanceof BlockHitResult b) ? b : null;
+        boolean arrivedOnTarget = (bhr != null && targetPos.equals(bhr.getBlockPos()));
+        boolean rotationDone = !RotationHandler.getInstance().isEnabled();
 
-        // Safety timeout if aiming takes over 3 seconds (60 ticks)
+        // Lock Direction face ONCE
+        Direction face = (arrivedOnTarget && bhr != null)
+                ? bhr.getDirection()
+                : BlockUtil.getClosestVisibleSide(targetPos);
+        if (face == null) face = Direction.UP;
+        miner.setMiningDirection(face);
+
+        // Safety timeout (max 3s aiming)
         if (aimTicks > 60) {
-            logError("AimState timeout, returning to StartingState");
+            logError("Aiming timeout exceeded, restarting state machine");
             return new StartingState();
         }
 
-        // Once crosshair hits target block or rotation finishes, transition to ArriveState to capture Direction face
-        if (arrivedOnTarget || rotationFinished || aimTicks >= 10) {
-            log("Aim complete, transitioning to ArriveState");
-            return new ArriveState();
+        if (arrivedOnTarget || rotationDone || aimTicks >= 5) {
+            log("Aim aligned on " + targetPos + " face " + face + ", transitioning to BreakingState");
+            return new BreakingState();
         }
 
         return this;
@@ -97,6 +100,6 @@ public class AimState implements BlockMinerState {
 
     @Override
     public void onEnd(BlockMiner miner) {
-        log("Exiting Aim State");
+        log("Exiting AimState");
     }
 }
