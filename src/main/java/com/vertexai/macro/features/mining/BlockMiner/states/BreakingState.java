@@ -27,7 +27,7 @@ import java.util.Comparator;
  */
 public class BreakingState implements BlockMinerState {
 
-    private static final double MAX_MINE_DISTANCE = 3.0;
+    private static final double MAX_MINE_DISTANCE = 4.2;
     private static final int LOOK_AWAY_THRESHOLD_MS = 500;
     private static final int TIMEOUT_TICKS = 300; // 15 seconds
 

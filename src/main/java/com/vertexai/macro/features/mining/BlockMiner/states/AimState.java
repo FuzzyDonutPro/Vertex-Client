@@ -40,14 +40,12 @@ public class AimState implements BlockMinerState {
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
 
         List<Vec3> points = BlockUtil.bestPointsOnBestSide(targetPos);
-        if (points.isEmpty()) {
-            logError("No targetable points on block face. Stopping miner.");
-            miner.setError(BlockMiner.BlockMinerError.NO_POINTS_FOUND);
-            miner.stop();
-            return;
+        Vec3 targetPoint;
+        if (!points.isEmpty()) {
+            targetPoint = points.get(0);
+        } else {
+            targetPoint = Vec3.atCenterOf(targetPos);
         }
-
-        Vec3 targetPoint = points.get(0);
         miner.setTargetPoint(targetPoint);
 
         RotationHandler.getInstance().stop();

@@ -200,9 +200,9 @@ public class BlockUtil {
                     final double hardness = getBlockStrength(state);
                     final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(pos)).lengthSqrt();
 
-                    // High pathfinder starting cost penalty for out-of-reach blocks (> 3.0 blocks reach)
+                    // High pathfinder starting cost penalty for out-of-reach blocks (> 4.2 blocks reach)
                     double pathfinderStartPenalty = 0.0;
-                    if (distSq > 9.0) { // > 3.0 blocks reach requiring pathfinder navigation
+                    if (distSq > 17.64) { // > 4.2 blocks reach requiring pathfinder navigation
                         if (!com.vertexai.Vertex.config().miningMacro.allowPathfinder) {
                             continue; // Ignore out-of-reach blocks if pathfinder walking is disabled
                         }
