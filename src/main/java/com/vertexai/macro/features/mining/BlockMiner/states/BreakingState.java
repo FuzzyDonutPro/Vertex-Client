@@ -59,12 +59,11 @@ public class BreakingState implements BlockMinerState {
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
 
         targetPoint = miner.getTargetPoint();
-        if (targetPoint != null) {
-            RotationHandler.getInstance().stop();
+        if (targetPoint != null && !RotationHandler.getInstance().isEnabled()) {
             RotationHandler.getInstance().queueRotation(
                     new RotationConfiguration(
                             new Target(targetPoint),
-                            100,
+                            200,
                             null
                     ).followTarget(true)
             );
@@ -131,13 +130,17 @@ public class BreakingState implements BlockMinerState {
             KeyBindUtil.setKeyBindState(mc.options.keyUp, false);
         }
 
+        // Reset attack cooldown & destroy delay every tick
+        ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
+        ((com.vertexai.mixin.MultiPlayerGameModeAccessor) mc.gameMode).setDestroyDelay(0);
+
         // Send START_DESTROY_BLOCK once on first tick within reach
         if (!hasSentStartPacket) {
             log("Firing START_DESTROY_BLOCK on " + targetPos + " face " + miningDirection);
             mc.gameMode.startDestroyBlock(targetPos, miningDirection);
             hasSentStartPacket = true;
         } else {
-            // Send swing animation & ServerboundSwingPacket every tick while digging
+            mc.gameMode.continueDestroyBlock(targetPos, miningDirection);
             if (mc.player != null && mc.getConnection() != null) {
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundSwingPacket(
