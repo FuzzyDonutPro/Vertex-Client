@@ -211,25 +211,33 @@ public class BreakingState implements BlockMinerState {
         BlockPos targetPos = miner.getTargetBlockPos();
         if (targetPos == null) return;
 
-        // Hold attack keybind down continuously while breaking block
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        // Do a fresh pick() so hitResult reflects the rotation set by RotationHandler
+        mc.gameRenderer.pick(1.0f);
 
-        if (!hasSentStartPacket || miningDirection == null) {
-            // Lock initial direction face on first tick
-            miningDirection = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos))
-                    ? bhr.getDirection()
-                    : BlockUtil.getClosestVisibleSide(targetPos);
+        // Check if player's crosshair has arrived on the target block
+        boolean arrivedOnTarget = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getBlockPos().equals(targetPos));
+
+        // 1. AIM & ARRIVE: Wait until crosshair arrives on target before starting block destruction (no first mine tick glide)
+        if (!hasSentStartPacket) {
+            if (!arrivedOnTarget) {
+                // Still aiming/gliding rotation toward target block — do not press keyAttack or send start packets yet
+                KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+                return;
+            }
+
+            // Crosshair has arrived on target block! Lock initial direction face and start destruction
+            net.minecraft.world.phys.BlockHitResult bhr = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
+            miningDirection = bhr.getDirection();
             if (miningDirection == null) miningDirection = net.minecraft.core.Direction.UP;
 
             mc.gameMode.startDestroyBlock(targetPos, miningDirection);
             hasSentStartPacket = true;
             hasStartedMining = true;
-        } else {
-            // Drive continuous block destruction with the LOCKED direction face
-            mc.gameMode.continueDestroyBlock(targetPos, miningDirection);
         }
 
-        // Swing hand for visual animation and server swing packet sync
+        // 2. MINE: Crosshair arrived and mining initiated — hold keyAttack and continue destruction
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+        mc.gameMode.continueDestroyBlock(targetPos, miningDirection != null ? miningDirection : net.minecraft.core.Direction.UP);
         mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
 
         // Handle shift/sneak requirements
