@@ -87,8 +87,8 @@ public class BreakingState implements BlockMinerState {
         // Reset attack cooldown every tick
         ((com.vertexai.mixin.client.MinecraftAccessor) mc).setAttackCooldown(0);
 
-        // Keep keyAttack false to prevent vanilla startAttack() raycast race
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+        // Hold keyAttack true while actively breaking block
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
         // Precision particle tracking
         if (miner.getTargetParticlePos() != null) {
@@ -158,23 +158,7 @@ public class BreakingState implements BlockMinerState {
             return new StartingState();
         }
 
-        // Failsafe 2: Look-away threshold (500ms)
-        mc.gameRenderer.pick(1.0f);
-        boolean isLookingAtTarget = (mc.hitResult instanceof BlockHitResult bhr && targetPos.equals(bhr.getBlockPos()));
-        if (!isLookingAtTarget) {
-            if (!wasLookingAway) {
-                lookAwayTimer.schedule(LOOK_AWAY_THRESHOLD_MS);
-                wasLookingAway = true;
-            } else if (lookAwayTimer.passed()) {
-                log("Camera drifted off target for >" + LOOK_AWAY_THRESHOLD_MS + "ms, selecting new block");
-                if (mc.gameMode != null) {
-                    mc.gameMode.stopDestroyBlock();
-                }
-                return new StartingState();
-            }
-        } else {
-            wasLookingAway = false;
-        }
+
 
         // Server Block Change Detection: Block turned to AIR, BEDROCK, changed block type, or blockChange event fired
         Block currentBlock = mc.level.getBlockState(targetPos).getBlock();

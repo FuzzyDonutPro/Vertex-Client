@@ -88,7 +88,7 @@ public class AimState implements BlockMinerState {
             return new StartingState();
         }
 
-        if (arrivedOnTarget || rotationDone || aimTicks >= 5) {
+        if (arrivedOnTarget || rotationDone) {
             log("Aim aligned on " + targetPos + " face " + face + ", transitioning to BreakingState");
             return new BreakingState();
         }
