@@ -138,10 +138,7 @@ public class BreakingState implements BlockMinerState {
                 hasStartedDestroy = true;
             }
         } else {
-            // Drive block destruction manually once started
-            mc.gameMode.continueDestroyBlock(targetPos, miningDirection);
-
-            // Send explicit swing packet to server & trigger local animation
+            // Drive block destruction via server packets (swing animation) every tick without vanilla client-side premature break prediction
             if (mc.player != null && mc.getConnection() != null) {
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundSwingPacket(
