@@ -20,7 +20,7 @@ public class MixinMouse {
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void onScroll(long window, double xoffset, double yoffset, CallbackInfo ci) {
         PerspectiveMod mod = PerspectiveMod.getInstance();
-        if (mod.isRunning()) {
+        if (mod.isActive()) {
             float delta = (float) (yoffset * 0.5f);
             mod.cameraDistance = Math.max(1.0f, Math.min(25.0f, mod.cameraDistance - delta));
             ci.cancel(); // Prevent hotbar slot scrolling while adjusting camera distance

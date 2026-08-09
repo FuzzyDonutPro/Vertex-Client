@@ -37,9 +37,13 @@ public class PerspectiveMod extends AbstractFeature {
         return "PerspectiveMod";
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
     @Override
     public boolean isRunning() {
-        return active;
+        return true;
     }
 
     @Override

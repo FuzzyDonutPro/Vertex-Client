@@ -57,17 +57,28 @@ public class BlockBreakingEngine {
         mc.player.setYRot(targetAngle.getYaw());
         mc.player.setXRot(targetAngle.getPitch());
 
+        // Perform instantaneous crosshair raycast pick to verify crosshair is directly touching block
+        boolean crosshairOnTarget = false;
+        Direction side = Direction.UP;
+
+        if (mc.hitResult instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(targetPos)) {
+            crosshairOnTarget = true;
+            side = blockHit.getDirection();
+        } else {
+            // Force raycast pick from current eye position with new yaw/pitch angles
+            net.minecraft.world.phys.HitResult hit = mc.player.pick(4.5, 0.0f, false);
+            if (hit instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(targetPos)) {
+                crosshairOnTarget = true;
+                side = blockHit.getDirection();
+            }
+        }
+
         // Initialize breaking state on first tick of new block target
         if (currentTargetPos == null || !currentTargetPos.equals(targetPos)) {
             currentTargetPos = targetPos;
             initialTargetBlock = currentBlock;
             isBreaking = true;
             breakStartTime = System.currentTimeMillis();
-
-            Direction side = Direction.UP;
-            if (mc.hitResult instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(targetPos)) {
-                side = blockHit.getDirection();
-            }
 
             if (mc.gameMode != null) {
                 mc.gameMode.startDestroyBlock(targetPos, side);

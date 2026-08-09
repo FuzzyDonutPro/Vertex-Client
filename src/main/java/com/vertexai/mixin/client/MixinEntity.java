@@ -15,7 +15,7 @@ public abstract class MixinEntity {
     private void onTurn(double yRot, double xRot, CallbackInfo ci) {
         if ((Object) this instanceof LocalPlayer) {
             PerspectiveMod mod = PerspectiveMod.getInstance();
-            if (mod.isRunning()) {
+            if (mod.isActive()) {
                 mod.freeLookYaw += (float) yRot * 0.15f;
                 mod.freeLookPitch += (float) xRot * 0.15f;
                 mod.freeLookPitch = Math.max(-90.0F, Math.min(90.0F, mod.freeLookPitch));
@@ -28,7 +28,7 @@ public abstract class MixinEntity {
     private void onGetViewYRot(float partialTicks, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
         if ((Object) this instanceof LocalPlayer) {
             PerspectiveMod mod = PerspectiveMod.getInstance();
-            if (mod.isRunning()) {
+            if (mod.isActive()) {
                 cir.setReturnValue(mod.freeLookYaw);
             }
         }
@@ -38,7 +38,7 @@ public abstract class MixinEntity {
     private void onGetViewXRot(float partialTicks, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
         if ((Object) this instanceof LocalPlayer) {
             PerspectiveMod mod = PerspectiveMod.getInstance();
-            if (mod.isRunning()) {
+            if (mod.isActive()) {
                 cir.setReturnValue(mod.freeLookPitch);
             }
         }
