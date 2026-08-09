@@ -254,6 +254,10 @@ public class ConfigSerializer {
 
             VertexClient.configManager.saveConfig();
             com.vertexai.util.Logger.sendLog("[Config] Updated " + categoryId + "." + fieldId + " -> " + valueStr);
+
+            if ("oreType".equalsIgnoreCase(field.getName())) {
+                com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().setupPrioritiesForOreType(config.miningMacro.oreType);
+            }
         } catch (Exception e) {
             com.vertexai.util.Logger.sendError("[Config] Failed to update " + categoryId + "." + fieldId + ": " + e.getMessage());
             e.printStackTrace();

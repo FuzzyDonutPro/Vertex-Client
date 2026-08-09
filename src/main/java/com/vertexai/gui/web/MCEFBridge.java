@@ -178,6 +178,28 @@ public class MCEFBridge {
                     else if (lower.contains("birch")) index = 5;
                     com.vertexai.Vertex.config().foraging.foragingTreeType = index;
                     com.vertexai.VertexClient.configManager.saveConfig();
+                } else if ("mining_general".equalsIgnoreCase(macroId) || "mining".equalsIgnoreCase(macroId) || "miningMacro".equalsIgnoreCase(macroId)) {
+                    int index = 0;
+                    String lower = target.toLowerCase(java.util.Locale.ROOT);
+                    if (lower.contains("diamond")) index = 1;
+                    else if (lower.contains("emerald")) index = 2;
+                    else if (lower.contains("redstone")) index = 3;
+                    else if (lower.contains("lapis")) index = 4;
+                    else if (lower.contains("gold")) index = 5;
+                    else if (lower.contains("iron")) index = 6;
+                    else if (lower.contains("coal")) index = 7;
+                    else if (lower.contains("hardstone")) index = 8;
+                    else if (lower.contains("gem")) index = 9;
+                    else if (lower.contains("glacite") || lower.contains("ice")) index = 10;
+                    else if (lower.contains("tungsten")) index = 11;
+                    else if (lower.contains("umber")) index = 12;
+
+                    com.vertexai.Vertex.config().miningMacro.oreType = index;
+                    com.vertexai.VertexClient.configManager.saveConfig();
+                    
+                    if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) {
+                        com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().setupPrioritiesForOreType(index);
+                    }
                 }
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {
