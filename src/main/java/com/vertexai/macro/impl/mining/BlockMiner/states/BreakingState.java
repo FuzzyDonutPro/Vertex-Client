@@ -130,14 +130,14 @@ public class BreakingState implements BlockMinerState {
             return new StartingState();
         }
 
-        // Safety mechanism: if we're looking away from target block, reset
+        // Safety mechanism: if we're looking away from target block for too long while not easing camera, reset
         BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = miner.getTargetBlockPos().equals(currentLookingAt);
+        boolean isLookingAtTarget = currentLookingAt != null && miner.getTargetBlockPos().equals(currentLookingAt);
         if (!isLookingAtTarget) {
             if (!wasLookingAway) {
                 lookAwayTimer.schedule(LOOK_AWAY_THRESHOLD_MS);
                 wasLookingAway = true;
-            } else if (lookAwayTimer.passed()) {
+            } else if (lookAwayTimer.passed() && !RotationHandler.getInstance().isEnabled()) {
                 log("Player looked away from target block for too long, choosing new block");
                 return new StartingState();
             }
@@ -165,16 +165,21 @@ public class BreakingState implements BlockMinerState {
      * Sets attack key to continuously mine and manages sneak state.
      */
     private void handleKeybinds(BlockMiner miner) {
-        // Hold left-click to break blocks
+        // Hold left-click to break blocks continuously
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
         if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
             net.minecraft.core.Direction side = miner.getMiningDirection();
             if (side == null) side = net.minecraft.core.Direction.UP;
-            if (breakAttemptTime <= 1) {
+            
+            // Only start destroying once at the beginning of targeting this block, then continuously mine
+            if (breakAttemptTime == 1) {
                 mc.gameMode.startDestroyBlock(miner.getTargetBlockPos(), side);
             } else {
                 mc.gameMode.continueDestroyBlock(miner.getTargetBlockPos(), side);
+            }
+            if (mc.player != null) {
+                mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
             }
         }
 
