@@ -188,7 +188,6 @@
 
         'commission': { catIds: ['commission'], allowedFieldIds: ['commClaimMethod', 'prioritiseTitanium', 'altMiningTool', 'altMiningToolSlot', 'altMiningToolButton', 'commSwapBeforeClaiming', 'slayerWeapon', 'slayerWeaponSlot', 'slayerWeaponButton', 'forgePathing'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['oreType', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'allowPathfinder', 'pathfinderMode'] },
         'powder': { catIds: ['powderMacro'], allowedFieldIds: ['powderType', 'powderLocation', 'chestSolver'] },
         'glacial': { catIds: ['miningMacro', 'commission'], allowedFieldIds: ['coldThreshold', 'allowPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['oreType', 'allowPathfinder'] },
@@ -314,7 +313,6 @@
         // Mining & Commissions
         { id: 'commission', category: 'mining', title: 'Commission Auto-Miner', desc: 'Dwarven Mines & Crystal Hollows commission route solver with Etherwarp.', running: false, target: 'Dwarven Mines', options: ['Dwarven Mines', 'Crystal Hollows', 'Glacite Mineshafts'] },
         { id: 'gemstone', category: 'mining', title: 'Gemstone Etherwarp Route Miner', desc: 'Follows custom JSON waypoint routes with 0-tick Etherwarp & Pickaxe swap.', running: false, target: 'Ruby Route #1', options: ['Ruby Route #1', 'Jasper Route #1', 'Sapphire Route #2', 'Topaz Magma Fields'] },
-        { id: 'mining_general', category: 'mining', title: 'Mithril & Ore Miner', desc: 'Auto-mines Mithril, Titanium, Gemstones & All Ores with smooth head rotation.', running: false, target: 'Mithril & Titanium', options: ['Mithril & Titanium', 'Diamond', 'Emerald', 'Redstone', 'Lapis', 'Gold', 'Iron', 'Coal', 'Hardstone', 'Gemstones', 'Glacite', 'Tungsten', 'Umber'] },
         { id: 'powder', category: 'mining', title: 'Chest & Mithril Powder Miner', desc: 'Uncovers and loots buried treasure chests in Crystal Hollows for Powder.', running: false, target: 'Chest Solver + Mining' },
         { id: 'glacial', category: 'mining', title: 'Glacial Cave Ice/Mithril Miner', desc: 'Auto-mines Glacite & Glacial Ice in Mineshafts with pathfinder.', running: false, target: 'Glacial Ice' },
         { id: 'nuker', category: 'mining', title: 'Custom Block & Ore Nuker', desc: 'High-speed block nuker with range & FOV filters.', running: false, target: 'Mithril Ores' },
