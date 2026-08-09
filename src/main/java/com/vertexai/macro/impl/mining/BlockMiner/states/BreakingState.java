@@ -111,7 +111,7 @@ public class BreakingState implements BlockMinerState {
     @Override
     public BlockMinerState onTick(BlockMiner miner) {
         // Handle key presses for mining
-        handleKeybinds();
+        handleKeybinds(miner);
 
         // Handle walking toward block if needed
         if (isWalking) {
@@ -164,9 +164,19 @@ public class BreakingState implements BlockMinerState {
      * Handles key bindings for mining.
      * Sets attack key to continuously mine and manages sneak state.
      */
-    private void handleKeybinds() {
+    private void handleKeybinds(BlockMiner miner) {
         // Hold left-click to break blocks
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
+            net.minecraft.core.Direction side = miner.getMiningDirection();
+            if (side == null) side = net.minecraft.core.Direction.UP;
+            if (breakAttemptTime <= 1) {
+                mc.gameMode.startDestroyBlock(miner.getTargetBlockPos(), side);
+            } else {
+                mc.gameMode.continueDestroyBlock(miner.getTargetBlockPos(), side);
+            }
+        }
 
         if (!isWalking) {
             KeyBindUtil.setKeyBindState(mc.options.keyShift, Vertex.config().general.sneakWhileMining);

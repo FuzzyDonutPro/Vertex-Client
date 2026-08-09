@@ -163,7 +163,8 @@ public class BlockMiner extends AbstractMacro {
         setupPrioritiesForOreType(oreIdx);
         String tool = Vertex.config().general.miningTool;
         PickaxeAbility ability = Vertex.config().general.usePickaxeAbility ? PickaxeAbility.MINING_SPEED_BOOST : PickaxeAbility.NONE;
-        startWithConfiguredPriorities(1000, ability, tool != null ? tool : "");
+        int detectedSpeed = com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask.detectMiningSpeed();
+        startWithConfiguredPriorities(detectedSpeed, ability, tool != null ? tool : "");
     }
 
     public void setupPrioritiesForOreType(int oreTypeIdx) {
