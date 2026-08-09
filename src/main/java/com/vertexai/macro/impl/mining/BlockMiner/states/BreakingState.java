@@ -29,13 +29,11 @@ public class BreakingState implements BlockMinerState {
         postBreakTimer.reset();
         blockBroken = false;
 
-        if (miner.getTargetBlockPos() != null) {
+        if (miner.getTargetBlockPos() != null && mc.player != null) {
             Vec3 centerVec = Vec3.atCenterOf(miner.getTargetBlockPos());
-            RotationHandler.getInstance().easeTo(new RotationConfiguration(
-                    new Target(centerVec),
-                    80L,
-                    null
-            ));
+            com.vertexai.util.helper.Angle targetAngle = com.vertexai.util.AngleUtil.getRotation(centerVec);
+            mc.player.setYRot(targetAngle.getYaw());
+            mc.player.setXRot(targetAngle.getPitch());
         }
     }
 
