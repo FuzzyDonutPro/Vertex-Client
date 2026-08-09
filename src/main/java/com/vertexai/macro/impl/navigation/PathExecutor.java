@@ -396,12 +396,28 @@ public class PathExecutor {
 
         boolean onGround = mc.player.onGround();
 
+        // 5-block lookahead node selection
+        int lookAheadIdx = this.target;
+        for (int i = this.target; i < this.blockPath.size(); i++) {
+            BlockPos pathPos = this.blockPath.get(i);
+            double dist = Math.hypot(pathPos.getX() + 0.5 - mc.player.getX(), pathPos.getZ() + 0.5 - mc.player.getZ());
+            if (dist <= 5.5) {
+                lookAheadIdx = i;
+            } else {
+                break;
+            }
+        }
+
+        BlockPos lookAheadNode = this.blockPath.get(lookAheadIdx);
+        int lookX = lookAheadNode.getX();
+        int lookZ = lookAheadNode.getZ();
+
         int targetX = target.getX();
         int targetZ = target.getZ();
         double horizontalDistToTarget = Math.hypot(mc.player.getX() - targetX - 0.5, mc.player.getZ() - targetZ - 0.5);
 
-        // Look directly at next node
-        Vec3 nodeCenter = new Vec3(targetX + 0.5, target.getY() + 0.5, targetZ + 0.5);
+        // Look toward the 5-block look-ahead node
+        Vec3 nodeCenter = new Vec3(lookX + 0.5, lookAheadNode.getY() + 0.5, lookZ + 0.5);
         Vec3 eyePos = PlayerUtil.getPlayerEyePos();
         Angle targetAngle = AngleUtil.getRotation(eyePos, nodeCenter);
         float yaw = targetAngle.getYaw();
@@ -426,7 +442,7 @@ public class PathExecutor {
         // Disable StrafeUtil for realistic client-side movement
         StrafeUtil.enabled = false;
 
-        // Smoothly rotate camera toward target node
+        // Smoothly rotate camera toward lookahead node
         if (yawDiff > 3 && !RotationHandler.getInstance().isEnabled()) {
             float rotYaw = yaw + (float) (random.nextGaussian() * ROTATION_HUMAN_ERROR_FACTOR);
             float time = Vertex.config().debug.useFixedRotation ? Vertex.config().debug.fixedRotationTime : Math.max(220, (long) (360 - horizontalDistToTarget * Vertex.config().debug.rotationMultiplier));
