@@ -201,7 +201,11 @@ public class BlockMiner extends AbstractMacro {
             default:
                 targetEnums.addAll(List.of(
                         MineableBlock.GREEN_MITHRIL, MineableBlock.BLUE_MITHRIL, MineableBlock.GRAY_MITHRIL,
-                        MineableBlock.GRAY_TERRACOTTA_MITHRIL, MineableBlock.TITANIUM
+                        MineableBlock.GRAY_TERRACOTTA_MITHRIL, MineableBlock.TITANIUM,
+                        MineableBlock.RUBY, MineableBlock.SAPPHIRE, MineableBlock.JASPER, MineableBlock.TOPAZ,
+                        MineableBlock.AMBER, MineableBlock.JADE, MineableBlock.AMETHYST, MineableBlock.OPAL,
+                        MineableBlock.DIAMOND, MineableBlock.EMERALD, MineableBlock.GOLD, MineableBlock.IRON,
+                        MineableBlock.COAL, MineableBlock.GLACITE
                 ));
                 break;
         }
@@ -218,10 +222,7 @@ public class BlockMiner extends AbstractMacro {
 
     public void startWithConfiguredPriorities(final int miningSpeed, final PickaxeAbility pickaxeAbility, String miningTool) {
         if (!miningTool.isEmpty() && !InventoryUtil.holdItem(miningTool)) {
-            logError(miningTool + " not found in inventory!");
-            error = BlockMinerError.NO_TOOLS_AVAILABLE;
-            this.stop();
-            return;
+            Logger.sendLog("[BlockMiner] Specified tool '" + miningTool + "' not found by name, using auto tool detection.");
         }
 
         if (blockPriority.isEmpty()) {
@@ -257,10 +258,7 @@ public class BlockMiner extends AbstractMacro {
      */
     public void start(MineableBlock[] blocksToMine, final int miningSpeed, final PickaxeAbility pickaxeAbility, final int[] priority, String miningTool) {
         if (!miningTool.isEmpty() && !InventoryUtil.holdItem(miningTool)) {
-            logError(miningTool + " not found in inventory!");
-            error = BlockMinerError.NO_TOOLS_AVAILABLE;
-            this.stop();
-            return;
+            Logger.sendLog("[BlockMiner] Specified tool '" + miningTool + "' not found by name, using auto tool detection.");
         }
 
         if (blocksToMine == null || Arrays.stream(priority).allMatch(i -> i == 0)) {
