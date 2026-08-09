@@ -2,11 +2,15 @@
     import { onMount } from 'svelte';
     import './app.css';
 
+    let isGuiOpen = true;
     let currentTab = 'dashboard';
     let searchQuery = '';
     let playerName = 'FuzzyDonutPro';
     let isConnected = true;
     let activeMacroName = 'None';
+    let subState = '';
+    let macroRuntime = '00:00:00';
+    let isRunning = false;
     let farmingSpeed = '0.0 BPS';
     let estProfit = '0 / hr';
     let liveFps = 0;
@@ -26,6 +30,10 @@
             if (!localStorage.getItem('vertex_uiScale')) {
                 uiScale = scale;
             }
+        };
+
+        window.setGuiOpen = (open) => {
+            isGuiOpen = open;
         };
     }
     
@@ -111,17 +119,6 @@
             }
         } catch(e) {}
     }
-
-    const categoryMapping = {
-        'farming': ['farming', 'melonPumpkin', 'farmBuilder'],
-        'mining': ['miningMacro', 'powderMacro', 'routeMiner', 'commission'],
-        'fishing': ['fishing'],
-        'slayer': ['combat'],
-        'dungeons': ['dungeons'],
-        'foraging': ['foraging'],
-        'alchemy': ['bazaarFlipper', 'misc'],
-        'diana': ['combat', 'misc']
-    };
 
     function fetchConfigSchema() {
         if (window.cefQuery) {
@@ -225,7 +222,7 @@
 
     onMount(() => {
         fetchStatus();
-        const interval = setInterval(fetchStatus, 2000);
+        const interval = setInterval(fetchStatus, 1000);
         fetchConfigSchema();
         return () => clearInterval(interval);
     });
@@ -260,11 +257,35 @@
                 const data = await res.json();
                 if (data.playerName && data.playerName !== 'Player') playerName = data.playerName;
                 if (data.activeMacro) activeMacroName = data.activeMacro;
+                if (data.subState !== undefined) subState = data.subState;
+                if (data.runtime) macroRuntime = data.runtime;
+                if (data.isRunning !== undefined) isRunning = data.isRunning;
                 if (data.bps) farmingSpeed = data.bps;
                 if (data.estProfit) estProfit = data.estProfit;
                 if (data.fps) liveFps = data.fps;
             }
         } catch (e) {}
+
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: 'get_status',
+                onSuccess: function(response) {
+                    try {
+                        let data = JSON.parse(response);
+                        if (data && data.status === 'ok') {
+                            if (data.playerName) playerName = data.playerName;
+                            if (data.activeMacro) activeMacroName = data.activeMacro;
+                            if (data.subState !== undefined) subState = data.subState;
+                            if (data.runtime) macroRuntime = data.runtime;
+                            if (data.isRunning !== undefined) isRunning = data.isRunning;
+                            if (data.bps) farmingSpeed = data.bps;
+                            if (data.estProfit) estProfit = data.estProfit;
+                            if (data.fps) liveFps = data.fps;
+                        }
+                    } catch (e) {}
+                }
+            });
+        }
     }
 
     function toggleMacro(id) {
@@ -308,6 +329,7 @@
 
     function closeGui() {
         saveConfig();
+        isGuiOpen = false;
         if (window.cefQuery) {
             window.cefQuery({ request: 'close_gui' });
         }
@@ -358,266 +380,296 @@
     }
 </script>
 
-<div style="font-family: {selectedFont}, Inter, sans-serif;" class="w-screen h-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-md select-none overflow-hidden relative">
+<div style="font-family: {selectedFont}, Inter, sans-serif;" class="w-screen h-screen select-none overflow-hidden relative">
     
-    <!-- Clean Main Container -->
-    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[940px] h-[580px] bg-[#0c101d]/95 border border-slate-800/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(56,189,248,0.15)] flex overflow-hidden relative z-10">
-        
-        <!-- Left Sidebar Rail -->
-        <aside class="w-[220px] bg-[#080b14] border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 select-none">
-            <div>
-                <!-- Brand Title -->
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-sky-400 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20 text-sm">
-                        V
-                    </div>
-                    <div>
-                        <h1 class="text-sm font-bold tracking-wider text-white">VERTEX</h1>
-                        <span class="text-[10px] text-sky-400 font-medium tracking-widest uppercase block">Fabric v1.21.11</span>
-                    </div>
-                </div>
-
-                <!-- Navigation List -->
-                <nav class="flex flex-col gap-1.5 overflow-y-auto max-h-[400px] pr-1 custom-scrollbar">
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'dashboard' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'dashboard'; }}>
-                        <span>📊</span> Dashboard
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'farming' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'farming'; }}>
-                        <span>🌾</span> Garden & Farming
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'mining' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'mining'; }}>
-                        <span>⛏️</span> Mining & Hollows
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'slayer' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'slayer'; }}>
-                        <span>⚔️</span> Slayer & Combat
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'fishing' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'fishing'; }}>
-                        <span>🎣</span> Fishing
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'foraging' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'foraging'; }}>
-                        <span>🪓</span> Foraging
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'alchemy' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'alchemy'; }}>
-                        <span>🧪</span> Economy & Alchemy
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'diana' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'diana'; }}>
-                        <span>🦅</span> Diana Mythological
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'config' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'config'; }}>
-                        <span>⚙️</span> Config & Settings
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'failsafe' ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'failsafe'; }}>
-                        <span>🛡️</span> Security & Failsafes
-                    </button>
-                    <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'themes' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
-                        <span>🎨</span> Themes & Style
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Player Status Footer Card -->
-            <div class="bg-slate-900/60 border border-slate-800/80 p-3 rounded-2xl flex items-center justify-between">
-                <div>
-                    <h4 class="text-xs font-bold text-slate-200">{playerName}</h4>
-                    <span class="text-[10px] text-emerald-400 font-medium">● Online {#if liveFps > 0}• {liveFps} FPS{/if}</span>
-                </div>
-                <button on:click={closeGui} class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all">
-                    ✕
-                </button>
-            </div>
-        </aside>
-
-        <!-- Right Content Workspace -->
-        <main class="flex-1 flex flex-col overflow-hidden bg-[#0a0d18]">
-            <!-- Top Search & Header Bar -->
-            <header class="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0">
-                <div class="relative w-72">
-                    <input 
-                        type="text" 
-                        bind:value={searchQuery} 
-                        placeholder="Search macros or settings..." 
-                        class="w-full bg-slate-900/80 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 px-4 py-2 rounded-xl focus:outline-none focus:border-sky-500/50 transition-all"
-                    />
-                </div>
-
-                <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
-                    <div>Active: <span class="text-sky-400 font-semibold">{activeMacroName}</span></div>
-                    {#if farmingSpeed !== '0.0 BPS'}
-                        <div>Speed: <span class="text-emerald-400 font-semibold">{farmingSpeed}</span></div>
-                    {/if}
-                    <button on:click={saveConfig} class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-xs transition-all shadow-md shadow-sky-500/20">
-                        Save Config
-                    </button>
-                </div>
-            </header>
-
-            <!-- Main Content Scroll Area -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+    {#if isGuiOpen}
+        <!-- Full Vertex Config Dashboard Screen -->
+        <div class="w-full h-full flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+            <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[940px] h-[580px] bg-[#0c101d]/95 border border-slate-800/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(56,189,248,0.15)] flex overflow-hidden relative z-10">
                 
-                <!-- Dashboard View -->
-                {#if currentTab === 'dashboard'}
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                            <h4 class="text-xs text-slate-400 font-medium">ACTIVE MACRO</h4>
-                            <p class="text-lg font-bold text-sky-400 mt-1">{activeMacroName}</p>
-                        </div>
-                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                            <h4 class="text-xs text-slate-400 font-medium">LIVE BPS</h4>
-                            <p class="text-lg font-bold text-emerald-400 mt-1">{farmingSpeed}</p>
-                        </div>
-                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                            <h4 class="text-xs text-slate-400 font-medium">ESTIMATED PROFIT</h4>
-                            <p class="text-lg font-bold text-amber-400 mt-1">{estProfit}</p>
-                        </div>
-                    </div>
-                {/if}
-
-                <!-- Macro Modules Grid -->
-                {#if filteredMacros.length > 0}
+                <!-- Left Sidebar Rail -->
+                <aside class="w-[220px] bg-[#080b14] border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 select-none">
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Available Features</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            {#each filteredMacros as macro}
-                                <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between">
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h4 class="text-sm font-bold text-white">{macro.title}</h4>
-                                            <button 
-                                                on:click={() => toggleMacro(macro.id)}
-                                                class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
-                                            >
-                                                {macro.running ? 'STOP' : 'START'}
-                                            </button>
-                                        </div>
-                                        <p class="text-xs text-slate-400 leading-relaxed mb-4">{macro.desc}</p>
-                                    </div>
-
-                                    {#if macro.options && macro.options.length > 0}
-                                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                                            <span class="text-xs text-slate-500 font-medium">Target Mode:</span>
-                                            <select 
-                                                value={macro.target} 
-                                                on:change={(e) => onTargetChange(macro.id, e.target.value)}
-                                                class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-lg px-3 py-1 focus:outline-none focus:border-sky-500"
-                                            >
-                                                {#each macro.options as opt}
-                                                    <option value={opt}>{opt}</option>
-                                                {/each}
-                                            </select>
-                                        </div>
-                                    {/if}
-                                </div>
-                            {/each}
+                        <!-- Brand Title -->
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-sky-400 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20 text-sm">
+                                V
+                            </div>
+                            <div>
+                                <h1 class="text-sm font-bold tracking-wider text-white">VERTEX</h1>
+                                <span class="text-[10px] text-sky-400 font-medium tracking-widest uppercase block">Fabric v1.21.11</span>
+                            </div>
                         </div>
+
+                        <!-- Navigation List -->
+                        <nav class="flex flex-col gap-1.5 overflow-y-auto max-h-[400px] pr-1 custom-scrollbar">
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'dashboard' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'dashboard'; }}>
+                                <span>📊</span> Dashboard
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'farming' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'farming'; }}>
+                                <span>🌾</span> Garden & Farming
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'mining' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'mining'; }}>
+                                <span>⛏️</span> Mining & Hollows
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'slayer' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'slayer'; }}>
+                                <span>⚔️</span> Slayer & Combat
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'fishing' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'fishing'; }}>
+                                <span>🎣</span> Fishing
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'foraging' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'foraging'; }}>
+                                <span>🪓</span> Foraging
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'alchemy' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'alchemy'; }}>
+                                <span>🧪</span> Economy & Alchemy
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'diana' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'diana'; }}>
+                                <span>🦅</span> Diana Mythological
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'config' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'config'; }}>
+                                <span>⚙️</span> Config & Settings
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'failsafe' ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'failsafe'; }}>
+                                <span>🛡️</span> Security & Failsafes
+                            </button>
+                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'themes' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
+                                <span>🎨</span> Themes & Style
+                            </button>
+                        </nav>
                     </div>
-                {/if}
 
-                <!-- Category Specific Config Settings -->
-                {#if currentTab === 'config' || currentTab === 'failsafe'}
-                    {#each Object.entries(dynamicConfigSchema) as [catId, catObj]}
-                        <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl">
-                            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                                {catObj.name || catId}
-                            </h3>
+                    <!-- Player Status Footer Card -->
+                    <div class="bg-slate-900/60 border border-slate-800/80 p-3 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-200">{playerName}</h4>
+                            <span class="text-[10px] text-emerald-400 font-medium">● Online {#if liveFps > 0}• {liveFps} FPS{/if}</span>
+                        </div>
+                        <button on:click={closeGui} class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all">
+                            ✕
+                        </button>
+                    </div>
+                </aside>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                {#each catObj.settings || [] as setting}
-                                    <div class="bg-slate-950/60 border border-slate-800/80 p-4 rounded-xl flex items-center justify-between gap-4">
-                                        <div class="flex-1 pr-2">
-                                            <h4 class="text-xs font-semibold text-slate-200">{setting.name}</h4>
-                                            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">{setting.desc}</p>
-                                        </div>
+                <!-- Right Content Workspace -->
+                <main class="flex-1 flex flex-col overflow-hidden bg-[#0a0d18]">
+                    <header class="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0">
+                        <div class="relative w-72">
+                            <input 
+                                type="text" 
+                                bind:value={searchQuery} 
+                                placeholder="Search macros or settings..." 
+                                class="w-full bg-slate-900/80 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 px-4 py-2 rounded-xl focus:outline-none focus:border-sky-500/50 transition-all"
+                            />
+                        </div>
 
-                                        <!-- Setting Control Types -->
-                                        <div>
-                                            {#if setting.type === 'boolean'}
-                                                <label class="relative inline-flex items-center cursor-pointer">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        checked={setting.value} 
-                                                        on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
-                                                        class="sr-only peer"
-                                                    />
-                                                    <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
-                                                </label>
-                                            {:else if setting.type === 'slider'}
-                                                <div class="flex items-center gap-2">
-                                                    <input 
-                                                        type="range" 
-                                                        min={setting.min || 0} 
-                                                        max={setting.max || 100} 
-                                                        step={setting.step || 1} 
-                                                        value={setting.value} 
-                                                        on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
-                                                        class="w-24 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                                                    />
-                                                    <span class="text-xs font-semibold text-sky-400 w-8 text-right">{setting.value}</span>
-                                                </div>
-                                            {:else if setting.type === 'dropdown'}
-                                                <select 
-                                                    value={setting.value} 
-                                                    on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
-                                                    class="bg-slate-900 border border-slate-800 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500"
-                                                >
-                                                    {#each setting.options || [] as opt, i}
-                                                        <option value={i}>{opt}</option>
-                                                    {/each}
-                                                </select>
-                                            {:else if setting.type === 'keybind'}
-                                                <button 
-                                                    on:click={() => startKeybindListen(catId, setting)}
-                                                    class="px-3 py-1 rounded-lg text-xs font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
-                                                >
-                                                    {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
-                                                </button>
-                                            {:else}
-                                                <div class="flex items-center gap-2">
-                                                    <input 
-                                                        type="text" 
-                                                        value={setting.value || ''} 
-                                                        on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
-                                                        class="w-28 bg-slate-900 border border-slate-800 text-xs text-slate-200 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-sky-500"
-                                                    />
+                        <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
+                            <div>Active: <span class="text-sky-400 font-semibold">{activeMacroName}</span></div>
+                            {#if farmingSpeed !== '0.0 BPS'}
+                                <div>Speed: <span class="text-emerald-400 font-semibold">{farmingSpeed}</span></div>
+                            {/if}
+                            <button on:click={saveConfig} class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-xs transition-all shadow-md shadow-sky-500/20">
+                                Save Config
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                        {#if currentTab === 'dashboard'}
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                    <h4 class="text-xs text-slate-400 font-medium">ACTIVE MACRO</h4>
+                                    <p class="text-lg font-bold text-sky-400 mt-1">{activeMacroName}</p>
+                                </div>
+                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                    <h4 class="text-xs text-slate-400 font-medium">LIVE BPS</h4>
+                                    <p class="text-lg font-bold text-emerald-400 mt-1">{farmingSpeed}</p>
+                                </div>
+                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                    <h4 class="text-xs text-slate-400 font-medium">ESTIMATED PROFIT</h4>
+                                    <p class="text-lg font-bold text-amber-400 mt-1">{estProfit}</p>
+                                </div>
+                            </div>
+                        {/if}
+
+                        {#if filteredMacros.length > 0}
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Available Features</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    {#each filteredMacros as macro}
+                                        <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <h4 class="text-sm font-bold text-white">{macro.title}</h4>
                                                     <button 
-                                                        on:click={() => executeButtonAction(catId, setting.id + 'Button')}
-                                                        title="Set from current held item"
-                                                        class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-xs font-semibold transition-all"
+                                                        on:click={() => toggleMacro(macro.id)}
+                                                        class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
                                                     >
-                                                        Hand
+                                                        {macro.running ? 'STOP' : 'START'}
                                                     </button>
+                                                </div>
+                                                <p class="text-xs text-slate-400 leading-relaxed mb-4">{macro.desc}</p>
+                                            </div>
+
+                                            {#if macro.options && macro.options.length > 0}
+                                                <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                                                    <span class="text-xs text-slate-500 font-medium">Target Mode:</span>
+                                                    <select 
+                                                        value={macro.target} 
+                                                        on:change={(e) => onTargetChange(macro.id, e.target.value)}
+                                                        class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-lg px-3 py-1 focus:outline-none focus:border-sky-500"
+                                                    >
+                                                        {#each macro.options as opt}
+                                                            <option value={opt}>{opt}</option>
+                                                        {/each}
+                                                    </select>
                                                 </div>
                                             {/if}
                                         </div>
-                                    </div>
-                                {/each}
+                                    {/each}
+                                </div>
                             </div>
-                        </div>
-                    {/each}
-                {/if}
+                        {/if}
 
-                <!-- Themes & Styling Tab -->
-                {#if currentTab === 'themes'}
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-bold text-white mb-2">Select Accent Theme</h3>
-                        <div class="grid grid-cols-3 gap-4">
-                            {#each themesList as theme}
-                                <button 
-                                    on:click={() => applyTheme(theme.id)}
-                                    class="bg-slate-900/50 border p-4 rounded-2xl text-left transition-all duration-200 {selectedTheme === theme.id ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 hover:border-slate-700'}"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="w-4 h-4 rounded-full" style="background-color: {theme.primaryColor};"></div>
-                                        <h4 class="text-xs font-bold text-white">{theme.name}</h4>
+                        {#if currentTab === 'config' || currentTab === 'failsafe'}
+                            {#each Object.entries(dynamicConfigSchema) as [catId, catObj]}
+                                <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl">
+                                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                        {catObj.name || catId}
+                                    </h3>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        {#each catObj.settings || [] as setting}
+                                            <div class="bg-slate-950/60 border border-slate-800/80 p-4 rounded-xl flex items-center justify-between gap-4">
+                                                <div class="flex-1 pr-2">
+                                                    <h4 class="text-xs font-semibold text-slate-200">{setting.name}</h4>
+                                                    <p class="text-[11px] text-slate-500 leading-tight mt-0.5">{setting.desc}</p>
+                                                </div>
+
+                                                <div>
+                                                    {#if setting.type === 'boolean'}
+                                                        <label class="relative inline-flex items-center cursor-pointer">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={setting.value} 
+                                                                on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
+                                                                class="sr-only peer"
+                                                            />
+                                                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                                                        </label>
+                                                    {:else if setting.type === 'slider'}
+                                                        <div class="flex items-center gap-2">
+                                                            <input 
+                                                                type="range" 
+                                                                min={setting.min || 0} 
+                                                                max={setting.max || 100} 
+                                                                step={setting.step || 1} 
+                                                                value={setting.value} 
+                                                                on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
+                                                                class="w-24 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                                                            />
+                                                            <span class="text-xs font-semibold text-sky-400 w-8 text-right">{setting.value}</span>
+                                                        </div>
+                                                    {:else if setting.type === 'dropdown'}
+                                                        <select 
+                                                            value={setting.value} 
+                                                            on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
+                                                            class="bg-slate-900 border border-slate-800 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500"
+                                                        >
+                                                            {#each setting.options || [] as opt, i}
+                                                                <option value={i}>{opt}</option>
+                                                            {/each}
+                                                        </select>
+                                                    {:else if setting.type === 'keybind'}
+                                                        <button 
+                                                            on:click={() => startKeybindListen(catId, setting)}
+                                                            class="px-3 py-1 rounded-lg text-xs font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
+                                                        >
+                                                            {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
+                                                        </button>
+                                                    {:else}
+                                                        <div class="flex items-center gap-2">
+                                                            <input 
+                                                                type="text" 
+                                                                value={setting.value || ''} 
+                                                                on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
+                                                                class="w-28 bg-slate-900 border border-slate-800 text-xs text-slate-200 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-sky-500"
+                                                            />
+                                                            <button 
+                                                                on:click={() => executeButtonAction(catId, setting.id + 'Button')}
+                                                                title="Set from current held item"
+                                                                class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-xs font-semibold transition-all"
+                                                            >
+                                                                Hand
+                                                            </button>
+                                                        </div>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                        {/each}
                                     </div>
-                                    <p class="text-[11px] text-slate-400">{theme.desc}</p>
-                                </button>
+                                </div>
                             {/each}
-                        </div>
+                        {/if}
+
+                        {#if currentTab === 'themes'}
+                            <div class="space-y-4">
+                                <h3 class="text-sm font-bold text-white mb-2">Select Accent Theme</h3>
+                                <div class="grid grid-cols-3 gap-4">
+                                    {#each themesList as theme}
+                                        <button 
+                                            on:click={() => applyTheme(theme.id)}
+                                            class="bg-slate-900/50 border p-4 rounded-2xl text-left transition-all duration-200 {selectedTheme === theme.id ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 hover:border-slate-700'}"
+                                        >
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-4 h-4 rounded-full" style="background-color: {theme.primaryColor};"></div>
+                                                <h4 class="text-xs font-bold text-white">{theme.name}</h4>
+                                            </div>
+                                            <p class="text-[11px] text-slate-400">{theme.desc}</p>
+                                        </button>
+                                    {/each}
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+                </main>
+            </div>
+        </div>
+    {:else}
+        <!-- MCEF Transparent Blurred Theme-Outlined Status HUD Overlay -->
+        <div class="fixed top-5 left-5 z-50 p-4 rounded-2xl bg-slate-950/40 backdrop-blur-xl border-2 border-[var(--theme-500)] shadow-[0_0_25px_var(--theme-500)] text-white w-64 select-none transition-all duration-300">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-[var(--theme-400)] animate-pulse"></div>
+                    <h3 class="text-xs font-extrabold tracking-wider bg-gradient-to-r from-white to-[var(--theme-400)] bg-clip-text text-transparent uppercase">VERTEX STATUS</h3>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {isRunning ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                    {isRunning ? 'ACTIVE' : 'IDLE'}
+                </span>
+            </div>
+            
+            <div class="space-y-2 text-xs font-medium">
+                <div class="flex items-center justify-between text-slate-300">
+                    <span class="text-slate-400">State:</span>
+                    <span class="text-[var(--theme-400)] font-semibold">{activeMacroName} {#if subState}<span class="text-slate-300 font-normal">({subState})</span>{/if}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-300">
+                    <span class="text-slate-400">Runtime:</span>
+                    <span class="text-slate-100 font-mono">{macroRuntime}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-300">
+                    <span class="text-slate-400">Profit:</span>
+                    <span class="text-emerald-400 font-semibold">{estProfit}</span>
+                </div>
+                {#if farmingSpeed !== '0.0 BPS'}
+                    <div class="flex items-center justify-between text-slate-300">
+                        <span class="text-slate-400">Speed:</span>
+                        <span class="text-amber-400 font-semibold">{farmingSpeed}</span>
                     </div>
                 {/if}
-
             </div>
-        </main>
-    </div>
+        </div>
+    {/if}
+
 </div>
