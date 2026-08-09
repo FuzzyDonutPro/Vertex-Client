@@ -66,7 +66,7 @@ public class ChoosingBlockState implements BlockMinerState {
         miner.setBlockChanged(false);
 
         log("Selected target block: " + selected + " (" + miner.getTargetBlockType() + ")");
-        return new AimState();
+        return new BreakingState();
     }
 
     @Override

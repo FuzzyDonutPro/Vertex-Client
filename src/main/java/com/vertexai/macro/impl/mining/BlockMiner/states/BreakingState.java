@@ -1,8 +1,8 @@
 package com.vertexai.macro.impl.mining.BlockMiner.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.handler.RotationHandler;
 import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.handler.RotationHandler;
 import com.vertexai.util.AngleUtil;
 import com.vertexai.util.BlockUtil;
 import com.vertexai.util.KeyBindUtil;
@@ -88,20 +88,12 @@ public class BreakingState implements BlockMinerState {
      */
     private boolean isWalking;
 
-    /**
-     * Tracks if startDestroyBlock has been called for 1.21.11.
-     */
-    private boolean hasStartedMining = false;
-    private net.minecraft.core.Direction miningDirection = null;
-
 
     @Override
     public void onStart(BlockMiner miner) {
         log("Entering Breaking State");
         breakAttemptTime = 0;
         isWalking = false;
-        hasStartedMining = false;
-        miningDirection = null;
 
         lookAwayTimer = new Clock();
         wasLookingAway = false;
@@ -119,7 +111,7 @@ public class BreakingState implements BlockMinerState {
     @Override
     public BlockMinerState onTick(BlockMiner miner) {
         // Handle key presses for mining
-        handleKeybinds(miner);
+        handleKeybinds();
 
         // Handle walking toward block if needed
         if (isWalking) {
@@ -165,12 +157,6 @@ public class BreakingState implements BlockMinerState {
     @Override
     public void onEnd(BlockMiner miner) {
         RotationHandler.getInstance().stop();
-        KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
-        if (mc.gameMode != null) {
-            mc.gameMode.stopDestroyBlock();
-        }
-        hasStartedMining = false;
-        miningDirection = null;
         log("Exiting Breaking State");
     }
 
@@ -178,36 +164,9 @@ public class BreakingState implements BlockMinerState {
      * Handles key bindings for mining.
      * Sets attack key to continuously mine and manages sneak state.
      */
-    private void handleKeybinds(BlockMiner miner) {
-        if (mc.gameMode == null || mc.player == null) return;
-
-        BlockPos targetPos = miner.getTargetBlockPos();
-        if (targetPos == null) return;
-
-        // Fresh pick so crosshair matches camera angle
-        mc.gameRenderer.pick(1.0f);
-
-        boolean isLookingAtTarget = targetPos.equals(BlockUtil.getBlockLookingAt());
-
-        if (!hasStartedMining) {
-            if (!isLookingAtTarget && RotationHandler.getInstance().isEnabled()) {
-                // Still aiming camera toward block — keep attack key off (no first mine tick glide)
-                KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
-                return;
-            }
-
-            net.minecraft.world.phys.BlockHitResult bhr = (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult b && b.getBlockPos().equals(targetPos)) ? b : null;
-            miningDirection = (bhr != null) ? bhr.getDirection() : BlockUtil.getClosestVisibleSide(targetPos);
-            if (miningDirection == null) miningDirection = net.minecraft.core.Direction.UP;
-
-            mc.gameMode.startDestroyBlock(targetPos, miningDirection);
-            hasStartedMining = true;
-        }
-
+    private void handleKeybinds() {
         // Hold left-click to break blocks
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
-        mc.gameMode.continueDestroyBlock(targetPos, miningDirection != null ? miningDirection : net.minecraft.core.Direction.UP);
-        mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
 
         if (!isWalking) {
             KeyBindUtil.setKeyBindState(mc.options.keyShift, Vertex.config().general.sneakWhileMining);
@@ -290,7 +249,6 @@ public class BreakingState implements BlockMinerState {
             isWalking = true;
             Vec3 vec = AngleUtil.getVectorForRotation(AngleUtil.getRotationYaw(this.targetPoint));
 
-            // Find walkable block closest to target
             if (mc.level.isEmptyBlock(new BlockPos((int) (mc.player.position().x + vec.x), (int) (mc.player.position().y + vec.y), (int) (mc.player.position().z + vec.z)))) {
                 this.walkingDestinationBlock = BlockUtil.getWalkableBlocksAround(PlayerUtil.getBlockStandingOn(), 3)
                         .stream()
