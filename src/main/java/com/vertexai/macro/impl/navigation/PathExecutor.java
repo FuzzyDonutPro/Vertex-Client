@@ -399,12 +399,23 @@ public class PathExecutor {
         int targetX = target.getX();
         int targetZ = target.getZ();
         double horizontalDistToTarget = Math.hypot(mc.player.getX() - targetX - 0.5, mc.player.getZ() - targetZ - 0.5);
-        float yaw = AngleUtil.getRotationYaw360(mc.player.position(), new Vec3(targetX + 0.5, 0.0, targetZ + 0.5));
-        float rawDiff = Math.abs(AngleUtil.get360RotationYaw() - yaw);
+
+        // Look directly at next node
+        Vec3 nodeCenter = new Vec3(targetX + 0.5, target.getY() + 0.5, targetZ + 0.5);
+        Vec3 eyePos = PlayerUtil.getPlayerEyePos();
+        Angle targetAngle = AngleUtil.getRotation(eyePos, nodeCenter);
+        float yaw = targetAngle.getYaw();
+
+        // Scale down vertical movement by 60% (keep 40%) unless going uphill
+        double deltaY = nodeCenter.y - eyePos.y;
+        float pitch = targetAngle.getPitch();
+        if (deltaY <= 0) {
+            pitch = pitch * 0.40f;
+        }
+
+        float rawDiff = Math.abs(AngleUtil.get360RotationYaw() - AngleUtil.get360RotationYaw(yaw));
         float yawDiff = rawDiff > 180 ? 360 - rawDiff : rawDiff;
         
-        // If we are intentionally standing still to wait for the camera to rotate, reset the stuck timer
-        // so we don't accidentally trigger the anti-stuck failsafe and fail the path!
         if (yawDiff >= 30 && onGround) {
             this.stuckTimer.reset();
         }
@@ -415,17 +426,14 @@ public class PathExecutor {
         // Disable StrafeUtil for realistic client-side movement
         StrafeUtil.enabled = false;
 
-        // Rotate player to face target direction
+        // Smoothly rotate camera toward target node
         if (yawDiff > 3 && !RotationHandler.getInstance().isEnabled()) {
-            float rotYaw = yaw;
-            float humanError = (float) (random.nextGaussian() * ROTATION_HUMAN_ERROR_FACTOR);
-            rotYaw += humanError;
-
+            float rotYaw = yaw + (float) (random.nextGaussian() * ROTATION_HUMAN_ERROR_FACTOR);
             float time = Vertex.config().debug.useFixedRotation ? Vertex.config().debug.fixedRotationTime : Math.max(220, (long) (360 - horizontalDistToTarget * Vertex.config().debug.rotationMultiplier));
 
             RotationHandler.getInstance().easeTo(
                     new RotationConfiguration(
-                            new Angle(rotYaw, 0.0f),
+                            new Angle(rotYaw, pitch),
                             (long) time, null
                     )
             );
