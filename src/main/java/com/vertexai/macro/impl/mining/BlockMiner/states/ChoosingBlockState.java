@@ -37,11 +37,18 @@ public class ChoosingBlockState implements BlockMinerState {
             return null;
         }
 
-        List<BlockPos> blocks = BlockUtil.findMineableBlocksFromAccessiblePositions(
+        List<BlockPos> blocks = BlockUtil.findMineableBlocksAroundHead(
                 miner.getBlockPriority(),
                 miner.getTargetBlockPos(),
                 miner.getMiningSpeed()
         );
+        if (blocks.isEmpty()) {
+            blocks = BlockUtil.findMineableBlocksFromAccessiblePositions(
+                    miner.getBlockPriority(),
+                    miner.getTargetBlockPos(),
+                    miner.getMiningSpeed()
+            );
+        }
 
         if (blocks.isEmpty()) {
             if (!searchTimer.isScheduled()) {
