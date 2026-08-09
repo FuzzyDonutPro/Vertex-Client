@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import { fly } from 'svelte/transition';
     import './app.css';
 
     let isGuiOpen = true;
@@ -400,11 +401,11 @@
     
     {#if isGuiOpen}
         <!-- Full Vertex Config Dashboard Screen -->
-        <div class="w-full h-full flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+        <div class="w-full h-full flex items-center justify-center bg-slate-950/80 backdrop-blur-md overflow-hidden">
             <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[940px] h-[580px] bg-[#0c101d]/95 border border-slate-800/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(56,189,248,0.15)] flex overflow-hidden relative z-10">
                 
                 <!-- Left Sidebar Rail -->
-                <aside class="w-[220px] bg-[#080b14] border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 select-none">
+                <aside class="w-[220px] bg-[#080b14] border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 select-none z-20">
                     <div>
                         <!-- Brand Title -->
                         <div class="flex items-center gap-3 mb-6">
@@ -464,9 +465,9 @@
                     </div>
                 </aside>
 
-                <!-- Right Content Workspace -->
-                <main class="flex-1 flex flex-col overflow-hidden bg-[#0a0d18]">
-                    <header class="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0">
+                <!-- Right Content Workspace with strict clip bounds -->
+                <main class="flex-1 flex flex-col overflow-hidden bg-[#0a0d18] relative z-10">
+                    <header class="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between shrink-0 bg-[#0a0d18] z-20">
                         <div class="relative w-72">
                             <input 
                                 type="text" 
@@ -487,169 +488,174 @@
                         </div>
                     </header>
 
-                    <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                        {#if currentTab === 'dashboard'}
-                            <div class="grid grid-cols-3 gap-4">
-                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                                    <h4 class="text-xs text-slate-400 font-medium">ACTIVE MACRO</h4>
-                                    <p class="text-lg font-bold text-sky-400 mt-1">{activeMacroName}</p>
-                                </div>
-                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                                    <h4 class="text-xs text-slate-400 font-medium">LIVE BPS</h4>
-                                    <p class="text-lg font-bold text-emerald-400 mt-1">{farmingSpeed}</p>
-                                </div>
-                                <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
-                                    <h4 class="text-xs text-slate-400 font-medium">ESTIMATED PROFIT</h4>
-                                    <p class="text-lg font-bold text-amber-400 mt-1">{estProfit}</p>
-                                </div>
-                            </div>
-                        {/if}
-
-                        <!-- Macro Modules Grid -->
-                        {#if filteredMacros.length > 0}
-                            <div>
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Available Features</h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    {#each filteredMacros as macro}
-                                        <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between">
-                                            <div>
-                                                <div class="flex items-center justify-between mb-2">
-                                                    <h4 class="text-xs font-bold text-white truncate pr-2">{macro.title}</h4>
-                                                    <button 
-                                                        on:click={() => toggleMacro(macro.id)}
-                                                        class="px-3 py-1 rounded-xl text-[11px] font-semibold transition-all shrink-0 {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
-                                                    >
-                                                        {macro.running ? 'STOP' : 'START'}
-                                                    </button>
-                                                </div>
-                                                <p class="text-[11px] text-slate-400 leading-snug line-clamp-2 mb-3">{macro.desc}</p>
-                                            </div>
-
-                                            {#if macro.options && macro.options.length > 0}
-                                                <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                                                    <span class="text-[11px] text-slate-500 font-medium">Target Mode:</span>
-                                                    <select 
-                                                        value={macro.target} 
-                                                        on:change={(e) => onTargetChange(macro.id, e.target.value)}
-                                                        class="bg-slate-950 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-sky-500"
-                                                    >
-                                                        {#each macro.options as opt}
-                                                            <option value={opt}>{opt}</option>
-                                                        {/each}
-                                                    </select>
-                                                </div>
-                                            {/if}
+                    <!-- Scrollable workspace clipped to exact container bounds -->
+                    <div class="flex-1 overflow-x-hidden overflow-y-auto p-6 space-y-6 custom-scrollbar relative">
+                        {#key currentTab}
+                            <div in:fly={{ x: 40, duration: 220, delay: 30 }} class="w-full space-y-6 overflow-hidden">
+                                {#if currentTab === 'dashboard'}
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                            <h4 class="text-xs text-slate-400 font-medium">ACTIVE MACRO</h4>
+                                            <p class="text-lg font-bold text-sky-400 mt-1">{activeMacroName}</p>
                                         </div>
-                                    {/each}
-                                </div>
-                            </div>
-                        {/if}
+                                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                            <h4 class="text-xs text-slate-400 font-medium">LIVE BPS</h4>
+                                            <p class="text-lg font-bold text-emerald-400 mt-1">{farmingSpeed}</p>
+                                        </div>
+                                        <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                                            <h4 class="text-xs text-slate-400 font-medium">ESTIMATED PROFIT</h4>
+                                            <p class="text-lg font-bold text-amber-400 mt-1">{estProfit}</p>
+                                        </div>
+                                    </div>
+                                {/if}
 
-                        <!-- Directly Embedded Category Config Settings (No giant all-in-one config tab) -->
-                        {#if categoryConfigEntries.length > 0}
-                            <div class="mt-6 pt-4 border-t border-slate-800/60">
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Category Settings</h3>
-                                {#each categoryConfigEntries as [catId, catObj]}
-                                    <div class="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl mb-4">
-                                        <h4 class="text-xs font-bold text-white mb-3 flex items-center gap-2">
-                                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                                            {catObj.name || catId}
-                                        </h4>
-
-                                        <div class="grid grid-cols-2 gap-3">
-                                            {#each catObj.settings || [] as setting}
-                                                <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl flex items-center justify-between gap-3">
-                                                    <div class="flex-1 pr-2 min-w-0">
-                                                        <h5 class="text-xs font-semibold text-slate-200 truncate">{setting.name}</h5>
-                                                        <p class="text-[10px] text-slate-500 leading-tight mt-0.5 truncate">{setting.desc}</p>
+                                <!-- Macro Modules Grid -->
+                                {#if filteredMacros.length > 0}
+                                    <div>
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Available Features</h3>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            {#each filteredMacros as macro}
+                                                <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between overflow-hidden">
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-2">
+                                                            <h4 class="text-xs font-bold text-white truncate pr-2">{macro.title}</h4>
+                                                            <button 
+                                                                on:click={() => toggleMacro(macro.id)}
+                                                                class="px-3 py-1 rounded-xl text-[11px] font-semibold transition-all shrink-0 {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
+                                                            >
+                                                                {macro.running ? 'STOP' : 'START'}
+                                                            </button>
+                                                        </div>
+                                                        <p class="text-[11px] text-slate-400 leading-snug line-clamp-2 mb-3">{macro.desc}</p>
                                                     </div>
 
-                                                    <div class="shrink-0">
-                                                        {#if setting.type === 'boolean'}
-                                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                                <input 
-                                                                    type="checkbox" 
-                                                                    checked={setting.value} 
-                                                                    on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
-                                                                    class="sr-only peer"
-                                                                />
-                                                                <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-500"></div>
-                                                            </label>
-                                                        {:else if setting.type === 'slider'}
-                                                            <div class="flex items-center gap-2">
-                                                                <input 
-                                                                    type="range" 
-                                                                    min={setting.min || 0} 
-                                                                    max={setting.max || 100} 
-                                                                    step={setting.step || 1} 
-                                                                    value={setting.value} 
-                                                                    on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
-                                                                    class="w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                                                                />
-                                                                <span class="text-[11px] font-semibold text-sky-400 w-7 text-right">{setting.value}</span>
-                                                            </div>
-                                                        {:else if setting.type === 'dropdown'}
+                                                    {#if macro.options && macro.options.length > 0}
+                                                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                                                            <span class="text-[11px] text-slate-500 font-medium">Target Mode:</span>
                                                             <select 
-                                                                value={setting.value} 
-                                                                on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
-                                                                class="bg-slate-900 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:border-sky-500 max-w-[110px] truncate"
+                                                                value={macro.target} 
+                                                                on:change={(e) => onTargetChange(macro.id, e.target.value)}
+                                                                class="bg-slate-950 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-sky-500"
                                                             >
-                                                                {#each setting.options || [] as opt, i}
-                                                                    <option value={i}>{opt}</option>
+                                                                {#each macro.options as opt}
+                                                                    <option value={opt}>{opt}</option>
                                                                 {/each}
                                                             </select>
-                                                        {:else if setting.type === 'keybind'}
-                                                            <button 
-                                                                on:click={() => startKeybindListen(catId, setting)}
-                                                                class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
-                                                            >
-                                                                {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
-                                                            </button>
-                                                        {:else}
-                                                            <div class="flex items-center gap-1.5">
-                                                                <input 
-                                                                    type="text" 
-                                                                    value={setting.value || ''} 
-                                                                    on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
-                                                                    class="w-24 bg-slate-900 border border-slate-800 text-[11px] text-slate-200 px-2 py-1 rounded-lg focus:outline-none focus:border-sky-500 truncate"
-                                                                />
-                                                                <button 
-                                                                    on:click={() => executeButtonAction(catId, setting.id + 'Button')}
-                                                                    title="Set from current held item"
-                                                                    class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-[11px] font-semibold transition-all"
-                                                                >
-                                                                    Hand
-                                                                </button>
-                                                            </div>
-                                                        {/if}
-                                                    </div>
+                                                        </div>
+                                                    {/if}
                                                 </div>
                                             {/each}
                                         </div>
                                     </div>
-                                {/each}
-                            </div>
-                        {/if}
+                                {/if}
 
-                        {#if currentTab === 'themes'}
-                            <div class="space-y-4">
-                                <h3 class="text-sm font-bold text-white mb-2">Select Accent Theme</h3>
-                                <div class="grid grid-cols-3 gap-4">
-                                    {#each themesList as theme}
-                                        <button 
-                                            on:click={() => applyTheme(theme.id)}
-                                            class="bg-slate-900/50 border p-4 rounded-2xl text-left transition-all duration-200 {selectedTheme === theme.id ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 hover:border-slate-700'}"
-                                        >
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-4 h-4 rounded-full" style="background-color: {theme.primaryColor};"></div>
-                                                <h4 class="text-xs font-bold text-white">{theme.name}</h4>
+                                <!-- Directly Embedded Category Config Settings -->
+                                {#if categoryConfigEntries.length > 0}
+                                    <div class="pt-4 border-t border-slate-800/60">
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Category Settings</h3>
+                                        {#each categoryConfigEntries as [catId, catObj]}
+                                            <div class="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl mb-4 overflow-hidden">
+                                                <h4 class="text-xs font-bold text-white mb-3 flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                                    {catObj.name || catId}
+                                                </h4>
+
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    {#each catObj.settings || [] as setting}
+                                                        <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl flex items-center justify-between gap-3 overflow-hidden">
+                                                            <div class="flex-1 pr-2 min-w-0">
+                                                                <h5 class="text-xs font-semibold text-slate-200 truncate">{setting.name}</h5>
+                                                                <p class="text-[10px] text-slate-500 leading-tight mt-0.5 truncate">{setting.desc}</p>
+                                                            </div>
+
+                                                            <div class="shrink-0">
+                                                                {#if setting.type === 'boolean'}
+                                                                    <label class="relative inline-flex items-center cursor-pointer">
+                                                                        <input 
+                                                                            type="checkbox" 
+                                                                            checked={setting.value} 
+                                                                            on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
+                                                                            class="sr-only peer"
+                                                                        />
+                                                                        <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-500"></div>
+                                                                    </label>
+                                                                {:else if setting.type === 'slider'}
+                                                                    <div class="flex items-center gap-2">
+                                                                        <input 
+                                                                            type="range" 
+                                                                            min={setting.min || 0} 
+                                                                            max={setting.max || 100} 
+                                                                            step={setting.step || 1} 
+                                                                            value={setting.value} 
+                                                                            on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
+                                                                            class="w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                                                                        />
+                                                                        <span class="text-[11px] font-semibold text-sky-400 w-7 text-right">{setting.value}</span>
+                                                                    </div>
+                                                                {:else if setting.type === 'dropdown'}
+                                                                    <select 
+                                                                        value={setting.value} 
+                                                                        on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
+                                                                        class="bg-slate-900 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:border-sky-500 max-w-[110px] truncate"
+                                                                    >
+                                                                        {#each setting.options || [] as opt, i}
+                                                                            <option value={i}>{opt}</option>
+                                                                        {/each}
+                                                                    </select>
+                                                                {:else if setting.type === 'keybind'}
+                                                                    <button 
+                                                                        on:click={() => startKeybindListen(catId, setting)}
+                                                                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
+                                                                    >
+                                                                        {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
+                                                                    </button>
+                                                                {:else}
+                                                                    <div class="flex items-center gap-1.5">
+                                                                        <input 
+                                                                            type="text" 
+                                                                            value={setting.value || ''} 
+                                                                            on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
+                                                                            class="w-24 bg-slate-900 border border-slate-800 text-[11px] text-slate-200 px-2 py-1 rounded-lg focus:outline-none focus:border-sky-500 truncate"
+                                                                        />
+                                                                        <button 
+                                                                            on:click={() => executeButtonAction(catId, setting.id + 'Button')}
+                                                                            title="Set from current held item"
+                                                                            class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-[11px] font-semibold transition-all"
+                                                                        >
+                                                                            Hand
+                                                                        </button>
+                                                                    </div>
+                                                                {/if}
+                                                            </div>
+                                                        </div>
+                                                    {/each}
+                                                </div>
                                             </div>
-                                            <p class="text-[11px] text-slate-400 line-clamp-2">{theme.desc}</p>
-                                        </button>
-                                    {/each}
-                                </div>
+                                        {/each}
+                                    </div>
+                                {/if}
+
+                                {#if currentTab === 'themes'}
+                                    <div class="space-y-4">
+                                        <h3 class="text-sm font-bold text-white mb-2">Select Accent Theme</h3>
+                                        <div class="grid grid-cols-3 gap-4">
+                                            {#each themesList as theme}
+                                                <button 
+                                                    on:click={() => applyTheme(theme.id)}
+                                                    class="bg-slate-900/50 border p-4 rounded-2xl text-left transition-all duration-200 {selectedTheme === theme.id ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 hover:border-slate-700'}"
+                                                >
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <div class="w-4 h-4 rounded-full" style="background-color: {theme.primaryColor};"></div>
+                                                        <h4 class="text-xs font-bold text-white">{theme.name}</h4>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-400 line-clamp-2">{theme.desc}</p>
+                                                </button>
+                                            {/each}
+                                        </div>
+                                    </div>
+                                {/if}
                             </div>
-                        {/if}
+                        {/key}
                     </div>
                 </main>
             </div>
