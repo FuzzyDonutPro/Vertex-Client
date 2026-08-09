@@ -2,7 +2,7 @@ package com.vertexai.macro.impl.GlacialMacro.states;
 
 import akka.japi.Pair;
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.navigation.RouteNavigator;
+import com.vertexai.macro.impl.navigation.RouteNavigator;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlaciteVeins;

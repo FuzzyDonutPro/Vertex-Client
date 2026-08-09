@@ -4,7 +4,7 @@ import com.vertexai.Vertex;
 import com.vertexai.event.PacketEvent;
 import com.vertexai.event.UpdateTablistEvent;
 import com.vertexai.macro.FeatureManager;
-import com.vertexai.macro.features.misc.MouseUngrab;
+import com.vertexai.macro.impl.misc.MouseUngrab;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;

@@ -2,7 +2,7 @@ package com.vertexai.render;
 
 import lombok.Getter;
 import com.vertexai.macro.AbstractFeature;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.util.RenderUtil;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.core.BlockPos;

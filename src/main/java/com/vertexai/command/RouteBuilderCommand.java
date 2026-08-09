@@ -2,7 +2,7 @@ package com.vertexai.command;
 
 import com.vertexai.Vertex;
 import com.vertexai.VertexClient;
-import com.vertexai.macro.features.navigation.RouteBuilder;
+import com.vertexai.macro.impl.navigation.RouteBuilder;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.util.KeyPressUtil;

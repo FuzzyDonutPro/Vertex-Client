@@ -1,6 +1,6 @@
 package com.vertexai.mixin.client;
 
-import com.vertexai.macro.features.misc.PerspectiveMod;
+import com.vertexai.macro.impl.misc.PerspectiveMod;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;

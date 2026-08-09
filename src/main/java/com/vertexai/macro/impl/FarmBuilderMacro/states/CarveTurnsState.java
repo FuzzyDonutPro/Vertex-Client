@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.FarmBuilderMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.navigation.Pathfinder;
+import com.vertexai.macro.impl.navigation.Pathfinder;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.macro.impl.FarmBuilderMacro.config.FarmPatternConfig;
 import com.vertexai.macro.impl.FarmBuilderMacro.config.FarmPatternManager;

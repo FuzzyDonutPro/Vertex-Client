@@ -2,7 +2,7 @@ package com.vertexai.failsafe.impl;
 
 import lombok.Getter;
 import com.vertexai.failsafe.AbstractFailsafe;
-import com.vertexai.macro.features.misc.LagDetector;
+import com.vertexai.macro.impl.misc.LagDetector;
 import com.vertexai.macro.MacroManager;
 import com.vertexai.util.Logger;
 import com.vertexai.util.helper.Clock;

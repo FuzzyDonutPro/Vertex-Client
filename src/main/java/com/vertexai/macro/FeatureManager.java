@@ -1,17 +1,17 @@
 package com.vertexai.macro;
 
 import com.vertexai.failsafe.AbstractFailsafe.Failsafe;
-import com.vertexai.macro.features.combat.*;
-import com.vertexai.macro.features.dungeon.*;
-import com.vertexai.macro.features.farming.*;
-import com.vertexai.macro.features.fishing.*;
-import com.vertexai.macro.features.mining.*;
-import com.vertexai.macro.features.mining.AutoDrillRefuel.AutoDrillRefuel;
-import com.vertexai.macro.features.misc.*;
-import com.vertexai.macro.features.misc.AutoGetStats.AutoGetStats;
-import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
-import com.vertexai.macro.features.navigation.*;
+import com.vertexai.macro.impl.combat.*;
+import com.vertexai.macro.impl.dungeon.*;
+import com.vertexai.macro.impl.farming.*;
+import com.vertexai.macro.impl.fishing.*;
+import com.vertexai.macro.impl.mining.*;
+import com.vertexai.macro.impl.mining.AutoDrillRefuel.AutoDrillRefuel;
+import com.vertexai.macro.impl.misc.*;
+import com.vertexai.macro.impl.misc.AutoGetStats.AutoGetStats;
+import com.vertexai.macro.impl.combat.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.navigation.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -60,7 +60,7 @@ public class FeatureManager {
                 WardrobeSwapper.instance,
                 SackManager.instance,
                 RefuelEngineSwapper.instance,
-                com.vertexai.macro.features.combat.SlayerQoL.SlayerQoL.getInstance(),
+                com.vertexai.macro.impl.combat.SlayerQoL.SlayerQoL.getInstance(),
                 RouteAutoRecorder.getInstance(),
                 FastBreak.instance,
                 PerspectiveMod.getInstance(),

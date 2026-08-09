@@ -208,7 +208,7 @@ public class BlockUtil {
                         }
                         // Minimal mode: check 5-block maximum distance limit from starting position
                         if (com.vertexai.Vertex.config().miningMacro.pathfinderMode == 0) { // Minimal
-                            BlockPos minerStart = com.vertexai.macro.features.mining.BlockMiner.BlockMiner.getInstance().getStartPos();
+                            BlockPos minerStart = com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().getStartPos();
                             if (minerStart != null && pos.distSqr(minerStart) > 25.0) { // > 5 blocks from start position
                                 continue;
                             }

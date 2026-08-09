@@ -1,6 +1,6 @@
 package com.vertexai.mixin.client;
 
-import com.vertexai.macro.features.misc.PerspectiveMod;
+import com.vertexai.macro.impl.misc.PerspectiveMod;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;

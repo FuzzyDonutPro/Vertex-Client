@@ -2,7 +2,7 @@ package com.vertexai.macro.impl.GlacialMacro.states;
 
 import akka.japi.Pair;
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlaciteVeins;
 import com.vertexai.util.InventoryUtil;

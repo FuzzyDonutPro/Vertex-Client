@@ -1,7 +1,7 @@
 package com.vertexai.ui.hud.elements;
 
 import com.vertexai.client.overlay.TextHud;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.MiningMacro.MiningMacro;
 import net.minecraft.core.BlockPos;
 

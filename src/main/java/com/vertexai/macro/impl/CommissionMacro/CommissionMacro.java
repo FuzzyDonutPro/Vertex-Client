@@ -6,7 +6,7 @@ import com.vertexai.Vertex;
 import com.vertexai.event.UpdateTablistEvent;
 import com.vertexai.failsafe.impl.NameMentionFailsafe;
 import com.vertexai.macro.FeatureManager;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.macro.impl.CommissionMacro.states.*;
 import com.vertexai.ui.hud.elements.CommissionHUD;

@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.RouteMiner.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.navigation.Pathfinder;
+import com.vertexai.macro.impl.navigation.Pathfinder;
 import com.vertexai.handler.RotationHandler;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.macro.impl.RouteMiner.RouteMinerMacro;

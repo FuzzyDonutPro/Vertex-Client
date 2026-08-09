@@ -3,7 +3,7 @@ package com.vertexai.macro.impl.ForagingMacro.states;
 import com.vertexai.Vertex;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacroState;
-import com.vertexai.macro.features.navigation.Pathfinder;
+import com.vertexai.macro.impl.navigation.Pathfinder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;

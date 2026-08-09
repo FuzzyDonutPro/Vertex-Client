@@ -3,7 +3,7 @@ package com.vertexai.macro.impl.NukerMacro;
 import lombok.Getter;
 import lombok.Setter;
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.macro.impl.NukerMacro.states.StartingState;
 

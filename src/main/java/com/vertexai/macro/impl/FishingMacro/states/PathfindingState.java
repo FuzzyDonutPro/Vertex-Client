@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.FishingMacro.states;
 
-import com.vertexai.macro.features.navigation.Pathfinder;
-import com.vertexai.macro.features.navigation.RouteNavigator;
+import com.vertexai.macro.impl.navigation.Pathfinder;
+import com.vertexai.macro.impl.navigation.RouteNavigator;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RotationHandler;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;

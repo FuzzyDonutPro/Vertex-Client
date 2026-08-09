@@ -3,7 +3,7 @@ package com.vertexai.ui.hud.elements;
 import lombok.Getter;
 import com.vertexai.Vertex;
 import com.vertexai.client.overlay.TextHud;
-import com.vertexai.macro.features.navigation.RouteBuilder;
+import com.vertexai.macro.impl.navigation.RouteBuilder;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.ui.hud.ColorPalette;

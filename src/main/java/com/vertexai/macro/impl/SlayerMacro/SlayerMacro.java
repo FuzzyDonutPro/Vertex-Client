@@ -2,7 +2,7 @@ package com.vertexai.macro.impl.SlayerMacro;
 
 import lombok.Getter;
 import com.vertexai.Vertex;
-import com.vertexai.macro.features.combat.AutoMobKiller.AutoMobKiller;
+import com.vertexai.macro.impl.combat.AutoMobKiller.AutoMobKiller;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.macro.impl.SlayerMacro.states.StartingState;
 

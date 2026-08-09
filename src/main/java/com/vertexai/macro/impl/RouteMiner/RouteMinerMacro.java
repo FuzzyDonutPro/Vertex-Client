@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import com.vertexai.Vertex;
 import com.vertexai.macro.FeatureManager;
-import com.vertexai.macro.features.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.handler.RotationHandler;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.macro.AbstractMacro;
