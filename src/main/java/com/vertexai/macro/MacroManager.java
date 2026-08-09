@@ -114,6 +114,7 @@ public class MacroManager {
 
         log("Macro::disable");
         FeatureManager.getInstance().disableAll();
+        com.vertexai.handler.RotationHandler.getInstance().stop();
         MouseUngrab.getInstance().regrabMouse();
         this.currentMacro.disable();
         send(this.currentMacro.getName() + " Disabled");

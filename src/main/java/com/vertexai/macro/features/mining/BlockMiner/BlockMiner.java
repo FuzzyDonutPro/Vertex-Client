@@ -177,9 +177,9 @@ public class BlockMiner extends AbstractFeature {
         if (currentState != null)
             currentState.onEnd(this);
         super.stop();
+        com.vertexai.handler.RotationHandler.getInstance().stop();
         KeyBindUtil.releaseAllExcept();
         blockPriority.clear();
-
     }
 
     @Override

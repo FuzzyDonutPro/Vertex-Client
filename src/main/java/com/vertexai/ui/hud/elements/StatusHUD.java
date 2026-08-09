@@ -116,4 +116,13 @@ public class StatusHUD extends TextHud {
         this.totalProfit = 0;
         this.macroStartTime = -1;
     }
+
+    @Override
+    protected boolean shouldShow() {
+        if (!enabled || mc.player == null || mc.level == null) return false;
+        if (com.vertexai.macro.impl.MiningMacro.MiningMacro.getInstance().isEnabled()) {
+            return false;
+        }
+        return com.vertexai.macro.MacroManager.getInstance().isRunning();
+    }
 }

@@ -75,4 +75,8 @@ public class MiningMacro {
     @ConfigOption(name = "Default Priority - Titanium", desc = "")
     @ConfigEditorSlider(minValue = 0, maxValue = 30, minStep = 1)
     public int mithrilPriorityTitaniumDefault = 10;
+
+    @ConfigOption(name = "Override Mining Speed (0 = Auto)", desc = "Manual Mining Speed override (e.g. 4500). Set to 0 to auto-detect from Tab list / item lore / stats.")
+    @ConfigEditorSlider(minValue = 0, maxValue = 20000, minStep = 50)
+    public int customMiningSpeed = 0;
 }

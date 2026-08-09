@@ -89,6 +89,7 @@ public class MiningMacro extends AbstractMacro {
         log("Enabling Mining Macro");
         resetVariables();
         setBlocksToMineBasedOnOreType();
+        com.vertexai.ui.hud.elements.MiningHUD.getInstance().resetStats();
         statsTimer.schedule(2500);
 
         if (miningSpeed == 0) {
@@ -216,10 +217,6 @@ public class MiningMacro extends AbstractMacro {
     }
 
     private void setBlocksToMineBasedOnOreType() {
-        log(
-                "Setting blocks to mine based on ore type: " +
-                        Vertex.config().miningMacro.oreType
-        );
         switch (Vertex.config().miningMacro.oreType) {
             case 0:
                 List<MineableBlock> list = new ArrayList<>();
@@ -273,10 +270,8 @@ public class MiningMacro extends AbstractMacro {
                 break;
             default:
                 blocksToMine = new MineableBlock[]{};
-                log("Invalid ore type selected");
                 break;
         }
-        log("Blocks to mine: " + Arrays.toString(blocksToMine));
     }
 
     private int[] determinePriority() {

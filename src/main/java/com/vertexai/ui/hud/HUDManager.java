@@ -34,6 +34,7 @@ public class HUDManager {
         elements.add(GlacialCommissionHUD.getInstance());
         elements.add(RouteBuilderHUD.getInstance());
         elements.add(FishingHUD.getInstance());
+        elements.add(MiningHUD.getInstance());
         elements.add(com.vertexai.client.overlay.SpotifyHudElement.getInstance());
     }
 
@@ -80,6 +81,7 @@ public class HUDManager {
         if (element instanceof MacroHUD) return hud.enableDebugHud;
         if (element instanceof RouteBuilderHUD) return hud.enableRouteBuilderHud;
         if (element instanceof FishingHUD) return hud.enableFishingHud;
+        if (element instanceof MiningHUD) return hud.enableMiningHud;
         if (element instanceof com.vertexai.client.overlay.SpotifyHudElement) return hud.enableSpotifyHud;
         return true;
     }
@@ -95,6 +97,7 @@ public class HUDManager {
         updateElement(GlacialCommissionHUD.getInstance(), hud.glacialHUD);
         updateElement(RouteBuilderHUD.getInstance(), hud.routeBuilderHUD);
         updateElement(FishingHUD.getInstance(), hud.fishingHUD);
+        updateElement(MiningHUD.getInstance(), hud.miningHUD);
         updateElement(com.vertexai.client.overlay.SpotifyHudElement.getInstance(), hud.spotifyHUD);
         positionsLoaded = true;
     }
@@ -117,6 +120,7 @@ public class HUDManager {
         saveElement(GlacialCommissionHUD.getInstance(), hud.glacialHUD);
         saveElement(RouteBuilderHUD.getInstance(), hud.routeBuilderHUD);
         saveElement(FishingHUD.getInstance(), hud.fishingHUD);
+        saveElement(MiningHUD.getInstance(), hud.miningHUD);
         saveElement(com.vertexai.client.overlay.SpotifyHudElement.getInstance(), hud.spotifyHUD);
 
         // Save the main config
@@ -164,6 +168,11 @@ public class HUDManager {
         FishingHUD.getInstance().setY(185);
         FishingHUD.getInstance().setAnchor(0);
         FishingHUD.getInstance().setScale(1.0f);
+
+        MiningHUD.getInstance().setX(5);
+        MiningHUD.getInstance().setY(130);
+        MiningHUD.getInstance().setAnchor(0);
+        MiningHUD.getInstance().setScale(1.0f);
 
         com.vertexai.client.overlay.SpotifyHudElement.getInstance().setX(5);
         com.vertexai.client.overlay.SpotifyHudElement.getInstance().setY(230);

@@ -12,4 +12,10 @@ public interface MultiPlayerGameModeAccessor {
 
     @Accessor("destroyDelay")
     int getDestroyDelay();
+
+    @Accessor("destroyProgress")
+    float getDestroyProgress();
+
+    @Accessor("destroyProgress")
+    void setDestroyProgress(float destroyProgress);
 }

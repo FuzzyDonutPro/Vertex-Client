@@ -28,12 +28,13 @@ public class AutoResponder extends AbstractFeature {
         String msg = message.toLowerCase();
         String playerName = mc.player.getName().getString().toLowerCase();
 
-        boolean isWhisper = msg.contains("from ") || msg.contains("whispers:") || msg.contains("to ");
-        boolean isMentioned = msg.contains(playerName);
+        // Clean string check with color codes stripped if needed
+        boolean isWhisper = msg.contains("from ") && (msg.contains(":") || msg.contains("->"));
+        boolean isMentioned = !playerName.isEmpty() && msg.contains(playerName);
         boolean isAdminCheck = msg.contains("are you macroing") || msg.contains("are you botting") ||
-                               msg.contains("reply to") || msg.contains("type ") || msg.contains("captcha");
+                               msg.contains("reply to staff") || msg.contains("type the captcha") || msg.contains("bot check");
 
-        if (isWhisper || (isMentioned && !msg.contains("joined")) || isAdminCheck) {
+        if (isWhisper || (isMentioned && !msg.contains("joined") && !msg.contains("left")) || isAdminCheck) {
             // Calculate reading pause: 0.7 seconds (700ms) per word in the received message (minimum 2.5s pause)
             String[] words = message.trim().split("\\s+");
             long pauseDurationMs = Math.max(2500L, (long) (words.length * 700L));

@@ -92,6 +92,7 @@ public class FeatureManager {
                 it.stop();
             }
         });
+        com.vertexai.handler.RotationHandler.getInstance().stop();
     }
 
     public void pauseAll() {

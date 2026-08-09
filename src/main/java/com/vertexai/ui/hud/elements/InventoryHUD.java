@@ -26,7 +26,7 @@ public class InventoryHUD extends AbstractHUDElement {
         this.x = 0;
         this.y = 52; // 52px above bottom screen (top of hotbar)
         this.anchor = 2; // Bottom-Left / Bottom-Center
-        this.enabled = true;
+        this.enabled = false;
     }
 
     public static InventoryHUD getInstance() {
