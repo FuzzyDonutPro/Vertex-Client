@@ -177,8 +177,8 @@ public class PathfindingState implements ForagingMacroState {
             BlockPos current = queue.poll();
             count++;
 
-            if (count >= 10) {
-                return true; // Cluster has at least 10 connected logs (real tree!)
+            if (count >= 1) {
+                return true; // Valid tree log cluster found
             }
 
             for (int dx = -1; dx <= 1; dx++) {
