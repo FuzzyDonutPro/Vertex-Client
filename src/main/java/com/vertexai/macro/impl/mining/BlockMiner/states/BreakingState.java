@@ -106,6 +106,12 @@ public class BreakingState implements BlockMinerState {
         // Setup rotation to look at the block
         RotationHandler.getInstance().stop();
         initializeRotation(miner);
+
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
+            net.minecraft.core.Direction side = miner.getMiningDirection();
+            if (side == null) side = net.minecraft.core.Direction.UP;
+            mc.gameMode.startDestroyBlock(miner.getTargetBlockPos(), side);
+        }
     }
 
     @Override
@@ -153,6 +159,12 @@ public class BreakingState implements BlockMinerState {
     private void handleKeybinds(BlockMiner miner) {
         // Hold left-click to break blocks continuously via vanilla MultiPlayerGameMode
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
+
+        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
+            net.minecraft.core.Direction side = miner.getMiningDirection();
+            if (side == null) side = net.minecraft.core.Direction.UP;
+            mc.gameMode.continueDestroyBlock(miner.getTargetBlockPos(), side);
+        }
 
         if (!isWalking) {
             KeyBindUtil.setKeyBindState(mc.options.keyShift, Vertex.config().general.sneakWhileMining);
