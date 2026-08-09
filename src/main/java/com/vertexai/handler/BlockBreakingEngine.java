@@ -65,8 +65,8 @@ public class BlockBreakingEngine {
             crosshairOnTarget = true;
             side = blockHit.getDirection();
         } else {
-            // Force raycast pick from current eye position with new yaw/pitch angles
-            net.minecraft.world.phys.HitResult hit = mc.player.pick(4.5, 0.0f, false);
+            // Force raycast pick from current eye position with new yaw/pitch angles (strict 3.0 block reach)
+            net.minecraft.world.phys.HitResult hit = mc.player.pick(3.0, 0.0f, false);
             if (hit instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(targetPos)) {
                 crosshairOnTarget = true;
                 side = blockHit.getDirection();

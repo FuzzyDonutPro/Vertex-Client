@@ -5,6 +5,7 @@ import com.vertexai.handler.BlockBreakingEngine;
 import com.vertexai.util.KeyBindUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * BreakingState — Refactored to use central BlockBreakingEngine.
@@ -29,6 +30,14 @@ public class BreakingState implements BlockMinerState {
         }
 
         BlockPos targetPos = miner.getTargetBlockPos();
+
+        // Verify reach limit (strict 3.0 blocks max = 9.0 sq blocks)
+        Vec3 centerVec = Vec3.atCenterOf(targetPos);
+        if (mc.player.getEyePosition().distanceToSqr(centerVec) > 9.0) {
+            log("Target block out of 3.0-block reach, choosing new block...");
+            BlockBreakingEngine.getInstance().stopBreaking();
+            return new StartingState();
+        }
 
         // Delegate breaking to centralized BlockBreakingEngine
         boolean stillMining = BlockBreakingEngine.getInstance().breakBlock(targetPos);
