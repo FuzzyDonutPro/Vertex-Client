@@ -142,6 +142,7 @@ public class BreakingState implements BlockMinerState {
     @Override
     public void onEnd(BlockMiner miner) {
         RotationHandler.getInstance().stop();
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
         log("Exiting Breaking State");
     }
 
@@ -150,20 +151,8 @@ public class BreakingState implements BlockMinerState {
      * Sets attack key to continuously mine and manages sneak state.
      */
     private void handleKeybinds(BlockMiner miner) {
-        // Hold left-click to break blocks continuously
+        // Hold left-click to break blocks continuously via vanilla MultiPlayerGameMode
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
-
-        if (mc.gameMode != null && miner.getTargetBlockPos() != null) {
-            net.minecraft.core.Direction side = miner.getMiningDirection();
-            if (side == null) side = net.minecraft.core.Direction.UP;
-            
-            // Only start destroying once at the beginning of targeting this block, then continuously mine
-            if (breakAttemptTime == 1) {
-                mc.gameMode.startDestroyBlock(miner.getTargetBlockPos(), side);
-            } else {
-                mc.gameMode.continueDestroyBlock(miner.getTargetBlockPos(), side);
-            }
-        }
 
         if (!isWalking) {
             KeyBindUtil.setKeyBindState(mc.options.keyShift, Vertex.config().general.sneakWhileMining);
