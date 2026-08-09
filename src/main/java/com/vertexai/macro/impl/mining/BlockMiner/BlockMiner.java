@@ -5,13 +5,18 @@ import lombok.Setter;
 import com.vertexai.Vertex;
 import com.vertexai.event.BlockChangeEvent;
 import com.vertexai.event.SpawnParticleEvent;
-import com.vertexai.macro.AbstractFeature;
+import com.vertexai.macro.AbstractMacro;
+import com.vertexai.macro.impl.mining.AutoDrillRefuel.AutoDrillRefuel;
 import com.vertexai.macro.impl.mining.BlockMiner.states.ApplyAbilityState;
 import com.vertexai.macro.impl.mining.BlockMiner.states.BlockMinerState;
 import com.vertexai.macro.impl.mining.BlockMiner.states.StartingState;
+import com.vertexai.macro.impl.misc.AutoGetStats.AutoGetStats;
+import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
+import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
 import com.vertexai.util.InventoryUtil;
 import com.vertexai.util.KeyBindUtil;
 import com.vertexai.util.RenderUtil;
+import com.vertexai.util.helper.Clock;
 import com.vertexai.util.helper.MineableBlock;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.core.BlockPos;
@@ -21,8 +26,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,19 +37,45 @@ import java.util.regex.Pattern;
 /**
  * BlockMiner
  * <p>
- * Main controller class for automatic block mining feature.
- * Implements a state machine pattern to manage different phases of the mining process.
- * Handles mining block selection, breaking, and speed boost management.
+ * Complete unified block mining macro and state machine.
+ * Handles stats retrieval, drill auto-refuel, block targeting priorities,
+ * rotation aiming, and 1.21.11 block destruction.
  */
-public class BlockMiner extends AbstractFeature {
+public class BlockMiner extends AbstractMacro {
+
+    public enum BlockMinerError {
+        NONE,
+        NO_POINTS_FOUND,
+        NO_TARGET_BLOCKS,
+        NOT_ENOUGH_BLOCKS,
+        NO_TOOLS_AVAILABLE,
+        NO_PICKAXE_ABILITY
+    }
+
+    public enum PickaxeAbility {
+        NONE,
+        MINING_SPEED_BOOST,
+        PICKOBULUS,
+        ANOMALY,
+        MANIAC_MINER,
+        GEMSTONE_INFUSION,
+        HAZARDOUS_RE_MINE
+    }
+
+    public enum PickaxeAbilityState {
+        AVAILABLE,
+        COOLDOWN,
+        ACTIVE,
+        UNAVAILABLE
+    }
 
     public static final long DEFAULT_PICKAXE_ABILITY_COOLDOWN_MS = 60000L;
     private static final Pattern PICKAXE_COOLDOWN_PATTERN = Pattern.compile("cooldown for\\s+(\\d+)\\s*([sm])");
-    private static BlockMiner instance;
-    /**
-     * The map of the state ID of the block -> its priority
-     */
+    private static final int LOW_FUEL_THRESHOLD = 100;
+    private static final BlockMiner instance = new BlockMiner();
+
     private final Map<Block, Integer> blockPriority = new HashMap<>();
+    private final List<String> necessaryItems = new ArrayList<>();
     private BlockMinerState currentState;
     private long lastAbilityUse = System.currentTimeMillis();
     private BlockMinerError error = BlockMinerError.NONE;
@@ -50,8 +83,8 @@ public class BlockMiner extends AbstractFeature {
     private BlockPos targetBlockPos;
     private Block targetBlockType;
     private Vec3 targetParticlePos;
-    private int miningSpeed;
-    private PickaxeAbility pickaxeAbility;
+    private int miningSpeed = 0;
+    private PickaxeAbility pickaxeAbility = PickaxeAbility.NONE;
     private int waitThreshold;
     private PickaxeAbilityState pickaxeAbilityState = PickaxeAbilityState.AVAILABLE;
     private long pickaxeAbilityCooldownEndMs;
@@ -59,6 +92,21 @@ public class BlockMiner extends AbstractFeature {
     private BlockPos startPos;
     private Vec3 targetPoint;
     private net.minecraft.core.Direction miningDirection;
+
+    private MiningSpeedRetrievalTask miningSpeedRetrievalTask;
+    private PickaxeAbilityRetrievalTask pickaxeAbilityRetrievalTask;
+    private MineableBlock[] blocksToMine = {};
+    private boolean isMining = false;
+    private final Clock statsTimer = new Clock();
+
+    public static BlockMiner getInstance() {
+        return instance;
+    }
+
+    @Override
+    public String getName() {
+        return "Mining Macro";
+    }
 
     public BlockPos getStartPos() { return startPos; }
     public void setStartPos(BlockPos startPos) { this.startPos = startPos; }
@@ -89,235 +137,303 @@ public class BlockMiner extends AbstractFeature {
     public void setPickaxeAbilityCooldownEndMs(long pickaxeAbilityCooldownEndMs) { this.pickaxeAbilityCooldownEndMs = pickaxeAbilityCooldownEndMs; }
     public boolean isBlockChanged() { return blockChanged; }
     public void setBlockChanged(boolean blockChanged) { this.blockChanged = blockChanged; }
+    public boolean isRunning() { return isEnabled(); }
 
-    public static BlockMiner getInstance() {
-        if (instance == null) {
-            instance = new BlockMiner();
+    public void start(MineableBlock[] blocks, int miningSpeed, PickaxeAbility ability, int[] priority, String tool) {
+        if (!isEnabled()) {
+            enable();
         }
-        return instance;
+        this.blocksToMine = blocks;
+        this.miningSpeed = miningSpeed;
+        this.pickaxeAbility = ability;
+        startMiningLoop(blocks, miningSpeed, ability, priority, tool);
     }
 
-    private static long parseCooldownMs(String messageLower) {
-        Matcher matcher = PICKAXE_COOLDOWN_PATTERN.matcher(messageLower);
-        if (!matcher.find()) {
-            return -1L;
+    public void stop() {
+        disable();
+    }
+
+    @Override
+    public List<String> getNecessaryItems() {
+        if (necessaryItems.isEmpty()) {
+            necessaryItems.add(Vertex.config().general.miningTool);
         }
+        return necessaryItems;
+    }
 
-        try {
-            long value = Long.parseLong(matcher.group(1));
-            String unit = matcher.group(2);
-            if (value <= 0L) {
-                return -1L;
-            }
+    @Override
+    public void onEnable() {
+        log("Enabling Mining Macro");
+        resetVariables();
+        setBlocksToMineBasedOnOreType();
+        com.vertexai.ui.hud.elements.MiningHUD.getInstance().resetStats();
+        statsTimer.schedule(2500);
 
-            if ("m".equals(unit)) {
-                return value * 60_000L;
+        if (miningSpeed == 0) {
+            miningSpeedRetrievalTask = new MiningSpeedRetrievalTask();
+            AutoGetStats.getInstance().startTask(miningSpeedRetrievalTask);
+
+            if (Vertex.config().general.usePickaxeAbility) {
+                pickaxeAbilityRetrievalTask = new PickaxeAbilityRetrievalTask();
+                AutoGetStats.getInstance().startTask(pickaxeAbilityRetrievalTask);
             }
-            return value * 1000L;
-        } catch (RuntimeException ignored) {
-            return -1L;
         }
     }
 
     @Override
-    public String getName() {
-        return "BlockMiner";
+    public void onDisable() {
+        log("Disabling Mining Macro");
+        stopStateMachine();
+        resetVariables();
     }
 
-    /**
-     * Starts the BlockMiner with specified parameters. Will continue to mine {@code blocksToMine} until stop() is called
-     *
-     * @param blocksToMine   Array of mine-able block types to target
-     * @param miningSpeed    Base mining speed (higher = faster)
-     * @param pickaxeAbility Users selected pickaxe ability
-     * @param priority       Array of priority values for block selection
-     * @param miningTool     Item name of the tool to use for mining
-     */
-    public void start(MineableBlock[] blocksToMine, final int miningSpeed, final PickaxeAbility pickaxeAbility, final int[] priority, String miningTool) {
-        // Try to hold the specified mining tool if provided
-        if (!miningTool.isEmpty() && !InventoryUtil.holdItem(miningTool)) {
-            logError(miningTool + " not found in inventory!");
-            error = BlockMinerError.NO_TOOLS_AVAILABLE;
-            this.stop();
+    @Override
+    public void onPause() {
+        stopStateMachine();
+        log("Mining Macro paused");
+    }
+
+    @Override
+    public void onResume() {
+        log("Mining Macro resumed");
+    }
+
+    private void resetVariables() {
+        miningSpeed = 0;
+        necessaryItems.clear();
+        isMining = false;
+        error = BlockMinerError.NONE;
+    }
+
+    private boolean handleRefuelIfNeeded() {
+        if (!Vertex.config().general.drillRefuel) return false;
+
+        String tool = Vertex.config().general.miningTool;
+        if (tool == null) return false;
+        if (!tool.toLowerCase().contains("drill")) return false;
+
+        int fuel = InventoryUtil.getDrillRemainingFuel(tool);
+
+        if (fuel <= LOW_FUEL_THRESHOLD && !AutoDrillRefuel.getInstance().isRunning()) {
+            log("Low drill fuel detected (" + fuel + "). Starting auto refuel.");
+            stopStateMachine();
+            isMining = false;
+
+            AutoDrillRefuel.FuelType[] fuelTypeMap = {
+                    AutoDrillRefuel.FuelType.VOLTA,
+                    AutoDrillRefuel.FuelType.OIL_BARREL,
+                    AutoDrillRefuel.FuelType.SUNFLOWER_OIL
+            };
+            AutoDrillRefuel.getInstance().start(tool, fuelTypeMap[Vertex.config().general.refuelMachineFuel]);
+            return true;
+        }
+
+        return AutoDrillRefuel.getInstance().isRunning();
+    }
+
+    @Override
+    public void onTick() {
+        if (!isEnabled()) return;
+
+        if (miningSpeed == 0) {
+            handleGettingStats();
+            if (miningSpeed == 0) return;
+        }
+
+        if (handleRefuelIfNeeded()) {
             return;
         }
 
-        // Validate blocks to mine
-        if (blocksToMine == null || Arrays.stream(priority).allMatch(i -> i == 0)) {
-            logError("Target blocks not set!");
+        setBlocksToMineBasedOnOreType();
+
+        if (!isMining) {
+            this.waitThreshold = Vertex.config().general.oreRespawnWaitThreshold * 1000;
+            String miningTool = Vertex.config().general.miningTool;
+            int miningToolSlot = Vertex.config().general.miningToolSlot;
+            String effectiveTool = (miningToolSlot >= 1 && miningToolSlot <= 9) ? String.valueOf(miningToolSlot) : miningTool;
+
+            startMiningLoop(blocksToMine, miningSpeed, pickaxeAbility, determinePriority(), effectiveTool);
+            isMining = true;
+            log("Started mining with speed: " + miningSpeed + ", Ability: " + pickaxeAbility.name());
+        }
+
+        handleErrors();
+
+        // Run state machine tick
+        if (currentState != null) {
+            BlockMinerState nextState = currentState.onTick(this);
+            if (nextState != currentState) {
+                currentState.onEnd(this);
+                currentState = nextState;
+                if (currentState != null) {
+                    currentState.onStart(this);
+                }
+            }
+        }
+    }
+
+    private void handleGettingStats() {
+        boolean finished = AutoGetStats.getInstance().hasFinishedAllTasks();
+        boolean timedOut = statsTimer.passed();
+
+        if (!finished && !timedOut) return;
+
+        if (miningSpeedRetrievalTask != null && miningSpeedRetrievalTask.getResult() != null) {
+            miningSpeed = miningSpeedRetrievalTask.getResult();
+        } else {
+            miningSpeed = 2000;
+        }
+
+        if (Vertex.config().general.usePickaxeAbility && pickaxeAbilityRetrievalTask != null && pickaxeAbilityRetrievalTask.getResult() != null) {
+            pickaxeAbility = pickaxeAbilityRetrievalTask.getResult();
+        } else {
+            pickaxeAbility = PickaxeAbility.NONE;
+        }
+
+        log("Finished getting stats (Speed: " + miningSpeed + ", Ability: " + pickaxeAbility + ")");
+    }
+
+    private void handleErrors() {
+        switch (error) {
+            case NO_POINTS_FOUND:
+                log("Restarting because block chosen cannot be mined");
+                isMining = false;
+                error = BlockMinerError.NONE;
+                break;
+            case NO_TARGET_BLOCKS:
+                disable("Please set at least one type of target block in configs!");
+                break;
+            case NOT_ENOUGH_BLOCKS:
+                disable("Not enough blocks nearby! Please move to a new vein");
+                break;
+            case NO_TOOLS_AVAILABLE:
+                disable("Cannot find tools in hotbar! Please set it in configs");
+                break;
+            case NO_PICKAXE_ABILITY:
+                disable("Cannot find messages for pickaxe ability! Check HOTM or chat settings.");
+                break;
+        }
+    }
+
+    private void startMiningLoop(MineableBlock[] blocks, int miningSpeed, PickaxeAbility ability, int[] priority, String tool) {
+        if (blocks == null || blocks.length == 0) {
             error = BlockMinerError.NO_TARGET_BLOCKS;
             return;
         }
 
-        // Build priority mapping for block selection
-        for (int i = 0; i < blocksToMine.length; i++) {
-            for (Block block : blocksToMine[i].getBlocks()) {
-                if (block != null) {
-                    blockPriority.put(block, priority[i]);
-                }
+        if (priority == null || priority.length != blocks.length) {
+            int[] defaultPriority = new int[blocks.length];
+            Arrays.fill(defaultPriority, 1);
+            priority = defaultPriority;
+        }
+
+        blockPriority.clear();
+        for (int i = 0; i < blocks.length; i++) {
+            for (Block block : blocks[i].getBlocks()) {
+                blockPriority.put(block, priority[i]);
             }
         }
 
-        // Initialize parameters
-        this.startPos = com.vertexai.util.PlayerUtil.getBlockStandingOn();
+        if (tool != null && !tool.isEmpty()) {
+            try {
+                int slot = Integer.parseInt(tool);
+                if (slot >= 1 && slot <= 9) {
+                    InventoryUtil.selectSlot(slot - 1);
+                } else {
+                    InventoryUtil.holdItem(tool);
+                }
+            } catch (NumberFormatException e) {
+                InventoryUtil.holdItem(tool);
+            }
+        }
+
         this.miningSpeed = miningSpeed;
-        this.pickaxeAbility = pickaxeAbility;
-        this.enabled = true;
-        this.error = BlockMinerError.NONE;
-        this.retryActivatePickaxeAbility = 0;
-        targetParticlePos = null;
+        this.pickaxeAbility = ability;
+        this.startPos = com.vertexai.util.PlayerUtil.getBlockStandingOn();
 
-        // Initialize with starting state
-        this.currentState = new StartingState();
-        this.start();
-    }
-
-    @Override
-    public void stop() {
-        if (currentState != null)
+        if (currentState != null) {
             currentState.onEnd(this);
-        super.stop();
-        com.vertexai.handler.RotationHandler.getInstance().stop();
-        KeyBindUtil.releaseAllExcept();
-        blockPriority.clear();
-    }
-
-    @Override
-    protected void onTick() {
-        if (!this.enabled || mc.screen != null) {
-            return;
         }
-
-        if (currentState == null)
-            return;
-
-        BlockMinerState nextState = currentState.onTick(this);
-        transitionTo(nextState);
-
-        if (retryActivatePickaxeAbility >= 4) {
-            sendError("Cannot find messages for pickaxe ability! Disabling pickaxe ability for this session.");
-            sendError("Either enable any pickaxe ability in HOTM or enable chat messages.");
-            this.pickaxeAbility = PickaxeAbility.NONE;
-            this.retryActivatePickaxeAbility = 0;
-        }
-
-    }
-
-    private void transitionTo(BlockMinerState nextState) {
-        // Skip if no state change
-        if (currentState == nextState)
-            return;
-
-        if ((currentState instanceof StartingState && nextState instanceof ApplyAbilityState)
-                || (currentState instanceof ApplyAbilityState && nextState instanceof StartingState)) {
-            retryActivatePickaxeAbility++;
-        } else {
-            retryActivatePickaxeAbility = 0;
-        }
-
-        currentState.onEnd(this);
-        currentState = nextState;
-
-        if (currentState == null) {
-            log("null state, returning");
-            return;
-        }
-
+        currentState = new StartingState();
         currentState.onStart(this);
     }
 
-    @Override
-    protected void onChat(String message) {
-        message = message.toLowerCase();
-
-        long now = System.currentTimeMillis();
-
-        if (message.contains("is now available!")) {
-            pickaxeAbilityState = PickaxeAbilityState.AVAILABLE;
-            pickaxeAbilityCooldownEndMs = 0L;
+    public void stopStateMachine() {
+        if (currentState != null) {
+            currentState.onEnd(this);
+            currentState = null;
         }
+        isMining = false;
+    }
 
-        // Treat any "used"/"cooldown" message as authoritative UNAVAILABLE.
-        if (message.contains("you used your")) {
-            pickaxeAbilityState = PickaxeAbilityState.UNAVAILABLE;
-            lastAbilityUse = now;
-            pickaxeAbilityCooldownEndMs = Math.max(pickaxeAbilityCooldownEndMs, now + DEFAULT_PICKAXE_ABILITY_COOLDOWN_MS);
-            return;
-        }
-
-        if (message.contains("your pickaxe ability is on cooldown for")) {
-            pickaxeAbilityState = PickaxeAbilityState.UNAVAILABLE;
-            long cooldownMs = parseCooldownMs(message);
-            if (cooldownMs > 0L) {
-                pickaxeAbilityCooldownEndMs = Math.max(pickaxeAbilityCooldownEndMs, now + cooldownMs);
-            }
+    private void setBlocksToMineBasedOnOreType() {
+        switch (Vertex.config().miningMacro.oreType) {
+            case 0:
+                List<MineableBlock> list = new ArrayList<>();
+                if (Vertex.config().miningMacro.mineGrayMithril) list.add(MineableBlock.GRAY_MITHRIL);
+                if (Vertex.config().miningMacro.mineGrayTerracottaMithril) list.add(MineableBlock.GRAY_TERRACOTTA_MITHRIL);
+                if (Vertex.config().miningMacro.mineGreenMithril) list.add(MineableBlock.GREEN_MITHRIL);
+                if (Vertex.config().miningMacro.mineBlueMithril) list.add(MineableBlock.BLUE_MITHRIL);
+                if (Vertex.config().miningMacro.mineTitanium) list.add(MineableBlock.TITANIUM);
+                blocksToMine = list.toArray(new MineableBlock[0]);
+                break;
+            case 1:
+                blocksToMine = new MineableBlock[]{MineableBlock.DIAMOND};
+                break;
+            case 2:
+                blocksToMine = new MineableBlock[]{MineableBlock.EMERALD};
+                break;
+            case 3:
+                blocksToMine = new MineableBlock[]{MineableBlock.REDSTONE};
+                break;
+            case 4:
+                blocksToMine = new MineableBlock[]{MineableBlock.LAPIS};
+                break;
+            case 5:
+                blocksToMine = new MineableBlock[]{MineableBlock.GOLD};
+                break;
+            case 6:
+                blocksToMine = new MineableBlock[]{MineableBlock.IRON};
+                break;
+            case 7:
+                blocksToMine = new MineableBlock[]{MineableBlock.COAL};
+                break;
+            case 8:
+                blocksToMine = new MineableBlock[]{MineableBlock.HARDSTONE};
+                break;
+            case 9:
+                blocksToMine = new MineableBlock[]{
+                        MineableBlock.RUBY, MineableBlock.OPAL, MineableBlock.SAPPHIRE,
+                        MineableBlock.TOPAZ, MineableBlock.AMBER, MineableBlock.JADE,
+                        MineableBlock.AMETHYST, MineableBlock.JASPER, MineableBlock.AQUAMARINE,
+                        MineableBlock.PERIDOT, MineableBlock.ONYX, MineableBlock.CITRINE
+                };
+                break;
+            case 10:
+                blocksToMine = new MineableBlock[]{MineableBlock.GLACITE};
+                break;
+            case 11:
+                blocksToMine = new MineableBlock[]{MineableBlock.TUNGSTEN};
+                break;
+            case 12:
+                blocksToMine = new MineableBlock[]{MineableBlock.UMBER};
+                break;
+            default:
+                blocksToMine = new MineableBlock[]{};
+                break;
         }
     }
 
-    @Override
-    protected void onParticleSpawn(SpawnParticleEvent event) {
-        if (!Vertex.config().general.precisionMiner
-                || event.getParticleType() != ParticleTypes.CRIT
-                || targetBlockPos == null
-                || mc.player.position().distanceToSqr(event.getPos()) >= 64) {
-
-            targetParticlePos = null;
-            return;
+    private int[] determinePriority() {
+        if (Vertex.config().miningMacro.oreType == 0) {
+            List<Integer> priorities = new ArrayList<>();
+            if (Vertex.config().miningMacro.mineGrayMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
+            if (Vertex.config().miningMacro.mineGrayTerracottaMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGrayDefault);
+            if (Vertex.config().miningMacro.mineGreenMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityGreenDefault);
+            if (Vertex.config().miningMacro.mineBlueMithril) priorities.add(Vertex.config().miningMacro.mithrilPriorityBlueDefault);
+            if (Vertex.config().miningMacro.mineTitanium) priorities.add(Vertex.config().miningMacro.mithrilPriorityTitaniumDefault);
+            return priorities.stream().mapToInt(i -> i).toArray();
         }
-
-        Vec3 particlePos = event.getPos();
-        double expansion = 0.2;
-        AABB expandedAABB = new AABB(
-                targetBlockPos.getX() - expansion, targetBlockPos.getY() - expansion, targetBlockPos.getZ() - expansion,
-                targetBlockPos.getX() + 1 + expansion, targetBlockPos.getY() + 1 + expansion, targetBlockPos.getZ() + 1 + expansion
-        );
-
-        if (!expandedAABB.contains(particlePos)) return;
-
-        targetParticlePos = particlePos;
-    }
-
-    @Override
-    protected void onBlockChange(BlockChangeEvent event) {
-        if (targetBlockPos != null && event.pos().equals(targetBlockPos)) {
-            log("Block change detected at target " + targetBlockPos + ": " + event.oldState().getBlock() + " -> " + event.newState().getBlock());
-            blockChanged = true;
-        }
-    }
-
-    @Override
-    protected void onWorldRender(WorldRenderContextWrapper context) {
-        if (this.targetParticlePos != null) {
-            RenderUtil.drawPoint(this.targetParticlePos, new Color(255, 0, 0, 100));
-        }
-    }
-
-    /**
-     * Possible states for pickaxe ability.
-     * AVAILABLE: Pickaxe ability can be activated
-     * UNAVAILABLE: Pickaxe ability is on cooldown or is currently in effect
-     */
-    public enum PickaxeAbilityState {
-        AVAILABLE, UNAVAILABLE,
-    }
-
-    public enum BlockMinerError {
-        NONE,              // No error
-        NOT_ENOUGH_BLOCKS, // Cannot find blocks to mine
-        NO_TOOLS_AVAILABLE, // Required mining tool not found in inventory
-        NO_POINTS_FOUND,    // Cannot find valid points to target on block
-        NO_TARGET_BLOCKS,   // The user did not set any blocks for the miner to mine
-        NO_PICKAXE_ABILITY,    // The user cannot use the pickaxe ability
-    }
-
-
-    /**
-     * The type of pickaxe ability to be used. At the moment, {@code MINING_SPEED_BOOST} represents all pickaxe abilities
-     * other than pickobulus
-     */
-    public enum PickaxeAbility {
-        NONE,
-        PICKOBULUS,
-        MINING_SPEED_BOOST
+        return new int[]{1, 1, 1, 1};
     }
 }

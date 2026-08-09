@@ -29,7 +29,6 @@ public class FeatureManager {
                 AutoGetStats.getInstance(),
                 AutoMobKiller.getInstance(),
                 AutoWarp.getInstance(),
-                BlockMiner.getInstance(),
                 CommissionDebugMode.getInstance(),
                 MouseUngrab.getInstance(),
                 Pathfinder.getInstance(),

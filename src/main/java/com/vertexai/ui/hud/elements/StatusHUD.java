@@ -120,7 +120,7 @@ public class StatusHUD extends TextHud {
     @Override
     protected boolean shouldShow() {
         if (!enabled || mc.player == null || mc.level == null) return false;
-        if (com.vertexai.macro.impl.MiningMacro.MiningMacro.getInstance().isEnabled()) {
+        if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) {
             return false;
         }
         return com.vertexai.macro.MacroManager.getInstance().isRunning();

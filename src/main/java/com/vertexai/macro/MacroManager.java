@@ -8,7 +8,7 @@ import com.vertexai.macro.impl.misc.MouseUngrab;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
-import com.vertexai.macro.impl.MiningMacro.MiningMacro;
+import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.PowderMacro.PowderMacro;
 import com.vertexai.macro.impl.RouteMiner.RouteMinerMacro;
 import com.vertexai.util.KeyPressUtil;
@@ -41,7 +41,7 @@ public class MacroManager {
             case 1:
                 return GlacialMacro.getInstance();
             case 2:
-                return MiningMacro.getInstance();
+                return com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance();
             case 3:
                 return RouteMinerMacro.getInstance();
             case 4:

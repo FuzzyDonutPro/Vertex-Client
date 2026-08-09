@@ -2,7 +2,6 @@ package com.vertexai.ui.hud.elements;
 
 import com.vertexai.client.overlay.TextHud;
 import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
-import com.vertexai.macro.impl.MiningMacro.MiningMacro;
 import net.minecraft.core.BlockPos;
 
 import java.util.List;
@@ -42,7 +41,7 @@ public class MiningHUD extends TextHud {
 
     public void resetStats() {
         this.blocksMinedCount = 0;
-        this.startTime = -1;
+        this.startTime = System.currentTimeMillis();
         this.lastTarget = null;
     }
 
@@ -59,6 +58,10 @@ public class MiningHUD extends TextHud {
             return;
         }
 
+        if (!enabled) {
+            return;
+        }
+
         lines.add("§b§lVERTEX §7| §f§lMINING OVERLAY");
         lines.add("§8§m------------------------");
 
@@ -67,9 +70,8 @@ public class MiningHUD extends TextHud {
             return;
         }
 
-        MiningMacro macro = MiningMacro.getInstance();
-        boolean isRunning = macro != null && macro.isEnabled();
         BlockMiner miner = BlockMiner.getInstance();
+        boolean isRunning = miner != null && miner.isEnabled();
 
         if (!isRunning) {
             this.startTime = -1;
@@ -120,7 +122,7 @@ public class MiningHUD extends TextHud {
     @Override
     protected boolean shouldShow() {
         if (!enabled || mc.player == null || mc.level == null) return false;
-        MiningMacro macro = MiningMacro.getInstance();
-        return macro != null && macro.isEnabled();
+        BlockMiner miner = BlockMiner.getInstance();
+        return miner != null && miner.isEnabled();
     }
 }

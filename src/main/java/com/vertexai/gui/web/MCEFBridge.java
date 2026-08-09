@@ -78,7 +78,7 @@ public class MCEFBridge {
                             targetMacro = com.vertexai.macro.impl.RouteMiner.RouteMinerMacro.getInstance();
                             break;
                         case "mining_general":
-                            targetMacro = com.vertexai.macro.impl.MiningMacro.MiningMacro.getInstance();
+                            targetMacro = com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance();
                             break;
                         case "powder":
                             targetMacro = com.vertexai.macro.impl.PowderMacro.PowderMacro.getInstance();

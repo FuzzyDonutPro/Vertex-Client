@@ -78,7 +78,7 @@ public class ProfitHUD extends TextHud {
     @Override
     protected boolean shouldShow() {
         if (!enabled || mc.player == null || mc.level == null) return false;
-        if (com.vertexai.macro.impl.MiningMacro.MiningMacro.getInstance().isEnabled()) return false;
+        if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) return false;
         return MacroManager.getInstance().isRunning();
     }
 }
