@@ -1,4 +1,4 @@
-﻿<script>
+<script>
     import { onMount } from 'svelte';
     import './app.css';
     import SpotifyWidget from './lib/components/SpotifyWidget.svelte';
@@ -353,67 +353,81 @@
 
     let dynamicConfigSchema = defaultConfigSchema;
 
+    function applyConfigSchema(data) {
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+
+            // Two-way sync card targets with loaded Java config
+            if (data.combat && data.combat.settings) {
+                let mk = data.combat.settings.find(s => s.id === 'mobKillerTarget');
+                if (mk && mk.options) {
+                    let card = macros.find(m => m.id === 'mob_killer');
+                    let idx = parseInt(mk.value);
+                    if (card && !isNaN(idx) && mk.options[idx]) {
+                        card.target = mk.options[idx];
+                    }
+                }
+                let sl = data.combat.settings.find(s => s.id === 'slayerTarget');
+                if (sl && sl.options) {
+                    let card = macros.find(m => m.id === 'slayer');
+                    let idx = parseInt(sl.value);
+                    if (card && !isNaN(idx) && sl.options[idx]) {
+                        card.target = sl.options[idx];
+                    }
+                }
+            }
+            if (data.foraging && data.foraging.settings) {
+                let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
+                if (fg && fg.options) {
+                    let card = macros.find(m => m.id === 'foraging');
+                    let idx = parseInt(fg.value);
+                    if (card && !isNaN(idx) && fg.options[idx]) {
+                        card.target = fg.options[idx];
+                    }
+                }
+            }
+            if (data.miningMacro && data.miningMacro.settings) {
+                let oreTypeSetting = data.miningMacro.settings.find(s => s.id === 'oreType');
+                if (oreTypeSetting) {
+                    let card = macros.find(m => m.id === 'mining_general');
+                    let idx = parseInt(oreTypeSetting.value);
+                    if (card && card.options && !isNaN(idx) && card.options[idx]) {
+                        card.target = card.options[idx];
+                    }
+                }
+            }
+            macros = [...macros];
+        }
+    }
+
     onMount(() => {
         fetchStatus();
         const interval = setInterval(fetchStatus, 2000);
         
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: 'get_config_schema',
+                onSuccess: function(response) {
+                    try {
+                        const data = JSON.parse(response);
+                        applyConfigSchema(data);
+                    } catch (e) {
+                        console.error("Failed to parse MCEF config schema:", e);
+                    }
+                },
+                onFailure: function() {}
+            });
+        }
+        
         fetch('/api/config/schema')
             .then(res => res.json())
-            .then(data => {
-                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    dynamicConfigSchema = { ...defaultConfigSchema, ...data };
-
-                    // Two-way sync card targets with loaded Java config
-                    if (data.combat && data.combat.settings) {
-                        let mk = data.combat.settings.find(s => s.id === 'mobKillerTarget');
-                        if (mk && mk.options) {
-                            let card = macros.find(m => m.id === 'mob_killer');
-                            let idx = parseInt(mk.value);
-                            if (card && !isNaN(idx) && mk.options[idx]) {
-                                card.target = mk.options[idx];
-                            }
-                        }
-                        let sl = data.combat.settings.find(s => s.id === 'slayerTarget');
-                        if (sl && sl.options) {
-                            let card = macros.find(m => m.id === 'slayer');
-                            let idx = parseInt(sl.value);
-                            if (card && !isNaN(idx) && sl.options[idx]) {
-                                card.target = sl.options[idx];
-                            }
-                        }
-                    }
-                    if (data.foraging && data.foraging.settings) {
-                        let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
-                        if (fg && fg.options) {
-                            let card = macros.find(m => m.id === 'foraging');
-                            let idx = parseInt(fg.value);
-                            if (card && !isNaN(idx) && fg.options[idx]) {
-                                card.target = fg.options[idx];
-                            }
-                        }
-                    }
-                    if (data.miningMacro && data.miningMacro.settings) {
-                        let oreTypeSetting = data.miningMacro.settings.find(s => s.id === 'oreType');
-                        if (oreTypeSetting) {
-                            let card = macros.find(m => m.id === 'mining_general');
-                            let idx = parseInt(oreTypeSetting.value);
-                            if (card && card.options && !isNaN(idx) && card.options[idx]) {
-                                card.target = card.options[idx];
-                            }
-                        }
-                    }
-                    macros = [...macros];
-                }
-            })
+            .then(data => applyConfigSchema(data))
             .catch(e => console.error(e));
         
         return () => clearInterval(interval);
     });
 
     function updateConfigValue(categoryId, fieldId, value) {
-        dynamicConfigSchema = dynamicConfigSchema; // Force Svelte reactivity update for all nested config state
-        macros = macros;
-        
         if (fieldId === 'guiFont') {
             selectedFont = fontsList[parseInt(value)] || 'Outfit';
         }
@@ -431,7 +445,6 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
-                    macros = [...macros];
                 }
             }
         }
@@ -443,7 +456,6 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
-                    macros = [...macros];
                 }
             }
         }
@@ -455,20 +467,23 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
-                    macros = [...macros];
                 }
             }
         }
-        if (fieldId === 'oreType') {
+        if (fieldId === 'oreType' && dynamicConfigSchema.miningMacro) {
+            let setting = dynamicConfigSchema.miningMacro.settings.find(s => s.id === 'oreType');
             let card = macros.find(m => m.id === 'mining_general');
-            if (card && card.options) {
-                let idx = parseInt(value);
-                if (!isNaN(idx) && card.options[idx]) {
-                    card.target = card.options[idx];
-                    macros = [...macros];
-                }
+            let idx = parseInt(value);
+            if (card && card.options && !isNaN(idx) && card.options[idx]) {
+                card.target = card.options[idx];
+            }
+            if (setting) {
+                setting.value = idx;
             }
         }
+
+        dynamicConfigSchema = dynamicConfigSchema; // Force Svelte reactivity update
+        macros = [...macros];
 
         if (window.cefQuery) {
             window.cefQuery({
