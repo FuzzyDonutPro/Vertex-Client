@@ -159,17 +159,85 @@ public class BlockMiner extends AbstractMacro {
 
     @Override
     public void onEnable() {
-        MineableBlock[] blocks = MineableBlock.values();
-        int[] priorities = new int[blocks.length];
         int oreIdx = Vertex.config().miningMacro.oreType;
-        if (oreIdx >= 0 && oreIdx < priorities.length) {
-            priorities[oreIdx] = 10;
-        } else {
-            Arrays.fill(priorities, 1);
-        }
+        setupPrioritiesForOreType(oreIdx);
         String tool = Vertex.config().general.miningTool;
         PickaxeAbility ability = Vertex.config().general.usePickaxeAbility ? PickaxeAbility.MINING_SPEED_BOOST : PickaxeAbility.NONE;
-        start(blocks, 1000, ability, priorities, tool != null ? tool : "");
+        startWithConfiguredPriorities(1000, ability, tool != null ? tool : "");
+    }
+
+    public void setupPrioritiesForOreType(int oreTypeIdx) {
+        blockPriority.clear();
+        List<MineableBlock> targetEnums = new java.util.ArrayList<>();
+        switch (oreTypeIdx) {
+            case 0: // Mithril & Titanium
+                targetEnums.addAll(List.of(
+                        MineableBlock.GREEN_MITHRIL,
+                        MineableBlock.BLUE_MITHRIL,
+                        MineableBlock.GRAY_MITHRIL,
+                        MineableBlock.GRAY_TERRACOTTA_MITHRIL,
+                        MineableBlock.TITANIUM
+                ));
+                break;
+            case 1: targetEnums.add(MineableBlock.DIAMOND); break;
+            case 2: targetEnums.add(MineableBlock.EMERALD); break;
+            case 3: targetEnums.add(MineableBlock.REDSTONE); break;
+            case 4: targetEnums.add(MineableBlock.LAPIS); break;
+            case 5: targetEnums.add(MineableBlock.GOLD); break;
+            case 6: targetEnums.add(MineableBlock.IRON); break;
+            case 7: targetEnums.add(MineableBlock.COAL); break;
+            case 8: targetEnums.add(MineableBlock.HARDSTONE); break;
+            case 9: // Gemstones
+                targetEnums.addAll(List.of(
+                        MineableBlock.RUBY, MineableBlock.SAPPHIRE, MineableBlock.JASPER, MineableBlock.TOPAZ,
+                        MineableBlock.AMBER, MineableBlock.JADE, MineableBlock.AMETHYST, MineableBlock.OPAL,
+                        MineableBlock.AQUAMARINE, MineableBlock.PERIDOT, MineableBlock.ONYX, MineableBlock.CITRINE
+                ));
+                break;
+            case 10: targetEnums.add(MineableBlock.GLACITE); break;
+            case 11: targetEnums.add(MineableBlock.TUNGSTEN); break;
+            case 12: targetEnums.add(MineableBlock.UMBER); break;
+            default:
+                targetEnums.addAll(List.of(
+                        MineableBlock.GREEN_MITHRIL, MineableBlock.BLUE_MITHRIL, MineableBlock.GRAY_MITHRIL,
+                        MineableBlock.GRAY_TERRACOTTA_MITHRIL, MineableBlock.TITANIUM
+                ));
+                break;
+        }
+
+        for (MineableBlock mb : targetEnums) {
+            int weight = (mb == MineableBlock.TITANIUM) ? 15 : 10;
+            for (Block b : mb.getBlocks()) {
+                if (b != null) {
+                    blockPriority.put(b, weight);
+                }
+            }
+        }
+    }
+
+    public void startWithConfiguredPriorities(final int miningSpeed, final PickaxeAbility pickaxeAbility, String miningTool) {
+        if (!miningTool.isEmpty() && !InventoryUtil.holdItem(miningTool)) {
+            logError(miningTool + " not found in inventory!");
+            error = BlockMinerError.NO_TOOLS_AVAILABLE;
+            this.stop();
+            return;
+        }
+
+        if (blockPriority.isEmpty()) {
+            setupPrioritiesForOreType(Vertex.config().miningMacro.oreType);
+        }
+
+        if (mc.player != null) {
+            this.startPos = mc.player.blockPosition();
+        }
+
+        this.miningSpeed = miningSpeed - 200;
+        this.pickaxeAbility = pickaxeAbility;
+        this.error = BlockMinerError.NONE;
+        this.retryActivatePickaxeAbility = 0;
+        targetParticlePos = null;
+
+        this.currentState = new StartingState();
     }
 
     @Override
@@ -200,10 +268,27 @@ public class BlockMiner extends AbstractMacro {
             return;
         }
 
+        blockPriority.clear();
         for (int i = 0; i < blocksToMine.length; i++) {
-            for (Block block : blocksToMine[i].getBlocks()) {
-                if (block != null) {
-                    blockPriority.put(block, priority[i]);
+            MineableBlock mb = blocksToMine[i];
+            int p = priority[i];
+            if (p <= 0) continue;
+
+            // Expand Mithril categories if any Mithril block type is passed
+            if (mb == MineableBlock.GREEN_MITHRIL || mb == MineableBlock.BLUE_MITHRIL || mb == MineableBlock.GRAY_MITHRIL || mb == MineableBlock.GRAY_TERRACOTTA_MITHRIL) {
+                for (MineableBlock mithrilMB : List.of(MineableBlock.GREEN_MITHRIL, MineableBlock.BLUE_MITHRIL, MineableBlock.GRAY_MITHRIL, MineableBlock.GRAY_TERRACOTTA_MITHRIL, MineableBlock.TITANIUM)) {
+                    int weight = (mithrilMB == MineableBlock.TITANIUM) ? p + 5 : p;
+                    for (Block block : mithrilMB.getBlocks()) {
+                        if (block != null) {
+                            blockPriority.put(block, weight);
+                        }
+                    }
+                }
+            } else {
+                for (Block block : mb.getBlocks()) {
+                    if (block != null) {
+                        blockPriority.put(block, p);
+                    }
                 }
             }
         }
