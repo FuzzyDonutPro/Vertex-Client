@@ -29,6 +29,13 @@ public class BreakingState implements ForagingMacroState {
         preMiningTimer.reset();
         logBroken = false;
         preMiningScheduled = false;
+
+        if (macro.getTargetBlockPos() != null && mc.player != null) {
+            Vec3 centerVec = Vec3.atCenterOf(macro.getTargetBlockPos());
+            com.vertexai.util.helper.Angle targetAngle = com.vertexai.util.AngleUtil.getRotation(centerVec);
+            mc.player.setYRot(targetAngle.getYaw());
+            mc.player.setXRot(targetAngle.getPitch());
+        }
     }
 
     @Override
@@ -62,20 +69,10 @@ public class BreakingState implements ForagingMacroState {
             return new PathfindingState();
         }
 
-        // Check if crosshair raycast is directly touching the target log block
-        boolean crosshairOnTarget = mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit
-                && blockHit.getBlockPos().equals(targetPos);
-
-        // If crosshair is not touching target log block, smoothly rotate until locked on
-        if (!crosshairOnTarget) {
-            if (!RotationHandler.getInstance().isEnabled()) {
-                RotationHandler.getInstance().easeTo(new RotationConfiguration(
-                        new Target(centerVec),
-                        80L,
-                        null
-                ));
-            }
-        }
+        // Keep camera aligned to center of target log block
+        com.vertexai.util.helper.Angle targetAngle = com.vertexai.util.AngleUtil.getRotation(centerVec);
+        mc.player.setYRot(targetAngle.getYaw());
+        mc.player.setXRot(targetAngle.getPitch());
 
         // Auto-swap to Treecapitator / Jungle Axe / Axe in hotbar
         int axeSlot = InventoryUtil.getHotbarSlotOfItem("Treecapitator");
@@ -103,9 +100,9 @@ public class BreakingState implements ForagingMacroState {
         // Regular Mining / Breaking logic (Hold left click)
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
-        // Fail-safe timeout if block doesn't break in 2.5s
+        // Fail-safe timeout if block doesn't break in 5s
         if (!breakDelay.isScheduled()) {
-            breakDelay.schedule(2500L);
+            breakDelay.schedule(5000L);
         } else if (breakDelay.passed()) {
             log("Log taking too long to break, switching target...");
             return new PathfindingState();
