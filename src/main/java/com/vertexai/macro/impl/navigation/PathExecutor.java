@@ -443,19 +443,15 @@ public class PathExecutor {
         // Disable StrafeUtil for realistic client-side movement
         StrafeUtil.enabled = false;
 
-        // Smoothly rotate camera toward lookahead node
-        if (yawDiff > 1.0f && mc.player != null) {
-            float currentYaw = mc.player.getYRot();
-            float currentPitch = mc.player.getXRot();
-
-            float neededYaw = AngleUtil.getNeededYawChange(currentYaw, yaw);
-            float neededPitch = pitch - currentPitch;
-
-            float newYaw = currentYaw + (neededYaw * 0.35f);
-            float newPitch = currentPitch + (neededPitch * 0.35f);
-
-            mc.player.setYRot(newYaw);
-            mc.player.setXRot(Mth.clamp(newPitch, -90f, 90f));
+        // Smoothly rotate camera toward lookahead node using universal RotationHandler engine
+        if (yawDiff > 1.5f || Math.abs(pitch - mc.player.getXRot()) > 1.5f) {
+            RotationHandler.getInstance().easeTo(
+                    new RotationConfiguration(
+                            new Angle(yaw, pitch),
+                            120L,
+                            null
+                    )
+            );
         }
 
         // Calculate which WASD keys to press based on current player rotation (not target direction)
