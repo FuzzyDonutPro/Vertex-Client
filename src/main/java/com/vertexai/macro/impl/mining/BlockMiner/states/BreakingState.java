@@ -130,22 +130,7 @@ public class BreakingState implements BlockMinerState {
             return new StartingState();
         }
 
-        // Safety mechanism: if we're looking away from target block for too long while not easing camera, reset
-        BlockPos currentLookingAt = BlockUtil.getBlockLookingAt();
-        boolean isLookingAtTarget = currentLookingAt != null && miner.getTargetBlockPos().equals(currentLookingAt);
-        if (!isLookingAtTarget) {
-            if (!wasLookingAway) {
-                lookAwayTimer.schedule(LOOK_AWAY_THRESHOLD_MS);
-                wasLookingAway = true;
-            } else if (lookAwayTimer.passed() && !RotationHandler.getInstance().isEnabled()) {
-                log("Player looked away from target block for too long, choosing new block");
-                return new StartingState();
-            }
-        } else {
-            wasLookingAway = false;
-        }
-
-        // After breaking a block, restart the whole cycle again
+        // After breaking a block (type changes or becomes air), restart the whole cycle again
         Block detectedBlockType = mc.level.getBlockState(miner.getTargetBlockPos()).getBlock();
         if (!detectedBlockType.equals(miner.getTargetBlockType())) {
             return new StartingState();
@@ -177,9 +162,6 @@ public class BreakingState implements BlockMinerState {
                 mc.gameMode.startDestroyBlock(miner.getTargetBlockPos(), side);
             } else {
                 mc.gameMode.continueDestroyBlock(miner.getTargetBlockPos(), side);
-            }
-            if (mc.player != null) {
-                mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
             }
         }
 
