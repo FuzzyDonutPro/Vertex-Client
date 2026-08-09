@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
@@ -443,16 +444,18 @@ public class PathExecutor {
         StrafeUtil.enabled = false;
 
         // Smoothly rotate camera toward lookahead node
-        if (yawDiff > 3 && !RotationHandler.getInstance().isEnabled()) {
-            float rotYaw = yaw + (float) (random.nextGaussian() * ROTATION_HUMAN_ERROR_FACTOR);
-            float time = Vertex.config().debug.useFixedRotation ? Vertex.config().debug.fixedRotationTime : Math.max(220, (long) (360 - horizontalDistToTarget * Vertex.config().debug.rotationMultiplier));
+        if (yawDiff > 1.0f && mc.player != null) {
+            float currentYaw = mc.player.getYRot();
+            float currentPitch = mc.player.getXRot();
 
-            RotationHandler.getInstance().easeTo(
-                    new RotationConfiguration(
-                            new Angle(rotYaw, pitch),
-                            (long) time, null
-                    )
-            );
+            float neededYaw = AngleUtil.getNeededYawChange(currentYaw, yaw);
+            float neededPitch = pitch - currentPitch;
+
+            float newYaw = currentYaw + (neededYaw * 0.35f);
+            float newPitch = currentPitch + (neededPitch * 0.35f);
+
+            mc.player.setYRot(newYaw);
+            mc.player.setXRot(Mth.clamp(newPitch, -90f, 90f));
         }
 
         // Calculate which WASD keys to press based on current player rotation (not target direction)
