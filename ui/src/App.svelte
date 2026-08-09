@@ -208,6 +208,17 @@
         { id: 'diana', category: 'diana', title: 'Diana Mythological Burrow Finder', desc: 'Ancestral spade particle trail pathfinding, digging, and Mythological mob killer.', running: false, target: 'Daedalus Axe', options: ['Daedalus Axe', 'Ancestral Spade Only', 'Inquisitor Hunter'] }
     ];
 
+    const tabCategoryMap = {
+        'farming': ['farming', 'melonPumpkin', 'farmBuilder'],
+        'mining': ['miningMacro', 'powderMacro', 'routeMiner', 'commission'],
+        'slayer': ['combat', 'dungeons'],
+        'fishing': ['fishing'],
+        'foraging': ['foraging'],
+        'alchemy': ['bazaarFlipper', 'misc'],
+        'diana': ['combat'],
+        'failsafe': ['failsafe', 'general']
+    };
+
     const defaultConfigSchema = {
         gui: { id: 'gui', name: 'Themes & Styling', settings: [{ id: 'handChams', name: 'Hand Chams', desc: 'Render held item with opaque glowing effect', type: 'boolean', value: false }, { id: 'chamsGlowAmount', name: 'Glow Amount', desc: 'Intensity of hand chams glow', type: 'slider', min: 0.0, max: 2.0, step: 0.1, value: 1.0 }, { id: 'chamsGlowColor', name: 'Glow Color', desc: 'Hex color for hand chams', type: 'text', value: '#00FFFF' }] },
         farming: { id: 'farming', name: 'Farming Settings', settings: [{ id: 'farmingCrop', name: 'Target Crop', desc: 'Select target crop', type: 'dropdown', options: ['Wheat', 'Carrot', 'Potato', 'Nether Wart', 'Sugar Cane', 'Cactus', 'Melon', 'Pumpkin'], value: 0 }, { id: 'laneSpeed', name: 'Walk Speed (BPS)', desc: 'Movement speed during farming', type: 'slider', min: 1, max: 400, step: 1, value: 250 }, { id: 'autoTeleport', name: 'Auto Spawn Teleport', desc: 'Warp back to plot start when lane ends', type: 'boolean', value: true }] },
@@ -342,6 +353,11 @@
         return matchesTab && matchesSearch;
     });
 
+    $: categoryConfigEntries = Object.entries(dynamicConfigSchema).filter(([catId]) => {
+        if (!tabCategoryMap[currentTab]) return false;
+        return tabCategoryMap[currentTab].includes(catId);
+    });
+
     let activeKeybindListening = null;
     const glfwNames = { 342: 'L-ALT', 346: 'R-ALT', 340: 'L-SHIFT', 344: 'R-SHIFT', 341: 'L-CTRL', 345: 'R-CTRL', 32: 'SPACE', 256: 'NONE', 257: 'ENTER', 258: 'TAB', 259: 'BACKSPACE' };
 
@@ -401,40 +417,37 @@
                             </div>
                         </div>
 
-                        <!-- Navigation List -->
+                        <!-- Navigation List without Emojis -->
                         <nav class="flex flex-col gap-1.5 overflow-y-auto max-h-[400px] pr-1 custom-scrollbar">
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'dashboard' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'dashboard'; }}>
-                                <span>📊</span> Dashboard
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'dashboard' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'dashboard'; }}>
+                                Dashboard
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'farming' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'farming'; }}>
-                                <span>🌾</span> Garden & Farming
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'farming' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'farming'; }}>
+                                Garden & Farming
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'mining' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'mining'; }}>
-                                <span>⛏️</span> Mining & Hollows
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'mining' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'mining'; }}>
+                                Mining & Hollows
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'slayer' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'slayer'; }}>
-                                <span>⚔️</span> Slayer & Combat
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'slayer' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'slayer'; }}>
+                                Slayer & Combat
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'fishing' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'fishing'; }}>
-                                <span>🎣</span> Fishing
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'fishing' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'fishing'; }}>
+                                Fishing
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'foraging' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'foraging'; }}>
-                                <span>🪓</span> Foraging
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'foraging' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'foraging'; }}>
+                                Foraging
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'alchemy' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'alchemy'; }}>
-                                <span>🧪</span> Economy & Alchemy
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'alchemy' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'alchemy'; }}>
+                                Economy & Alchemy
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'diana' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'diana'; }}>
-                                <span>🦅</span> Diana Mythological
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'diana' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'diana'; }}>
+                                Diana Mythological
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'config' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'config'; }}>
-                                <span>⚙️</span> Config & Settings
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'failsafe' ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'failsafe'; }}>
+                                Security & Failsafes
                             </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'failsafe' ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'failsafe'; }}>
-                                <span>🛡️</span> Security & Failsafes
-                            </button>
-                            <button class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 {currentTab === 'themes' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
-                                <span>🎨</span> Themes & Style
+                            <button class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all duration-150 {currentTab === 'themes' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'}" on:click={() => { playUiSound(); currentTab = 'themes'; }}>
+                                Themes & Style
                             </button>
                         </nav>
                     </div>
@@ -458,7 +471,7 @@
                             <input 
                                 type="text" 
                                 bind:value={searchQuery} 
-                                placeholder="Search macros or settings..." 
+                                placeholder="Search features & settings..." 
                                 class="w-full bg-slate-900/80 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 px-4 py-2 rounded-xl focus:outline-none focus:border-sky-500/50 transition-all"
                             />
                         </div>
@@ -492,32 +505,33 @@
                             </div>
                         {/if}
 
+                        <!-- Macro Modules Grid -->
                         {#if filteredMacros.length > 0}
                             <div>
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Available Features</h3>
                                 <div class="grid grid-cols-2 gap-4">
                                     {#each filteredMacros as macro}
-                                        <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between">
+                                        <div class="bg-slate-900/50 border border-slate-800 hover:border-sky-500/30 p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between">
                                             <div>
                                                 <div class="flex items-center justify-between mb-2">
-                                                    <h4 class="text-sm font-bold text-white">{macro.title}</h4>
+                                                    <h4 class="text-xs font-bold text-white truncate pr-2">{macro.title}</h4>
                                                     <button 
                                                         on:click={() => toggleMacro(macro.id)}
-                                                        class="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
+                                                        class="px-3 py-1 rounded-xl text-[11px] font-semibold transition-all shrink-0 {macro.running ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30' : 'bg-sky-500/20 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30'}"
                                                     >
                                                         {macro.running ? 'STOP' : 'START'}
                                                     </button>
                                                 </div>
-                                                <p class="text-xs text-slate-400 leading-relaxed mb-4">{macro.desc}</p>
+                                                <p class="text-[11px] text-slate-400 leading-snug line-clamp-2 mb-3">{macro.desc}</p>
                                             </div>
 
                                             {#if macro.options && macro.options.length > 0}
-                                                <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                                                    <span class="text-xs text-slate-500 font-medium">Target Mode:</span>
+                                                <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                                                    <span class="text-[11px] text-slate-500 font-medium">Target Mode:</span>
                                                     <select 
                                                         value={macro.target} 
                                                         on:change={(e) => onTargetChange(macro.id, e.target.value)}
-                                                        class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-lg px-3 py-1 focus:outline-none focus:border-sky-500"
+                                                        class="bg-slate-950 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-sky-500"
                                                     >
                                                         {#each macro.options as opt}
                                                             <option value={opt}>{opt}</option>
@@ -531,86 +545,90 @@
                             </div>
                         {/if}
 
-                        {#if currentTab === 'config' || currentTab === 'failsafe'}
-                            {#each Object.entries(dynamicConfigSchema) as [catId, catObj]}
-                                <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl">
-                                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                                        {catObj.name || catId}
-                                    </h3>
+                        <!-- Directly Embedded Category Config Settings (No giant all-in-one config tab) -->
+                        {#if categoryConfigEntries.length > 0}
+                            <div class="mt-6 pt-4 border-t border-slate-800/60">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Category Settings</h3>
+                                {#each categoryConfigEntries as [catId, catObj]}
+                                    <div class="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl mb-4">
+                                        <h4 class="text-xs font-bold text-white mb-3 flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                            {catObj.name || catId}
+                                        </h4>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        {#each catObj.settings || [] as setting}
-                                            <div class="bg-slate-950/60 border border-slate-800/80 p-4 rounded-xl flex items-center justify-between gap-4">
-                                                <div class="flex-1 pr-2">
-                                                    <h4 class="text-xs font-semibold text-slate-200">{setting.name}</h4>
-                                                    <p class="text-[11px] text-slate-500 leading-tight mt-0.5">{setting.desc}</p>
-                                                </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            {#each catObj.settings || [] as setting}
+                                                <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl flex items-center justify-between gap-3">
+                                                    <div class="flex-1 pr-2 min-w-0">
+                                                        <h5 class="text-xs font-semibold text-slate-200 truncate">{setting.name}</h5>
+                                                        <p class="text-[10px] text-slate-500 leading-tight mt-0.5 truncate">{setting.desc}</p>
+                                                    </div>
 
-                                                <div>
-                                                    {#if setting.type === 'boolean'}
-                                                        <label class="relative inline-flex items-center cursor-pointer">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={setting.value} 
-                                                                on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
-                                                                class="sr-only peer"
-                                                            />
-                                                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
-                                                        </label>
-                                                    {:else if setting.type === 'slider'}
-                                                        <div class="flex items-center gap-2">
-                                                            <input 
-                                                                type="range" 
-                                                                min={setting.min || 0} 
-                                                                max={setting.max || 100} 
-                                                                step={setting.step || 1} 
+                                                    <div class="shrink-0">
+                                                        {#if setting.type === 'boolean'}
+                                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={setting.value} 
+                                                                    on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)}
+                                                                    class="sr-only peer"
+                                                                />
+                                                                <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-500"></div>
+                                                            </label>
+                                                        {:else if setting.type === 'slider'}
+                                                            <div class="flex items-center gap-2">
+                                                                <input 
+                                                                    type="range" 
+                                                                    min={setting.min || 0} 
+                                                                    max={setting.max || 100} 
+                                                                    step={setting.step || 1} 
+                                                                    value={setting.value} 
+                                                                    on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
+                                                                    class="w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                                                                />
+                                                                <span class="text-[11px] font-semibold text-sky-400 w-7 text-right">{setting.value}</span>
+                                                            </div>
+                                                        {:else if setting.type === 'dropdown'}
+                                                            <select 
                                                                 value={setting.value} 
-                                                                on:input={(e) => updateConfigValue(catId, setting.id, parseFloat(e.target.value))}
-                                                                class="w-24 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                                                            />
-                                                            <span class="text-xs font-semibold text-sky-400 w-8 text-right">{setting.value}</span>
-                                                        </div>
-                                                    {:else if setting.type === 'dropdown'}
-                                                        <select 
-                                                            value={setting.value} 
-                                                            on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
-                                                            class="bg-slate-900 border border-slate-800 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500"
-                                                        >
-                                                            {#each setting.options || [] as opt, i}
-                                                                <option value={i}>{opt}</option>
-                                                            {/each}
-                                                        </select>
-                                                    {:else if setting.type === 'keybind'}
-                                                        <button 
-                                                            on:click={() => startKeybindListen(catId, setting)}
-                                                            class="px-3 py-1 rounded-lg text-xs font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
-                                                        >
-                                                            {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
-                                                        </button>
-                                                    {:else}
-                                                        <div class="flex items-center gap-2">
-                                                            <input 
-                                                                type="text" 
-                                                                value={setting.value || ''} 
-                                                                on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
-                                                                class="w-28 bg-slate-900 border border-slate-800 text-xs text-slate-200 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-sky-500"
-                                                            />
-                                                            <button 
-                                                                on:click={() => executeButtonAction(catId, setting.id + 'Button')}
-                                                                title="Set from current held item"
-                                                                class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-xs font-semibold transition-all"
+                                                                on:change={(e) => updateConfigValue(catId, setting.id, parseInt(e.target.value))}
+                                                                class="bg-slate-900 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:border-sky-500 max-w-[110px] truncate"
                                                             >
-                                                                Hand
+                                                                {#each setting.options || [] as opt, i}
+                                                                    <option value={i}>{opt}</option>
+                                                                {/each}
+                                                            </select>
+                                                        {:else if setting.type === 'keybind'}
+                                                            <button 
+                                                                on:click={() => startKeybindListen(catId, setting)}
+                                                                class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-800 text-sky-400 hover:bg-slate-700'}"
+                                                            >
+                                                                {activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'PRESS KEY' : getKeyName(setting.value)}
                                                             </button>
-                                                        </div>
-                                                    {/if}
+                                                        {:else}
+                                                            <div class="flex items-center gap-1.5">
+                                                                <input 
+                                                                    type="text" 
+                                                                    value={setting.value || ''} 
+                                                                    on:change={(e) => updateConfigValue(catId, setting.id, e.target.value)}
+                                                                    class="w-24 bg-slate-900 border border-slate-800 text-[11px] text-slate-200 px-2 py-1 rounded-lg focus:outline-none focus:border-sky-500 truncate"
+                                                                />
+                                                                <button 
+                                                                    on:click={() => executeButtonAction(catId, setting.id + 'Button')}
+                                                                    title="Set from current held item"
+                                                                    class="px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 rounded-lg text-[11px] font-semibold transition-all"
+                                                                >
+                                                                    Hand
+                                                                </button>
+                                                            </div>
+                                                        {/if}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        {/each}
+                                            {/each}
+                                        </div>
                                     </div>
-                                </div>
-                            {/each}
+                                {/each}
+                            </div>
                         {/if}
 
                         {#if currentTab === 'themes'}
@@ -626,7 +644,7 @@
                                                 <div class="w-4 h-4 rounded-full" style="background-color: {theme.primaryColor};"></div>
                                                 <h4 class="text-xs font-bold text-white">{theme.name}</h4>
                                             </div>
-                                            <p class="text-[11px] text-slate-400">{theme.desc}</p>
+                                            <p class="text-[11px] text-slate-400 line-clamp-2">{theme.desc}</p>
                                         </button>
                                     {/each}
                                 </div>
@@ -652,7 +670,7 @@
             <div class="space-y-2 text-xs font-medium">
                 <div class="flex items-center justify-between text-slate-300">
                     <span class="text-slate-400">State:</span>
-                    <span class="text-[var(--theme-400)] font-semibold">{activeMacroName} {#if subState}<span class="text-slate-300 font-normal">({subState})</span>{/if}</span>
+                    <span class="text-[var(--theme-400)] font-semibold truncate max-w-[130px]">{activeMacroName} {#if subState}<span class="text-slate-300 font-normal">({subState})</span>{/if}</span>
                 </div>
                 <div class="flex items-center justify-between text-slate-300">
                     <span class="text-slate-400">Runtime:</span>
@@ -660,7 +678,7 @@
                 </div>
                 <div class="flex items-center justify-between text-slate-300">
                     <span class="text-slate-400">Profit:</span>
-                    <span class="text-emerald-400 font-semibold">{estProfit}</span>
+                    <span class="text-emerald-400 font-semibold truncate max-w-[130px]">{estProfit}</span>
                 </div>
                 {#if farmingSpeed !== '0.0 BPS'}
                     <div class="flex items-center justify-between text-slate-300">
