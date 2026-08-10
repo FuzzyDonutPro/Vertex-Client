@@ -42,6 +42,7 @@ public class BedrockBlockChangeFailsafe extends AbstractFailsafe {
 
     @Override
     public boolean onTick() {
+        if (!com.vertexai.Vertex.config().failsafe.enableBedrockFailsafe) return false;
         long currentTime = System.currentTimeMillis();
 
         List<Long> validTimestamps = new ArrayList<>();
@@ -65,6 +66,7 @@ public class BedrockBlockChangeFailsafe extends AbstractFailsafe {
 
     @Override
     public boolean onPacketReceive(Packet<?> packet) {
+        if (!com.vertexai.Vertex.config().failsafe.enableBedrockFailsafe) return false;
         if (packet instanceof ClientboundBlockUpdatePacket blockUpdatePacket) {
             BlockPos blockPos = blockUpdatePacket.getPos();
             net.minecraft.world.level.block.Block block = blockUpdatePacket.getBlockState().getBlock();

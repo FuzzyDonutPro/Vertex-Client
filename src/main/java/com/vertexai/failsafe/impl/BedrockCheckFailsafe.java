@@ -33,6 +33,7 @@ public class BedrockCheckFailsafe extends AbstractFailsafe {
 
     @Override
     public boolean onTick() {
+        if (!com.vertexai.Vertex.config().failsafe.enableBedrockFailsafe) return false;
         if (mc.player == null) return false;
         return checkForEnclosure(mc.player.position());
     }
