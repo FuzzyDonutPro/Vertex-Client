@@ -128,6 +128,13 @@ public class Failsafe {
     public boolean enableCropChangeFailsafe = true;
 
     @ConfigOption(
+            name = "Enable Bedrock Failsafe",
+            desc = "Triggers a failsafe reaction if a bedrock box is detected"
+    )
+    @ConfigEditorBoolean
+    public boolean enableBedrockFailsafe = true;
+
+    @ConfigOption(
             name = "Crop Change Reaction Preset",
             desc = "Recorded reaction preset to play when crop type changes unexpectedly"
     )

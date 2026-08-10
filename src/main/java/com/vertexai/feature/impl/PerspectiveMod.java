@@ -24,6 +24,7 @@ public class PerspectiveMod extends AbstractFeature {
     public float cameraDistance = 4.0f;
     
     private CameraType originalCameraType = CameraType.FIRST_PERSON;
+    private boolean awaitingRelease = false;
 
     public static PerspectiveMod getInstance() {
         if (instance == null) {
@@ -52,8 +53,18 @@ public class PerspectiveMod extends AbstractFeature {
         int keybind = Vertex.config().gui.freeLookKeybind;
         int mode = Vertex.config().gui.freeLookMode; // 0 = Hold, 1 = Toggle
         
+        if (!mc.isWindowActive() || mc.screen != null) {
+            awaitingRelease = true;
+        }
+
+        boolean rawKeyDown = com.mojang.blaze3d.platform.InputConstants.isKeyDown(mc.getWindow(), keybind);
+        if (!rawKeyDown) {
+            awaitingRelease = false;
+        }
+
         // Prevent getting stuck in freelook when Alt-Tabbing or opening a GUI (e.g. Chat/Inventory)
-        boolean isKeyDown = mc.isWindowActive() && mc.screen == null && com.mojang.blaze3d.platform.InputConstants.isKeyDown(mc.getWindow(), keybind);
+        // awaitingRelease prevents the GLFW bug where glfwGetKey returns true after regaining focus
+        boolean isKeyDown = mc.isWindowActive() && mc.screen == null && rawKeyDown && !awaitingRelease;
 
         if (mode == 0) {
             // Hold mode
