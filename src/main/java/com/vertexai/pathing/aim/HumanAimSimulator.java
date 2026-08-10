@@ -116,9 +116,9 @@ public class HumanAimSimulator {
             }
         }
 
-        // === Pitch Cap & BadPacketsD Bypass ===
-        // Clamp pitch to max 40% downwards (strictly [-90.0, 36.0] degrees) so camera never looks straight down on arrival
-        newPitch = Math.max(-90.0f, Math.min(36.0f, newPitch));
+        // === BadPacketsD Bypass ===
+        // Note: We removed the global 36.0f downward pitch clamp here because it prevented aiming at low enemies (like Silverfish).
+        // The pathing downward pitch cap is now strictly handled at the PathExecutor level, allowing combat aiming to be unrestricted.
 
         return new float[]{newYaw, newPitch};
     }
