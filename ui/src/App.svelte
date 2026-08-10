@@ -614,14 +614,9 @@
     <!-- Sidebar Navigation -->
     <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-4 flex flex-col justify-between shrink-0 select-none overflow-y-auto max-h-full custom-scrollbar">
         <div>
-            <div class="flex items-center gap-2.5 mb-5">
-                <div class="w-[32px] h-[32px] bg-gradient-to-br from-sky-400 to-sky-600 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-[0_3px_10px_rgba(56,189,248,0.4)]">
-                    V
-                </div>
-                <div>
-                    <h1 class="font-outfit text-[15px] font-bold tracking-wide bg-gradient-to-r from-white to-sky-400 bg-clip-text text-transparent leading-none">VERTEX CLIENT</h1>
-                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-0.5">Fabric v1.21.11 • v1.0.0</span>
-                </div>
+            <div class="mb-5">
+                <h1 class="font-outfit text-[17px] font-extrabold tracking-widest text-white leading-none">VERTEX CLIENT</h1>
+                <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-1">Fabric v1.21.11 • v1.0.6</span>
             </div>
 
             <ul class="flex flex-col gap-1">

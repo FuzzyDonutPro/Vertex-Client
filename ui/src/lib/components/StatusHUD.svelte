@@ -17,16 +17,11 @@
 
         <!-- Header -->
         <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
-            <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-xl bg-gradient-to-br {themeGradientClass} flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(56,189,248,0.4)]">
-                    V
-                </div>
-                <div>
-                    <h3 class="font-outfit text-[13px] font-extrabold tracking-wider bg-gradient-to-r from-white via-slate-100 to-sky-400 bg-clip-text text-transparent uppercase leading-none">
-                        VERTEX <span class="text-sky-400">|</span> STATUS
-                    </h3>
-                    <span class="text-[9px] text-slate-400 tracking-widest uppercase block mt-0.5 font-mono">v1.0.6 • Live Engine</span>
-                </div>
+            <div>
+                <h3 class="font-outfit text-[14px] font-extrabold tracking-widest text-white uppercase leading-none">
+                    VERTEX <span class="text-sky-400">STATUS</span>
+                </h3>
+                <span class="text-[9px] text-slate-400 tracking-widest uppercase block mt-1 font-mono">v1.0.6 • Live Engine</span>
             </div>
 
             <!-- Status Indicator Pulse -->
