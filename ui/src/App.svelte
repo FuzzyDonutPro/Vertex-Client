@@ -96,23 +96,27 @@
         rainbowFrame = requestAnimationFrame(animateRainbow);
     }
 
+    let currentThemeObj = themesList[0];
+
     $: {
-        const theme = themesList.find(t => t.id === selectedTheme) || themesList[0];
+        currentThemeObj = themesList.find(t => t.id === selectedTheme) || themesList[0];
         
         if (typeof document !== 'undefined') {
-            if (theme.accent === 'rainbow') {
+            if (currentThemeObj.accent === 'rainbow') {
                 if (!rainbowFrame) animateRainbow();
             } else {
                 if (rainbowFrame) {
                     cancelAnimationFrame(rainbowFrame);
                     rainbowFrame = null;
                 }
+                
                 let t400, t500, t600;
-                if (theme.accent === 'sky') { t400 = '#38bdf8'; t500 = '#0ea5e9'; t600 = '#0284c7'; }
-                else if (theme.accent === 'purple') { t400 = '#c084fc'; t500 = '#a855f7'; t600 = '#9333ea'; }
-                else if (theme.accent === 'emerald') { t400 = '#34d399'; t500 = '#10b981'; t600 = '#059669'; }
-                else if (theme.accent === 'rose') { t400 = '#fb7185'; t500 = '#f43f5e'; t600 = '#e11d48'; }
-                else if (theme.accent === 'amber') { t400 = '#fbbf24'; t500 = '#f59e0b'; t600 = '#d97706'; }
+                if (currentThemeObj.accent === 'sky') { t400 = '#38bdf8'; t500 = '#0ea5e9'; t600 = '#0284c7'; }
+                else if (currentThemeObj.accent === 'purple') { t400 = '#c084fc'; t500 = '#a855f7'; t600 = '#9333ea'; }
+                else if (currentThemeObj.accent === 'emerald') { t400 = '#34d399'; t500 = '#10b981'; t600 = '#059669'; }
+                else if (currentThemeObj.accent === 'rose') { t400 = '#fb7185'; t500 = '#f43f5e'; t600 = '#e11d48'; }
+                else if (currentThemeObj.accent === 'amber') { t400 = '#fbbf24'; t500 = '#f59e0b'; t600 = '#d97706'; }
+                else { t400 = currentThemeObj.primaryColor; t500 = currentThemeObj.primaryColor; t600 = currentThemeObj.primaryColor; }
                 
                 document.documentElement.style.setProperty('--theme-400', t400);
                 document.documentElement.style.setProperty('--theme-500', t500);
@@ -1322,10 +1326,10 @@
 {/if}
 
 {#if !isConfigOpen && statusHudEnabled}
-    <StatusHUD isRunning={activeMacroName !== 'None' && isRunning} activeMacro={activeMacroName} runtime={runtime} profit={estProfit} profitRate={estProfit} failsafe={false} themeGradientClass={themeMap[selectedTheme]?.buttonGradient || 'from-sky-400 to-sky-600'} />
+    <StatusHUD isRunning={activeMacroName !== 'None' && isRunning} activeMacro={activeMacroName} runtime={runtime} profit={estProfit} profitRate={estProfit} failsafe={false} themeGradientClass={currentThemeObj?.bgGradient || 'from-sky-400 to-sky-600'} />
 {/if}
 
 {#if !isConfigOpen && miningHudEnabled}
-    <MiningHUD isRunning={activeMacroName === 'Mining Macro' && isRunning} runtime={runtime} target={miningTarget} speed={miningSpeed} themeColorClass={themeMap[selectedTheme]?.borderColor || 'border-sky-400'} themeGradientClass={themeMap[selectedTheme]?.buttonGradient || 'from-sky-400 to-sky-600'} />
+    <MiningHUD isRunning={activeMacroName === 'Mining Macro' && isRunning} runtime={runtime} target={miningTarget} speed={miningSpeed} themeGradientClass={currentThemeObj?.bgGradient || 'from-sky-400 to-sky-600'} />
 {/if}
 </div>
