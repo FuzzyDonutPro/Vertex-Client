@@ -3,17 +3,21 @@
     import './app.css';
     import SpotifyWidget from './lib/components/SpotifyWidget.svelte';
     import MiningHUD from './lib/components/MiningHUD.svelte';
+    import StatusHUD from './lib/components/StatusHUD.svelte';
 
     let isConfigOpen = false;
     let miningTarget = 'Searching...';
     let miningSpeed = 2000;
     let miningHudEnabled = false;
+    let statusHudEnabled = true;
 
     let currentTab = 'farming';
     let searchQuery = '';
     let playerName = 'Player';
     let isConnected = true;
     let activeMacroName = 'None';
+    let isRunning = false;
+    let runtime = '00:00:00';
     let farmingSpeed = '0.0 BPS';
     let estProfit = '0 / hr';
     let liveFps = 0;
@@ -1315,6 +1319,10 @@
     </div>
     {/if}
     </div>
+{/if}
+
+{#if !isConfigOpen && statusHudEnabled}
+    <StatusHUD isRunning={activeMacroName !== 'None' && isRunning} activeMacro={activeMacroName} runtime={runtime} profit={estProfit} profitRate={estProfit} failsafe={false} themeGradientClass={themeMap[selectedTheme]?.buttonGradient || 'from-sky-400 to-sky-600'} />
 {/if}
 
 {#if !isConfigOpen && miningHudEnabled}

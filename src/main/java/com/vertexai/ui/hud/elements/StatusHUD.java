@@ -37,59 +37,8 @@ public class StatusHUD extends TextHud {
 
     @Override
     protected void getLines(List<String> lines, boolean example) {
-        if (example) {
-            lines.add("§f§lVERTEX §8| §b§lSTATUS §a●");
-            lines.add("§8§m------------------------");
-            lines.add("§8» §7State: §aCrop/Wart S-Shape");
-            lines.add("§8» §7Macro Time: §f00:24:15");
-            lines.add("§8» §7Profit: §a+1,250,000 §8(§73.1M/hr§8)");
-            return;
-        }
-
-        MacroManager mm = MacroManager.getInstance();
-        AbstractMacro active = mm.getActiveMacro();
-        boolean isRunning = active != null && active.isEnabled();
-        boolean failsafe = FailsafeManager.getInstance().triggeredFailsafe.isPresent();
-
-        String statusIndicator = failsafe ? "§c✖" : (isRunning ? "§a●" : "§7○");
-        lines.add("§f§lVERTEX §8| §b§lSTATUS " + statusIndicator);
-        lines.add("§8§m------------------------");
-
-        if (mc.player == null) {
-            lines.add("§8» §cOffline");
-            return;
-        }
-
-        // 1. Current State
-        String stateStr;
-        if (FailsafeManager.getInstance().triggeredFailsafe.isPresent()) {
-            stateStr = "§cFAILSAFE TRIGGERED";
-        } else if (isRunning) {
-            String macroName = active.getName();
-            String subState = getMacroSubState(active);
-            stateStr = "§a" + macroName + (subState.isEmpty() ? "" : " §8(§f" + subState + "§8)");
-        } else {
-            stateStr = "§7IDLE";
-        }
-        lines.add("§8» §7State: " + stateStr);
-
-        // 2. Macro Runtime Duration
-        if (isRunning) {
-            if (macroStartTime == -1) {
-                macroStartTime = System.currentTimeMillis();
-            }
-            long elapsedSec = (System.currentTimeMillis() - macroStartTime) / 1000;
-            lines.add("§8» §7Macro Time: §f" + formatTime(elapsedSec));
-        } else {
-            macroStartTime = -1;
-            lines.add("§8» §7Macro Time: §700:00:00");
-        }
-
-        // 3. Profit Calculation
-        long elapsedSec = (isRunning && macroStartTime > 0) ? Math.max(1, (System.currentTimeMillis() - macroStartTime) / 1000) : 0;
-        long profitPerHour = elapsedSec > 0 ? (totalProfit * 3600) / elapsedSec : 0;
-        String profitStr = String.format("§a+%,d §8(§7%,d/hr§8)", totalProfit, profitPerHour);
-        lines.add("§8» §7Profit: " + profitStr);
+        // Disabled: StatusHUD is now rendered in Svelte Overlay UI
+        lines.clear();
     }
 
     private String getMacroSubState(AbstractMacro macro) {
