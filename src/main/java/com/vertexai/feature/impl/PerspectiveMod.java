@@ -52,7 +52,8 @@ public class PerspectiveMod extends AbstractFeature {
         int keybind = Vertex.config().gui.freeLookKeybind;
         int mode = Vertex.config().gui.freeLookMode; // 0 = Hold, 1 = Toggle
         
-        boolean isKeyDown = com.mojang.blaze3d.platform.InputConstants.isKeyDown(mc.getWindow(), keybind);
+        // Prevent getting stuck in freelook when Alt-Tabbing or opening a GUI (e.g. Chat/Inventory)
+        boolean isKeyDown = mc.isWindowActive() && mc.screen == null && com.mojang.blaze3d.platform.InputConstants.isKeyDown(mc.getWindow(), keybind);
 
         if (mode == 0) {
             // Hold mode
