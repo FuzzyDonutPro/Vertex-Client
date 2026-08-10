@@ -13,7 +13,4 @@ public interface KeyMappingAccessor {
 
     @Accessor("key")
     InputConstants.Key getBoundKey();
-
-    @Accessor("isDown")
-    void setDown(boolean isDown);
 }

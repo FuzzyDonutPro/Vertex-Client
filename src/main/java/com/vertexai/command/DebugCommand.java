@@ -1,14 +1,14 @@
 package com.vertexai.command;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.misc.AutoGetStats.AutoGetStats;
-import com.vertexai.macro.impl.misc.AutoGetStats.tasks.TaskStatus;
-import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
-import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
-import com.vertexai.macro.impl.combat.AutoMobKiller.AutoMobKiller;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
-import com.vertexai.macro.impl.navigation.Pathfinder;
-import com.vertexai.macro.impl.navigation.RouteNavigator;
+import com.vertexai.feature.impl.AutoGetStats.AutoGetStats;
+import com.vertexai.feature.impl.AutoGetStats.tasks.TaskStatus;
+import com.vertexai.feature.impl.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
+import com.vertexai.feature.impl.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
+import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.Pathfinder;
+import com.vertexai.feature.impl.RouteNavigator;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.macro.impl.CommissionMacro.Commission;

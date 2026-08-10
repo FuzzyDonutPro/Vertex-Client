@@ -2,7 +2,7 @@ package com.vertexai.macro.impl.GlacialMacro.states;
 
 import akka.japi.Pair;
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlaciteVeins;
 import com.vertexai.util.InventoryUtil;
@@ -26,9 +26,7 @@ public class MiningState implements GlacialMacroState {
     @Override
     public void onStart(GlacialMacro macro) {
         log("Starting to mine at vein: " + (macro.getCurrentVein() != null ? macro.getCurrentVein().first() : "Unknown"));
-        int slot = Vertex.config().general.miningToolSlot;
-        String tool = (slot >= 1 && slot <= 9) ? String.valueOf(slot) : Vertex.config().general.miningTool;
-        InventoryUtil.holdItem(tool);
+        InventoryUtil.holdItem(Vertex.config().general.miningTool);
         this.miningRetries = 0;
         startMining(macro);
     }

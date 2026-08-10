@@ -25,45 +25,15 @@ public class InventoryUtil {
 
     private static final Minecraft mc = Minecraft.getInstance();
 
-    public static void selectSlot(int slot) {
-        if (mc.player != null) {
-            mc.player.getInventory().setSelectedSlot(slot);
-            if (mc.getConnection() != null) {
-                mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(slot));
-            }
-        }
-    }
-
     public static boolean holdItem(String item) {
-        if (item == null || item.trim().isEmpty()) return false;
-
-        // If string is numeric "1" - "9", interpret directly as hotbar slot 1..9
-        try {
-            int parsedSlot = Integer.parseInt(item.trim());
-            if (parsedSlot >= 1 && parsedSlot <= 9) {
-                if (mc.player != null) {
-                    selectSlot(parsedSlot - 1);
-                    return true;
-                }
-            }
-        } catch (NumberFormatException ignored) {}
-
         int slot = getHotbarSlotOfItem(item);
         if (slot == -1) {
             return false;
         }
-        selectSlot(slot);
-        return true;
-    }
-
-    public static boolean holdItemOrSlot(String item, int slot1Based) {
-        if (slot1Based >= 1 && slot1Based <= 9) {
-            if (mc.player != null) {
-                selectSlot(slot1Based - 1);
-                return true;
-            }
+        if (mc.player != null) {
+            mc.player.getInventory().setSelectedSlot(slot);
         }
-        return holdItem(item);
+        return true;
     }
 
     public static int getSlotIdOfItemInContainer(String item) {
@@ -153,8 +123,7 @@ public class InventoryUtil {
                 continue;
             }
 
-            String name = ChatFormatting.stripFormatting(slot.getHoverName().getString());
-            if (name != null && name.toLowerCase().contains(items.toLowerCase())) {
+            if (slot.getHoverName().getString().contains(items)) {
                 return i;
             }
         }

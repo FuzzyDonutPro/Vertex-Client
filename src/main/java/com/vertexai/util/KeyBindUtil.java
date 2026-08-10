@@ -68,11 +68,11 @@ public class KeyBindUtil {
     }
 
     public static int getRightClickDelayTimer() {
-        return ((com.vertexai.mixin.client.MinecraftAccessor) mc).getRightClickDelayTimer();
+        return 0; // mc.rightClickDelay
     }
 
     public static void resetRightClickDelayTimer() {
-        ((com.vertexai.mixin.client.MinecraftAccessor) mc).setRightClickDelayTimer(0);
+        // 0 = 0;
     }
 
     public static void setKeyBindState(KeyMapping key, boolean pressed) {
@@ -87,7 +87,16 @@ public class KeyBindUtil {
 
     private static void realSetKeyBindState(KeyMapping key, boolean pressed) {
         if (key == null) return;
-        ((KeyMappingAccessor) key).setDown(pressed);
+        InputConstants.Key boundKey = ((KeyMappingAccessor) key).getBoundKey();
+        if (pressed) {
+            if (!key.isDown()) {
+                KeyMapping.set(boundKey, true);
+            }
+        } else {
+            if (key.isDown()) {
+                KeyMapping.set(boundKey, false);
+            }
+        }
     }
 
     public static void stopMovement() {

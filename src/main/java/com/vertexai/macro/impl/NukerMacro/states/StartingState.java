@@ -1,9 +1,9 @@
 package com.vertexai.macro.impl.NukerMacro.states;
 
-import com.vertexai.macro.impl.misc.AutoGetStats.AutoGetStats;
-import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
-import com.vertexai.macro.impl.misc.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.AutoGetStats.AutoGetStats;
+import com.vertexai.feature.impl.AutoGetStats.tasks.impl.MiningSpeedRetrievalTask;
+import com.vertexai.feature.impl.AutoGetStats.tasks.impl.PickaxeAbilityRetrievalTask;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.NukerMacro.NukerMacro;
 import com.vertexai.macro.impl.NukerMacro.NukerMacroState;
 

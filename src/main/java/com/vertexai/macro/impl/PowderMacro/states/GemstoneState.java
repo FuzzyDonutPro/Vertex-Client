@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.PowderMacro.states;
 
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.PowderMacro.PowderMacro;
 import net.minecraft.core.BlockPos;
 

@@ -24,20 +24,16 @@ public class Commission {
         @ConfigEditorBoolean
         public boolean prioritiseTitanium = false;
 
-        @ConfigOption(name = "Alt. Mining Tool", desc = "Item name OR hotbar slot (1-9)")
+        @ConfigOption(name = "Alt. Mining Tool", desc = "")
         @ConfigEditorText
         public String altMiningTool = "";
-
-        @ConfigOption(name = "Alt. Mining Tool Slot (1-9)", desc = "Hotbar slot (1-9). 0 = Use item name string.")
-        @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
-        public int altMiningToolSlot = 0;
 
         @ConfigOption(
                 name = "Set Alt Mining Tool",
                 desc = "Set the alt tool name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable altMiningToolButton = ConfigActions::setAltMiningTool;
+        public transient Runnable setAltMiningToolButton = ConfigActions::setAltMiningTool;
 
         @ConfigOption(
                 name = "Swap before claiming commission",
@@ -48,24 +44,17 @@ public class Commission {
 
         @ConfigOption(
                 name = "Slayer Weapon",
-                desc = "Weapon item name OR hotbar slot (1-9) used when killing goblins"
+                desc = "Weapon used when killing goblins"
         )
         @ConfigEditorText
         public String slayerWeapon = "";
-
-        @ConfigOption(
-                name = "Slayer Weapon Slot (1-9)",
-                desc = "Hotbar slot (1-9). 0 = Use item name string."
-        )
-        @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
-        public int slayerWeaponSlot = 0;
 
         @ConfigOption(
                 name = "Set Slayer Weapon",
                 desc = "Set the slayer weapon name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable slayerWeaponButton = ConfigActions::setSlayerWeapon;
+        public transient Runnable setSlayerWeaponButton = ConfigActions::setSlayerWeapon;
 
         @ConfigOption(
                 name = "Sprint During MobKiller",

@@ -146,16 +146,9 @@ public class ConfigSerializer {
         return null;
     }
 
-    public static JsonObject executeButton(VertexConfig config, String categoryId, String fieldId) {
-        if (config == null || fieldId == null) return serialize(config);
-        if (categoryId == null || "undefined".equalsIgnoreCase(categoryId) || categoryId.isEmpty()) {
-            categoryId = "general";
-        }
-        
+    public static void executeButton(VertexConfig config, String categoryId, String fieldId) {
+        if (config == null || categoryId == null || fieldId == null) return;
         try {
-            String cleanId = fieldId.toLowerCase();
-
-            // 2. Reflective Runnable field execution
             Field catField = null;
             for (Field f : VertexConfig.class.getDeclaredFields()) {
                 if (f.getName().equalsIgnoreCase(categoryId)) {
@@ -163,75 +156,50 @@ public class ConfigSerializer {
                     break;
                 }
             }
-            if (catField == null) return serialize(config);
+            if (catField == null) return;
             catField.setAccessible(true);
             Object categoryObj = catField.get(config);
-            if (categoryObj == null) return serialize(config);
+            if (categoryObj == null) return;
 
             FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
-            if (pair != null) {
-                Object val = pair.field.get(pair.owner);
-                if (val instanceof Runnable runnable) {
-                    java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
-                    Runnable task = () -> {
-                        try {
-                            runnable.run();
-                            VertexClient.configManager.saveConfig();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        } finally {
-                            future.complete(null);
-                        }
-                    };
-                    if (net.minecraft.client.Minecraft.getInstance().isSameThread()) {
-                        task.run();
-                    } else {
-                        net.minecraft.client.Minecraft.getInstance().execute(task);
-                        future.join();
-                    }
-                }
+            if (pair == null) return;
+
+            Object val = pair.field.get(pair.owner);
+            if (val instanceof Runnable runnable) {
+                runnable.run();
+            } else if ("setMiningToolButton".equalsIgnoreCase(fieldId) || "miningTool".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setMiningTool();
+            } else if ("setAltMiningToolButton".equalsIgnoreCase(fieldId) || "altMiningTool".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setAltMiningTool();
+            } else if ("setSlayerWeaponButton".equalsIgnoreCase(fieldId) || "slayerWeapon".equalsIgnoreCase(fieldId)) {
+                ConfigActions.setSlayerWeapon();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return serialize(config);
     }
 
     public static void updateField(VertexConfig config, String categoryId, String fieldId, String valueStr) {
-        if (config == null || fieldId == null) return;
+        if (config == null || categoryId == null || fieldId == null) return;
         try {
-            FieldOwnerPair pair = null;
-            if (categoryId != null && !categoryId.isEmpty() && !"undefined".equalsIgnoreCase(categoryId)) {
-                for (Field f : VertexConfig.class.getDeclaredFields()) {
-                    if (f.getName().equalsIgnoreCase(categoryId)) {
-                        f.setAccessible(true);
-                        try {
-                            Object categoryObj = f.get(config);
-                            if (categoryObj != null) {
-                                pair = findFieldAndOwner(categoryObj, fieldId);
-                            }
-                        } catch (Exception ignored) {}
-                        break;
-                    }
+            Field catField = null;
+            for (Field f : VertexConfig.class.getDeclaredFields()) {
+                if (f.getName().equalsIgnoreCase(categoryId)) {
+                    catField = f;
+                    break;
                 }
             }
-
-            if (pair == null) {
-                for (Field f : VertexConfig.class.getDeclaredFields()) {
-                    if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) continue;
-                    f.setAccessible(true);
-                    try {
-                        Object categoryObj = f.get(config);
-                        if (categoryObj != null) {
-                            pair = findFieldAndOwner(categoryObj, fieldId);
-                            if (pair != null) break;
-                        }
-                    } catch (Exception ignored) {}
-                }
+            if (catField == null) {
+                com.vertexai.util.Logger.sendError("[Config] Category not found: " + categoryId);
+                return;
             }
+            catField.setAccessible(true);
+            Object categoryObj = catField.get(config);
+            if (categoryObj == null) return;
 
+            FieldOwnerPair pair = findFieldAndOwner(categoryObj, fieldId);
             if (pair == null) {
-                com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " (category: " + categoryId + ")");
+                com.vertexai.util.Logger.sendError("[Config] Field not found: " + fieldId + " in " + categoryId);
                 return;
             }
 
@@ -254,10 +222,6 @@ public class ConfigSerializer {
 
             VertexClient.configManager.saveConfig();
             com.vertexai.util.Logger.sendLog("[Config] Updated " + categoryId + "." + fieldId + " -> " + valueStr);
-
-            if ("oreType".equalsIgnoreCase(field.getName())) {
-                com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().setupPrioritiesForOreType(config.miningMacro.oreType);
-            }
         } catch (Exception e) {
             com.vertexai.util.Logger.sendError("[Config] Failed to update " + categoryId + "." + fieldId + ": " + e.getMessage());
             e.printStackTrace();

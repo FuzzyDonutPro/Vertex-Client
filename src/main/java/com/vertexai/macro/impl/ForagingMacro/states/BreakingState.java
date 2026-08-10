@@ -2,31 +2,76 @@ package com.vertexai.macro.impl.ForagingMacro.states;
 
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacroState;
-import com.vertexai.handler.BlockBreakingEngine;
+import com.vertexai.handler.RotationHandler;
 import com.vertexai.util.InventoryUtil;
+import com.vertexai.util.KeyBindUtil;
+import com.vertexai.util.helper.Clock;
+import com.vertexai.util.helper.RotationConfiguration;
+import com.vertexai.util.helper.Target;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public class BreakingState implements ForagingMacroState {
 
     private final Minecraft mc = Minecraft.getInstance();
+    private final Clock breakDelay = new Clock();
+    private final Clock postBreakTimer = new Clock();
+    private boolean logBroken = false;
 
     @Override
     public void onStart(ForagingMacro macro) {
         log("Aiming and breaking target tree...");
-        if (macro.getTargetBlockPos() != null) {
-            BlockBreakingEngine.getInstance().breakBlock(macro.getTargetBlockPos());
-        }
+        breakDelay.reset();
+        postBreakTimer.reset();
+        logBroken = false;
     }
 
     @Override
     public ForagingMacroState onTick(ForagingMacro macro) {
         if (mc.player == null || mc.level == null || macro.getTargetBlockPos() == null) {
-            BlockBreakingEngine.getInstance().stopBreaking();
             return new PathfindingState();
         }
 
         BlockPos targetPos = macro.getTargetBlockPos();
+
+        // Check if block turned to air
+        if (mc.level.isEmptyBlock(targetPos)) {
+            if (!logBroken) {
+                logBroken = true;
+                postBreakTimer.schedule(150L); // 150ms post-break pause for Treecapitator/Jungle Axe server packet sync
+            }
+            if (postBreakTimer.passed()) {
+                log("Tree log broken!");
+                return new PathfindingState();
+            }
+            // Stop attacking while waiting for packet sync
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            return this;
+        }
+
+        // Verify reach limit (4.5 blocks max)
+        Vec3 centerVec = Vec3.atCenterOf(targetPos);
+        double distanceSq = mc.player.getEyePosition().distanceToSqr(centerVec);
+        if (distanceSq > 20.25) { // Out of 4.5-block reach
+            log("Target log out of reach (" + String.format("%.1f", Math.sqrt(distanceSq)) + " blocks), pathfinding closer...");
+            return new PathfindingState();
+        }
+
+        // Check if crosshair raycast is directly touching the target log block
+        boolean crosshairOnTarget = mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit
+                && blockHit.getBlockPos().equals(targetPos);
+
+        // If crosshair is not touching target log block, smoothly rotate until locked on
+        if (!crosshairOnTarget) {
+            if (!RotationHandler.getInstance().isEnabled()) {
+                RotationHandler.getInstance().easeTo(new RotationConfiguration(
+                        new Target(centerVec),
+                        80L,
+                        null
+                ));
+            }
+        }
 
         // Auto-swap to Treecapitator / Jungle Axe / Axe in hotbar
         int axeSlot = InventoryUtil.getHotbarSlotOfItem("Treecapitator");
@@ -36,15 +81,14 @@ public class BreakingState implements ForagingMacroState {
             mc.player.getInventory().setSelectedSlot(axeSlot);
         }
 
-        boolean stillMining = BlockBreakingEngine.getInstance().breakBlock(targetPos);
-        if (!stillMining) {
-            log("Tree log broken!");
-            return new PathfindingState();
-        }
+        // Regular Mining / Breaking logic (Hold left click)
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
 
-        if (BlockBreakingEngine.getInstance().getBreakDurationMs() > 5000L) {
+        // Fail-safe timeout if block doesn't break in 2.5s
+        if (!breakDelay.isScheduled()) {
+            breakDelay.schedule(2500L);
+        } else if (breakDelay.passed()) {
             log("Log taking too long to break, switching target...");
-            BlockBreakingEngine.getInstance().stopBreaking();
             return new PathfindingState();
         }
 
@@ -53,6 +97,7 @@ public class BreakingState implements ForagingMacroState {
 
     @Override
     public void onEnd(ForagingMacro macro) {
-        BlockBreakingEngine.getInstance().stopBreaking();
+        KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+        RotationHandler.getInstance().stop();
     }
 }

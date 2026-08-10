@@ -23,29 +23,29 @@ public abstract class MixinScoreboard {
     @Shadow
     public abstract PlayerTeam getPlayerTeam(String name);
 
-    @Inject(method = "removePlayerTeam", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "removePlayerTeam", at = @At("HEAD"), cancellable = true)
     private void Vertex$checkIfTeamIsNull(PlayerTeam team, CallbackInfo ci) {
         if (team == null) ci.cancel();
     }
 
-    @Redirect(method = "removePlayerTeam", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 0, remap = false), require = 0)
+    @Redirect(method = "removePlayerTeam", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 0, remap = false))
     private <K, V> V Vertex$checkIfRegisteredNameIsNull(Map<K, V> instance, K o) {
         if (o != null) return instance.remove(o);
         return null;
     }
 
-    @Inject(method = "removeObjective", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "removeObjective", at = @At("HEAD"), cancellable = true)
     private void Vertex$checkIfObjectiveIsNull(Objective objective, CallbackInfo ci) {
         if (objective == null) ci.cancel();
     }
 
-    @Redirect(method = "removeObjective", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 0, remap = false), require = 0)
+    @Redirect(method = "removeObjective", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 0, remap = false))
     private <K, V> V Vertex$checkIfNameIsNull(Map<K, V> instance, K o) {
         if (o != null) return instance.remove(o);
         return null;
     }
 
-    @Inject(method = "addPlayerTeam", at = @At(value = "CONSTANT", args = "stringValue=A team with the name '"), cancellable = true, require = 0)
+    @Inject(method = "addPlayerTeam", at = @At(value = "CONSTANT", args = "stringValue=A team with the name '"), cancellable = true)
     private void Vertex$returnExistingTeam(String name, CallbackInfoReturnable<PlayerTeam> cir) {
         PlayerTeam existing = this.getPlayerTeam(name);
         if (existing != null) {

@@ -2,8 +2,8 @@ package com.vertexai.handler;
 
 import com.google.gson.annotations.Expose;
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.navigation.GraphEditorFeature;
-import com.vertexai.macro.impl.navigation.GraphOverlayRenderer;
+import com.vertexai.feature.route.GraphEditorFeature;
+import com.vertexai.feature.route.GraphOverlayRenderer;
 import com.vertexai.macro.AbstractMacro;
 import com.vertexai.route.graph.GraphPathfinder;
 import com.vertexai.route.graph.GraphRepository;

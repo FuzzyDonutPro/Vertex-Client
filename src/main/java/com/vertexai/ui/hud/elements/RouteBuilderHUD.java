@@ -3,7 +3,7 @@ package com.vertexai.ui.hud.elements;
 import lombok.Getter;
 import com.vertexai.Vertex;
 import com.vertexai.client.overlay.TextHud;
-import com.vertexai.macro.impl.navigation.RouteBuilder;
+import com.vertexai.feature.impl.RouteBuilder;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RouteHandler;
 import com.vertexai.ui.hud.ColorPalette;
@@ -49,16 +49,16 @@ public class RouteBuilderHUD extends TextHud {
    @Override
    protected void getLines(List<String> lines, boolean example) {
       if (example) {
-         lines.add("Â§dÂ§lROUTE BUILDER");
-         lines.add("Â§8Â§m------------------------");
-         lines.add("Â§8Â» Â§7Status: Â§aACTIVE");
-         lines.add("Â§8Â» Â§7Mode: Â§fETHERWARP");
-         lines.add("Â§8Â» Â§7Nodes: Â§a15");
-         lines.add("Â§8Â» Â§aStand: Â§f-3, 110, 15");
-         lines.add("Â§8Â» Â§cSelect: Â§f-4, 110, 16 Â§8(Â§f2.4mÂ§8)");
-         lines.add("Â§8Â» Â§bHover: Â§f-2, 110, 14 Â§8(Â§f6.1mÂ§8)");
-         lines.add("Â§8Â§m------------------------");
-         lines.add("Â§8Â» Â§7Save: Â§f/graph save");
+         lines.add("§d§lROUTE BUILDER");
+         lines.add("§8§m------------------------");
+         lines.add("§8» §7Status: §aACTIVE");
+         lines.add("§8» §7Mode: §fETHERWARP");
+         lines.add("§8» §7Nodes: §a15");
+         lines.add("§8» §aStand: §f-3, 110, 15");
+         lines.add("§8» §cSelect: §f-4, 110, 16 §8(§f2.4m§8)");
+         lines.add("§8» §bHover: §f-2, 110, 14 §8(§f6.1m§8)");
+         lines.add("§8§m------------------------");
+         lines.add("§8» §7Save: §f/graph save");
          return;
       }
 
@@ -80,29 +80,29 @@ public class RouteBuilderHUD extends TextHud {
       RouteWaypoint hoveredWaypoint = graphHandler.getCachedHoveredWaypoint();
       RouteWaypoint selected = graphHandler.getLastPos();
 
-      lines.add("Â§dÂ§lROUTE BUILDER");
-      lines.add("Â§8Â§m------------------------");
-      lines.add("Â§8Â» Â§7Status: " + (editing ? "Â§aEDITING" : "Â§fVIEWING"));
+      lines.add("§d§lROUTE BUILDER");
+      lines.add("§8§m------------------------");
+      lines.add("§8» §7Status: " + (editing ? "§aEDITING" : "§fVIEWING"));
       
       String shownGraph = editing ? graphHandler.getActiveGraphKey() : (debugRender ? graphHandler.getDebugGraphKey() : graphHandler.getActiveGraphKey());
-      lines.add("Â§8Â» Â§7Graph: Â§f" + shownGraph + " " + (graphHandler.isDirty() ? " Â§8(Â§cDirtyÂ§8)" : ""));
+      lines.add("§8» §7Graph: §f" + shownGraph + " " + (graphHandler.isDirty() ? " §8(§cDirty§8)" : ""));
       if (editing) {
-         lines.add("Â§8Â» Â§7Placement: Â§b" + graphHandler.getEditorPlacementType());
+         lines.add("§8» §7Placement: §b" + graphHandler.getEditorPlacementType());
       }
-      lines.add("Â§8Â» Â§7Total Nodes: Â§a" + graph.map.size());
+      lines.add("§8» §7Total Nodes: §a" + graph.map.size());
 
       if (standingBlock != null) {
-         lines.add("Â§8Â» Â§aStanding: Â§f" + standingBlock.getX() + ", " + standingBlock.getY() + ", " + standingBlock.getZ());
+         lines.add("§8» §aStanding: §f" + standingBlock.getX() + ", " + standingBlock.getY() + ", " + standingBlock.getZ());
       }
       
       if (selected != null) {
          String dist = formatDistanceTo(selected.toBlockPos());
-         lines.add("Â§8Â» Â§cSelected: Â§f" + selected.getX() + ", " + selected.getY() + ", " + selected.getZ() + (dist == null ? "" : " Â§8(Â§f" + dist + "Â§8)"));
+         lines.add("§8» §cSelected: §f" + selected.getX() + ", " + selected.getY() + ", " + selected.getZ() + (dist == null ? "" : " §8(§f" + dist + "§8)"));
       }
       
       if (hoveredBlock != null) {
          String dist = formatDistanceTo(hoveredBlock);
-         lines.add("Â§8Â» Â§bHovered: Â§f" + hoveredBlock.getX() + ", " + hoveredBlock.getY() + ", " + hoveredBlock.getZ() + (dist == null ? "" : " Â§8(Â§f" + dist + "Â§8)"));
+         lines.add("§8» §bHovered: §f" + hoveredBlock.getX() + ", " + hoveredBlock.getY() + ", " + hoveredBlock.getZ() + (dist == null ? "" : " §8(§f" + dist + "§8)"));
       }
 
       RouteWaypoint infoWaypoint = hoveredWaypoint != null ? hoveredWaypoint : selected;
@@ -110,32 +110,32 @@ public class RouteBuilderHUD extends TextHud {
          Set<RouteWaypoint> edges = graph.map.getOrDefault(infoWaypoint, Collections.emptySet());
          int outgoing = edges.size();
          int incoming = graphHandler.getIncomingEdgeCount(graph, infoWaypoint);
-         lines.add("Â§8Â§m------------------------");
-         lines.add("Â§8Â» Â§7Node Method: Â§f" + infoWaypoint.getTransportMethod());
-         lines.add("Â§8Â» Â§7Connections: Â§7Out:Â§f" + outgoing + " Â§7In:Â§f" + incoming);
+         lines.add("§8§m------------------------");
+         lines.add("§8» §7Node Method: §f" + infoWaypoint.getTransportMethod());
+         lines.add("§8» §7Connections: §7Out:§f" + outgoing + " §7In:§f" + incoming);
       }
 
-      lines.add("Â§8Â§m------------------------");
+      lines.add("§8§m------------------------");
       for (String hint : graphHandler.getEditorControlHints()) {
-         lines.add("Â§8Â» Â§7" + hint.replace(": ", ": Â§f"));
+         lines.add("§8» §7" + hint.replace(": ", ": §f"));
       }
-      lines.add("Â§8Â» Â§7Save: Â§f/graph save");
+      lines.add("§8» §7Save: §f/graph save");
    }
 
    private void addRouteEditorLines(List<String> lines) {
-      lines.add("Â§dÂ§lROUTE EDITOR");
-      lines.add("Â§8Â§m------------------------");
-      lines.add("Â§8Â» Â§7Status: Â§aACTIVE");
+      lines.add("§d§lROUTE EDITOR");
+      lines.add("§8§m------------------------");
+      lines.add("§8» §7Status: §aACTIVE");
 
       Route selectedRoute = routeHandler.getSelectedRoute();
       String selectedRouteName = routeHandler.getSelectedRouteName();
       int waypointCount = selectedRoute == null ? 0 : selectedRoute.size();
-      lines.add("Â§8Â» Â§7Route: Â§f" + selectedRouteName);
-      lines.add("Â§8Â» Â§7Waypoints: Â§a" + waypointCount);
+      lines.add("§8» §7Route: §f" + selectedRouteName);
+      lines.add("§8» §7Waypoints: §a" + waypointCount);
 
       BlockPos standingBlock = PlayerUtil.getBlockStandingOn();
       if (standingBlock != null) {
-         lines.add("Â§8Â» Â§aStanding: Â§f" + standingBlock.getX() + ", " + standingBlock.getY() + ", " + standingBlock.getZ());
+         lines.add("§8» §aStanding: §f" + standingBlock.getX() + ", " + standingBlock.getY() + ", " + standingBlock.getZ());
       }
 
       if (selectedRoute != null && !selectedRoute.isEmpty() && standingBlock != null) {
@@ -144,18 +144,18 @@ public class RouteBuilderHUD extends TextHud {
             RouteWaypoint waypoint = closest.get();
             int index = selectedRoute.indexOf(waypoint) + 1;
             String dist = formatDistanceTo(waypoint.toBlockPos());
-            lines.add("Â§8Â» Â§bClosest: Â§f#" + index + " Â§7(" + waypoint.getTransportMethod() + ") Â§f" + waypoint.getX() + ", " + waypoint.getY() + ", " + waypoint.getZ() + (dist == null ? "" : " Â§8(Â§f" + dist + "Â§8)"));
+            lines.add("§8» §bClosest: §f#" + index + " §7(" + waypoint.getTransportMethod() + ") §f" + waypoint.getX() + ", " + waypoint.getY() + ", " + waypoint.getZ() + (dist == null ? "" : " §8(§f" + dist + "§8)"));
          }
       }
 
-      lines.add("Â§8Â§m------------------------");
+      lines.add("§8§m------------------------");
       var config = Vertex.config();
       if (config != null) {
-         lines.add("Â§8Â» Â§7Add WALK: Â§f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderWalkAddKeybind) + "]");
-         lines.add("Â§8Â» Â§7Add ETHER: Â§f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderEtherwarpAddKeybind) + "]");
-         lines.add("Â§8Â» Â§7Remove: Â§f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderRemoveKeybind) + "]");
+         lines.add("§8» §7Add WALK: §f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderWalkAddKeybind) + "]");
+         lines.add("§8» §7Add ETHER: §f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderEtherwarpAddKeybind) + "]");
+         lines.add("§8» §7Remove: §f[" + KeyPressUtil.getKeyName(config.routeMiner.routeBuilderRemoveKeybind) + "]");
       }
-      lines.add("Â§8Â» Â§7Help: Â§f/rb keys");
+      lines.add("§8» §7Help: §f/rb keys");
    }
 
    private String formatOutgoingPreview(Set<RouteWaypoint> edges, int max) {
@@ -175,13 +175,13 @@ public class RouteBuilderHUD extends TextHud {
       for (int i = 0; i < shown; i++) {
          RouteWaypoint wp = list.get(i);
          if (i > 0) {
-            sb.append("Â§8, ");
+            sb.append("§8, ");
          }
-         sb.append("Â§f");
+         sb.append("§f");
          sb.append(wp.getX()).append(",").append(wp.getY()).append(",").append(wp.getZ());
       }
       if (list.size() > shown) {
-         sb.append(" Â§8+").append(list.size() - shown);
+         sb.append(" §8+").append(list.size() - shown);
       }
       return sb.toString();
    }

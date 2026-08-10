@@ -265,7 +265,10 @@ public abstract class TextHud extends AbstractHUDElement {
         }
         int r = Math.max(0, Math.min(radius, Math.min(w / 2, h / 2)));
         if (r <= 0) {
-            context.fill(x1, y1, x1 + w, y1 + h, color);
+            context.fill(x1, y1, x2, y1 + 1, color);
+            context.fill(x1, y2 - 1, x2, y2, color);
+            context.fill(x1, y1, x1 + 1, y2, color);
+            context.fill(x2 - 1, y1, x2, y2, color);
             return;
         }
 
@@ -284,14 +287,26 @@ public abstract class TextHud extends AbstractHUDElement {
     }
 
     private void drawPanelChrome(GuiGraphics context, int panelX, int panelY, int panelW, int panelH) {
-        // Background with vertical gradient
-        fillRoundedRectGradient(context, panelX, panelY, panelX + panelW, panelY + panelH, PANEL_CORNER_RADIUS_PX, ColorPalette.BG_DARK, ColorPalette.BG_MEDIUM);
+        int accentColor = getAccentColor();
 
-        // Top accent bar
-        fillRoundedRect(context, panelX, panelY, panelX + panelW, panelY + ACCENT_WIDTH_PX, 1, getAccentColor());
+        // 1. Soft Outer Theme Glow Ring
+        int outerGlowColor = (accentColor & 0x00FFFFFF) | 0x35000000;
+        drawRoundedOutline(context, panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, PANEL_CORNER_RADIUS_PX + 1, outerGlowColor);
 
-        // Subtle border
-        drawRoundedOutline(context, panelX, panelY, panelX + panelW, panelY + panelH, PANEL_CORNER_RADIUS_PX, ColorPalette.BORDER_LIGHT);
+        // 2. Glass Translucent Background (~22% - 30% opacity with subtle dark tint)
+        int glassTop = 0x480F172A;   // Translucent Slate 900
+        int glassBottom = 0x30090D16; // Translucent deep void
+        fillRoundedRectGradient(context, panelX, panelY, panelX + panelW, panelY + panelH, PANEL_CORNER_RADIUS_PX, glassTop, glassBottom);
+
+        // 3. Glass Specular Highlight (Top edge reflection)
+        fillRoundedRect(context, panelX + 2, panelY + 1, panelX + panelW - 2, panelY + 2, 1, 0x22FFFFFF);
+
+        // 4. Top Accent Bar (Vibrant Theme Color)
+        fillRoundedRect(context, panelX, panelY, panelX + panelW, panelY + ACCENT_WIDTH_PX, 1, accentColor);
+
+        // 5. Full Panel Outline in Theme Color
+        int themeOutlineColor = (accentColor & 0x00FFFFFF) | 0xDD000000; // ~87% opacity theme border
+        drawRoundedOutline(context, panelX, panelY, panelX + panelW, panelY + panelH, PANEL_CORNER_RADIUS_PX, themeOutlineColor);
     }
 
     protected void drawProgressBar(GuiGraphics context, int x, int y, int width, int height, float progress, int color) {

@@ -20,13 +20,6 @@ public class Foraging {
     })
     public int foragingTreeType = 0; // Default: Dark Oak
 
-    @ConfigOption(
-            name = "Pre-Mining Delay (s)",
-            desc = "Delay in seconds (0.1s to 5s) after aiming/locking onto a log before attacking/mining it"
-    )
-    @io.github.notenoughupdates.moulconfig.annotations.ConfigEditorSlider(minValue = 0.1f, maxValue = 5.0f, minStep = 0.1f)
-    public float logBreakDelay = 0.1f;
-
     @ConfigOption(name = "Fig", desc = "The best method for general foraging no matter the gear you have. Supports jump boost, scaffolding, axe throwing, and more.")
     @ConfigEditorBoolean
     public boolean foragingFig = false;

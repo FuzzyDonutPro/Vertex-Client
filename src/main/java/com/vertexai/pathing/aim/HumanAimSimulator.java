@@ -48,38 +48,51 @@ public class HumanAimSimulator {
         float newYaw;
         float newPitch;
 
-        if (loadedProfile == null || loadedProfile.ticks.isEmpty()) {
-            // Fallback to basic algorithmic aim if no profile is loaded
-            float dYaw = com.vertexai.util.AngleUtil.getNeededYawChange(currentYaw, targetYaw);
-            float dPitch = targetPitch - currentPitch;
+        float dYaw = com.vertexai.util.AngleUtil.getNeededYawChange(currentYaw, targetYaw);
+        float dPitch = targetPitch - currentPitch;
 
-            // Smooth interpolation with ±10% random variance (breaks fixed exponential decay pattern)
-            float baseStep = isPathfinding ? 0.3f : 0.2f;
-            float variance = (random.nextFloat() * 0.2f - 0.1f) * baseStep; // ±10%
-            float step = baseStep + variance;
-            newYaw = currentYaw + (dYaw * step);
-            newPitch = currentPitch + (dPitch * step);
+        if (loadedProfile == null || loadedProfile.ticks.isEmpty()) {
+            // Humanized organic S-curve interpolation
+            float absYaw = Math.abs(dYaw);
+            float absPitch = Math.abs(dPitch);
+
+            // Smoothstep curve for deceleration near target
+            float yawProgress = Math.min(1.0f, absYaw / (isPathfinding ? 45.0f : 25.0f));
+            float pitchProgress = Math.min(1.0f, absPitch / 20.0f);
+            float yawCurve = yawProgress * yawProgress * (3.0f - 2.0f * yawProgress);
+            float pitchCurve = pitchProgress * pitchProgress * (3.0f - 2.0f * pitchProgress);
+
+            float baseStepYaw = isPathfinding ? (0.16f + yawCurve * 0.26f) : (0.14f + yawCurve * 0.28f);
+            float baseStepPitch = isPathfinding ? (0.18f + pitchCurve * 0.24f) : (0.15f + pitchCurve * 0.27f);
+
+            // Micro-variance per tick (±8%)
+            float varianceYaw = (random.nextFloat() * 0.16f - 0.08f) * baseStepYaw;
+            float variancePitch = (random.nextFloat() * 0.16f - 0.08f) * baseStepPitch;
+
+            float stepYaw = Math.max(0.08f, Math.min(0.85f, baseStepYaw + varianceYaw));
+            float stepPitch = Math.max(0.08f, Math.min(0.85f, baseStepPitch + variancePitch));
+
+            newYaw = currentYaw + (dYaw * stepYaw);
+            newPitch = currentPitch + (dPitch * stepPitch);
+
+            // Subtle pitch breathing effect (simulates natural mouse hold variance)
+            double breathing = Math.sin(System.currentTimeMillis() * 0.003) * 0.06;
+            newPitch += (float) breathing;
         } else {
             // 1. Calculate remaining distance
-            float dYaw = com.vertexai.util.AngleUtil.getNeededYawChange(currentYaw, targetYaw);
-            float dPitch = targetPitch - currentPitch;
-
-            // 2. If we are very close, snap to target
-            if (Math.abs(dYaw) < 0.5f && Math.abs(dPitch) < 0.5f) {
+            if (Math.abs(dYaw) < 0.3f && Math.abs(dPitch) < 0.3f) {
                 newYaw = targetYaw;
                 newPitch = targetPitch;
             } else {
-                // 3. Sample a random tick from the recorded organic profile
+                // 2. Sample from recorded organic profile
                 RotationProfile.TickData sample = loadedProfile.ticks.get(random.nextInt(loadedProfile.ticks.size()));
 
-                // 4. Scale the sampled delta based on direction and distance ratio
                 float yawRatio = Math.abs(dYaw) > 0.01f ? Math.min(1.0f, Math.abs(dYaw) / 30.0f) : 1.0f;
                 float pitchRatio = Math.abs(dPitch) > 0.01f ? Math.min(1.0f, Math.abs(dPitch) / 20.0f) : 1.0f;
                 
-                float appliedYawDelta = Math.max(Math.abs(dYaw) * 0.25f, Math.abs(sample.deltaYaw) * yawRatio) * Math.signum(dYaw);
-                float appliedPitchDelta = Math.max(Math.abs(dPitch) * 0.25f, Math.abs(sample.deltaPitch) * pitchRatio) * Math.signum(dPitch);
+                float appliedYawDelta = Math.max(Math.abs(dYaw) * 0.22f, Math.abs(sample.deltaYaw) * yawRatio) * Math.signum(dYaw);
+                float appliedPitchDelta = Math.max(Math.abs(dPitch) * 0.22f, Math.abs(sample.deltaPitch) * pitchRatio) * Math.signum(dPitch);
 
-                // Cap movement to prevent overshooting
                 if (Math.abs(appliedYawDelta) > Math.abs(dYaw)) appliedYawDelta = dYaw;
                 if (Math.abs(appliedPitchDelta) > Math.abs(dPitch)) appliedPitchDelta = dPitch;
 
@@ -103,9 +116,9 @@ public class HumanAimSimulator {
             }
         }
 
-        // === BadPacketsD Bypass ===
-        // Clamp pitch to strictly [-90, 90]
-        newPitch = Math.max(-90.0f, Math.min(90.0f, newPitch));
+        // === Pitch Cap & BadPacketsD Bypass ===
+        // Clamp pitch to max 40% downwards (strictly [-90.0, 36.0] degrees) so camera never looks straight down on arrival
+        newPitch = Math.max(-90.0f, Math.min(36.0f, newPitch));
 
         return new float[]{newYaw, newPitch};
     }

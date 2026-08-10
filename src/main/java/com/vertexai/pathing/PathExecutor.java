@@ -28,17 +28,34 @@ public class PathExecutor {
         LocalPlayer player = mc.player;
         if (player == null) return;
 
-        BlockPos target = currentPath.get(pathIndex);
+        // Dynamic nearest node search along current path
+        int nearestIdx = pathIndex;
+        double minDistanceSq = Double.MAX_VALUE;
+        for (int i = 0; i < currentPath.size(); i++) {
+            BlockPos n = currentPath.get(i);
+            double distSq = player.position().distanceToSqr(n.getX() + 0.5, n.getY(), n.getZ() + 0.5);
+            if (distSq < minDistanceSq) {
+                minDistanceSq = distSq;
+                nearestIdx = i;
+            }
+        }
+        if (nearestIdx > pathIndex) {
+            pathIndex = nearestIdx;
+        }
+
+        int lookIndex = Math.min(pathIndex, currentPath.size() - 1);
+        BlockPos target = currentPath.get(lookIndex);
         Vec3 targetVec = new Vec3(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
 
-        // Advance to the next node if we're close enough
+        // Advance to next node if close enough
         if (player.position().distanceTo(targetVec) < 0.6) {
             pathIndex++;
             if (pathIndex >= currentPath.size()) {
                 stopMovement();
                 return;
             }
-            target = currentPath.get(pathIndex);
+            lookIndex = Math.min(pathIndex, currentPath.size() - 1);
+            target = currentPath.get(lookIndex);
             targetVec = new Vec3(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
         }
 
@@ -49,7 +66,10 @@ public class PathExecutor {
 
         double horizDist = Math.sqrt(dX * dX + dZ * dZ);
         float targetYaw = (float) (Mth.atan2(dZ, dX) * (180D / Math.PI)) - 90.0F;
-        float targetPitch = (float) -(Mth.atan2(dY, horizDist) * (180D / Math.PI));
+        float rawPitch = (float) -(Mth.atan2(dY, horizDist) * (180D / Math.PI));
+        
+        // Cap pitch to max 40% downwards (+36.0 degrees) so character never looks straight down on arrival
+        float targetPitch = Math.max(-90.0f, Math.min(36.0f, rawPitch));
 
         com.vertexai.pathing.aim.HumanAimSimulator.loadProfile(); // Ensure it's loaded
         float[] nextAngles = com.vertexai.pathing.aim.HumanAimSimulator.getNextAnglePathfinding(

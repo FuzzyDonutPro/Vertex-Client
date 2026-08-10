@@ -3,7 +3,7 @@ package com.vertexai.macro.impl.SlayerMacro.states;
 import com.vertexai.Vertex;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacro;
 import com.vertexai.macro.impl.SlayerMacro.SlayerMacroState;
-import com.vertexai.macro.impl.combat.AutoMobKiller.AutoMobKiller;
+import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,15 +51,10 @@ public class StartingState implements SlayerMacroState {
         }
         
         String weapon = Vertex.config().general.slayerWeapon;
-        int weaponSlot = Vertex.config().general.slayerWeaponSlot;
         String pickaxe = Vertex.config().general.miningTool;
-        int pickaxeSlot = Vertex.config().general.miningToolSlot;
         
-        boolean hasWeapon = (weapon != null && !weapon.trim().isEmpty()) || weaponSlot >= 1;
-        boolean hasPickaxe = (pickaxe != null && !pickaxe.trim().isEmpty()) || pickaxeSlot >= 1;
-        
-        if (!hasWeapon && !hasPickaxe) {
-            macro.disable("Please set a Slayer Weapon or Mining Tool (name or slot 1-9) in the config!");
+        if ((weapon == null || weapon.trim().isEmpty()) && (pickaxe == null || pickaxe.trim().isEmpty())) {
+            macro.disable("Please set a Slayer Weapon or Mining Tool in the config!");
             return this;
         }
         

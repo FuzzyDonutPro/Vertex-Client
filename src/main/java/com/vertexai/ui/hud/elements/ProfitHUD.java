@@ -74,11 +74,4 @@ public class ProfitHUD extends TextHud {
         this.totalItemsHarvested += count;
         this.estimatedCoins += coinValue;
     }
-
-    @Override
-    protected boolean shouldShow() {
-        if (!enabled || mc.player == null || mc.level == null) return false;
-        if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) return false;
-        return MacroManager.getInstance().isRunning();
-    }
 }

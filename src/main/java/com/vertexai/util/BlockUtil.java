@@ -136,10 +136,10 @@ public class BlockUtil {
     public static MinHeap<BlockPos> findMineableBlocksAroundPoint(Vec3 point, Map<Block, Integer> blockPriorities, Set<Long> blocksToIgnore, int miningSpeed, MiningDebugContext debugContext) {
         final MinHeap<BlockPos> blocks = new MinHeap<>(500);
 
-        final int HORIZONTAL_RADIUS = 12;
-        final int VERTICAL_LOWER = -4;
-        final int VERTICAL_UPPER = 6;
-        final double MAX_DISTANCE = 12;
+        final int HORIZONTAL_RADIUS = 5;
+        final int VERTICAL_LOWER = -3;
+        final int VERTICAL_UPPER = 4;
+        final double MAX_DISTANCE = Vertex.config().miningMacro.pathfinderMode == 2 ? 3.0 : 4.0;
 
         // Calculate bounds for the block
         final double baseX = point.x;
@@ -181,7 +181,7 @@ public class BlockUtil {
                     if (mc.level == null) continue;
                     final BlockState state = mc.level.getBlockState(pos);
                     final Block block = state.getBlock();
-                    if (block == Blocks.BEDROCK || block == Blocks.AIR || !blockPriorities.containsKey(block))
+                    if (!blockPriorities.containsKey(block))
                         continue;
 
                     final int blockPriority = blockPriorities.get(block);
@@ -196,31 +196,26 @@ public class BlockUtil {
                         continue;
                     }
 
+                    // Check pathfinder mode "Minimal" (1) - restrict to 5 block radius from starting position
+                    if (Vertex.config().miningMacro.pathfinderMode == 1) {
+                        com.vertexai.feature.impl.BlockMiner.BlockMiner miner = com.vertexai.feature.impl.BlockMiner.BlockMiner.getInstance();
+                        if (miner != null && miner.getStartingPos() != null) {
+                            double distToStartSq = pos.distToCenterSqr(miner.getStartingPos());
+                            if (distToStartSq > 25.0) { // 5 block radius squared
+                                if (debugContext != null) debugContext.onBlockRejected(pos, "Outside minimal radius");
+                                continue;
+                            }
+                        }
+                    }
+
                     // Calculate mining cost components
                     final double hardness = getBlockStrength(state);
                     final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(pos)).lengthSqrt();
 
-                    // Enforce strict 3.0 block reach limit (3.0^2 = 9.0 sq blocks)
-                    double pathfinderStartPenalty = 0.0;
-                    if (distSq > 9.0) { // > 3.0 blocks reach requiring pathfinder navigation
-                        if (!com.vertexai.Vertex.config().miningMacro.allowPathfinder) {
-                            continue; // Ignore out-of-reach blocks (> 3.0 blocks) if pathfinder walking is disabled
-                        }
-                        // Minimal mode: check 5-block maximum distance limit from starting position
-                        if (com.vertexai.Vertex.config().miningMacro.pathfinderMode == 0) { // Minimal
-                            BlockPos minerStart = com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().getStartPos();
-                            if (minerStart != null && pos.distSqr(minerStart) > 25.0) { // > 5 blocks from start position
-                                continue;
-                            }
-                        }
-                        pathfinderStartPenalty = 500.0 + (distSq * 10.0);
-                    }
-
                     // Calculate final cost and add to heap
                     double miningCost = hardness / (miningSpeed * 1.0d) * Vertex.config().debug.miningCoefficient
                             + angleChange * Vertex.config().debug.angleCoefficient
-                            + distSq * Vertex.config().debug.distanceCoefficient
-                            + pathfinderStartPenalty;
+                            + distSq * Vertex.config().debug.distanceCoefficient;
                     miningCost /= (blockPriority * 1.0d);
 
                     if (debugContext != null) debugContext.onBlockCandidate(pos, miningCost);
@@ -479,33 +474,27 @@ public class BlockUtil {
     }
 
     public static Direction getClosestVisibleSide(BlockPos block) {
-        if (mc.player == null || mc.level == null) return Direction.UP;
+        if (!isFullCube(block)) {
+            return null;
+        }
+        if (mc.player == null) return null;
         final Vec3 eyePos = mc.player.getEyePosition();
         double dist = Double.MAX_VALUE;
         Direction face = null;
-        for (Direction side : Direction.values()) {
-            BlockPos neighbor = block.relative(side);
-            BlockState neighborState = mc.level.getBlockState(neighbor);
-            // Face is exposed if neighbor is air, non-solid, or non-occluding
-            if (neighborState.isAir() || !neighborState.isSolidRender() || !neighborState.canOcclude()) {
-                final double distanceToThisSide = eyePos.distanceTo(getSidePos(block, side));
-                if (distanceToThisSide < dist) {
-                    dist = distanceToThisSide;
-                    face = side;
-                }
+        for (Direction side : BLOCK_SIDES.keySet()) {
+            if (side != null && !shouldRenderSide(block, side)) {
+                continue;
             }
-        }
-        if (face != null) return face;
-        
-        // Fallback if fully enclosed: pick geometrically closest side
-        for (Direction side : Direction.values()) {
             final double distanceToThisSide = eyePos.distanceTo(getSidePos(block, side));
-            if (distanceToThisSide < dist) {
+            if (canSeeSide(block, side) && distanceToThisSide < dist) {
+                if (side == null && face != null) {
+                    continue;
+                }
                 dist = distanceToThisSide;
                 face = side;
             }
         }
-        return face != null ? face : Direction.UP;
+        return face;
     }
 
     public static Direction getClosestVisibleSide(Vec3 from, BlockPos block) {
@@ -531,11 +520,14 @@ public class BlockUtil {
     }
 
     public static boolean hasVisibleSide(BlockPos block) {
-        if (mc.level == null) return false;
+        if (!isFullCube(block)) {
+            return false;
+        }
         for (Direction side : Direction.values()) {
-            BlockPos adj = block.relative(side);
-            BlockState adjState = mc.level.getBlockState(adj);
-            if (adjState.isAir() || !adjState.isSolidRender()) {
+            if (side != null && !shouldRenderSide(block, side)) {
+                continue;
+            }
+            if (canSeeSide(block, side)) {
                 return true;
             }
         }
@@ -543,7 +535,18 @@ public class BlockUtil {
     }
 
     public static boolean hasVisibleSide(Vec3 from, BlockPos block) {
-        return hasVisibleSide(block);
+        if (!isFullCube(block)) {
+            return false;
+        }
+        for (Direction side : Direction.values()) {
+            if (!shouldRenderSide(block, side)) {
+                continue;
+            }
+            if (canSeeSide(from, block, side)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static List<Vec3> bestPointsOnBestSide(final BlockPos block) {

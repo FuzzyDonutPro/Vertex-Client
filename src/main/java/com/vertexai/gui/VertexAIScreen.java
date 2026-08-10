@@ -20,6 +20,12 @@ public class VertexAIScreen extends Screen {
         super.init();
         cefBrowser = VertexCEFBrowser.getInstance();
         cefBrowser.resize(this.width, this.height);
+        com.vertexai.gui.web.MCEFBridge.isConfigScreenOpen = true;
+        if (cefBrowser != null && cefBrowser.getBrowser() != null) {
+            try {
+                cefBrowser.getBrowser().executeJavaScript("if(window.setConfigState) window.setConfigState(true);", "", 0);
+            } catch (Throwable t) {}
+        }
     }
 
     public void resize(Minecraft client, int width, int height) {

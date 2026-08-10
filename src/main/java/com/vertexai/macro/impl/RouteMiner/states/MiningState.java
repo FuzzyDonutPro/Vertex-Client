@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.RouteMiner.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.RouteMiner.RouteMinerMacro;
 import com.vertexai.util.InventoryUtil;
 import com.vertexai.util.helper.MineableBlock;
@@ -15,9 +15,7 @@ public class MiningState implements RouteMinerMacroState {
     @Override
     public void onStart(RouteMinerMacro macro) {
         log("Entering Mining State");
-        int slot = Vertex.config().general.miningToolSlot;
-        String tool = (slot >= 1 && slot <= 9) ? String.valueOf(slot) : Vertex.config().general.miningTool;
-        InventoryUtil.holdItem(tool);
+        InventoryUtil.holdItem(Vertex.config().general.miningTool);
         startMining(macro);
     }
 

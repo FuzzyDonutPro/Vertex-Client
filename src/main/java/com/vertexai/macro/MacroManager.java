@@ -3,12 +3,12 @@ package com.vertexai.macro;
 import com.vertexai.Vertex;
 import com.vertexai.event.PacketEvent;
 import com.vertexai.event.UpdateTablistEvent;
-import com.vertexai.macro.FeatureManager;
-import com.vertexai.macro.impl.misc.MouseUngrab;
+import com.vertexai.feature.FeatureManager;
+import com.vertexai.feature.impl.MouseUngrab;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.macro.impl.GlacialMacro.GlacialMacro;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.MiningMacro.MiningMacro;
 import com.vertexai.macro.impl.PowderMacro.PowderMacro;
 import com.vertexai.macro.impl.RouteMiner.RouteMinerMacro;
 import com.vertexai.util.KeyPressUtil;
@@ -41,7 +41,7 @@ public class MacroManager {
             case 1:
                 return GlacialMacro.getInstance();
             case 2:
-                return com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance();
+                return MiningMacro.getInstance();
             case 3:
                 return RouteMinerMacro.getInstance();
             case 4:
@@ -85,7 +85,7 @@ public class MacroManager {
         this.currentMacro = macro;
         send(this.currentMacro.getName() + " Enabled");
         com.vertexai.util.DiscordWebhookNotifier.sendWebhookNotification(
-                "ðŸŸ¢ Macro Started",
+                "🟢 Macro Started",
                 "Enabled macro: **" + this.currentMacro.getName() + "**",
                 0x22C55E // Emerald Green
         );
@@ -114,7 +114,6 @@ public class MacroManager {
 
         log("Macro::disable");
         FeatureManager.getInstance().disableAll();
-        com.vertexai.handler.RotationHandler.getInstance().stop();
         MouseUngrab.getInstance().regrabMouse();
         this.currentMacro.disable();
         send(this.currentMacro.getName() + " Disabled");
@@ -123,7 +122,7 @@ public class MacroManager {
         String summaryMsg = "Disabled macro: **" + this.currentMacro.getName() + "**";
 
         com.vertexai.util.DiscordWebhookNotifier.sendWebhookNotification(
-                "ðŸ“Š SESSION SUMMARY REPORT",
+                "📊 SESSION SUMMARY REPORT",
                 summaryMsg,
                 0xEF4444 // Red
         );

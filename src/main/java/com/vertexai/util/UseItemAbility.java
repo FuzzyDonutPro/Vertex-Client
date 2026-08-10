@@ -43,12 +43,6 @@ public class UseItemAbility {
 
         int previousSlot = mc.player.getInventory().getSelectedSlot();
         mc.player.getInventory().setSelectedSlot(hotbarSlot);
-        if (mc.getConnection() != null) {
-            mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(hotbarSlot));
-        }
-        if (mc.gameMode != null && mc.player != null) {
-            mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
-        }
         KeyBindUtil.resetRightClickDelayTimer();
         KeyBindUtil.rightClick();
 
@@ -71,9 +65,6 @@ public class UseItemAbility {
             mc.execute(() -> {
                 if (mc.player != null) {
                     mc.player.getInventory().setSelectedSlot(previousSlot);
-                    if (mc.getConnection() != null) {
-                        mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(previousSlot));
-                    }
                 }
             });
         });

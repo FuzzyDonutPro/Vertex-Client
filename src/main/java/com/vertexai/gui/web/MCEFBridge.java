@@ -14,6 +14,8 @@ import com.vertexai.VertexClient;
  */
 public class MCEFBridge {
 
+    public static boolean isConfigScreenOpen = false;
+
     public static boolean isMcefAvailable() {
         try {
             return MCEF.isInitialized();
@@ -78,7 +80,7 @@ public class MCEFBridge {
                             targetMacro = com.vertexai.macro.impl.RouteMiner.RouteMinerMacro.getInstance();
                             break;
                         case "mining_general":
-                            targetMacro = com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance();
+                            targetMacro = com.vertexai.macro.impl.MiningMacro.MiningMacro.getInstance();
                             break;
                         case "powder":
                             targetMacro = com.vertexai.macro.impl.PowderMacro.PowderMacro.getInstance();
@@ -178,28 +180,6 @@ public class MCEFBridge {
                     else if (lower.contains("birch")) index = 5;
                     com.vertexai.Vertex.config().foraging.foragingTreeType = index;
                     com.vertexai.VertexClient.configManager.saveConfig();
-                } else if ("mining_general".equalsIgnoreCase(macroId) || "mining".equalsIgnoreCase(macroId) || "miningMacro".equalsIgnoreCase(macroId)) {
-                    int index = 0;
-                    String lower = target.toLowerCase(java.util.Locale.ROOT);
-                    if (lower.contains("diamond")) index = 1;
-                    else if (lower.contains("emerald")) index = 2;
-                    else if (lower.contains("redstone")) index = 3;
-                    else if (lower.contains("lapis")) index = 4;
-                    else if (lower.contains("gold")) index = 5;
-                    else if (lower.contains("iron")) index = 6;
-                    else if (lower.contains("coal")) index = 7;
-                    else if (lower.contains("hardstone")) index = 8;
-                    else if (lower.contains("gem")) index = 9;
-                    else if (lower.contains("glacite") || lower.contains("ice")) index = 10;
-                    else if (lower.contains("tungsten")) index = 11;
-                    else if (lower.contains("umber")) index = 12;
-
-                    com.vertexai.Vertex.config().miningMacro.oreType = index;
-                    com.vertexai.VertexClient.configManager.saveConfig();
-                    
-                    if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) {
-                        com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().setupPrioritiesForOreType(index);
-                    }
                 }
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {
@@ -215,15 +195,12 @@ public class MCEFBridge {
                     String catId = btnParts[1];
                     String fieldId = btnParts[2];
                     Logger.sendLog("[IPC] click_button received: category=" + catId + " field=" + fieldId);
-                    return ConfigSerializer.executeButton(VertexClient.config, catId, fieldId).toString();
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                        ConfigSerializer.executeButton(VertexClient.config, catId, fieldId);
+                    });
+                    return "{\"status\":\"ok\"}";
                 }
                 return "{\"status\":\"error\",\"message\":\"invalid_args\"}";
-            } else if ("save_config".equals(action)) {
-                Logger.sendLog("[IPC] save_config received, persisting config to disk");
-                net.minecraft.client.Minecraft.getInstance().execute(() -> {
-                    com.vertexai.VertexClient.configManager.saveConfig();
-                });
-                return "{\"status\":\"ok\"}";
             } else if ("update_config".equals(action)) {
                 String[] configParts = request.split(":", 4);
                 if (configParts.length >= 3) {
@@ -250,26 +227,11 @@ public class MCEFBridge {
                 var active = MacroManager.getInstance().getActiveMacro();
                 String macroName = active != null ? active.getName() : "None";
                 boolean isRunning = MacroManager.getInstance().isRunning();
-                String subState = "";
-                String runtimeStr = "00:00:00";
-                if (active != null && active.isEnabled()) {
-                    try {
-                        var st = active.getStateMachine().getCurrentState();
-                        if (st != null) subState = st.getClass().getSimpleName().replace("State", "");
-                    } catch (Exception ignored) {}
-                    if (active.uptime != null) {
-                        long elapsedSec = active.uptime.getTimePassed() / 1000;
-                        long h = elapsedSec / 3600;
-                        long m = (elapsedSec % 3600) / 60;
-                        long s = elapsedSec % 60;
-                        runtimeStr = String.format("%02d:%02d:%02d", h, m, s);
-                    }
-                }
                 String bpsStr = isRunning ? "20.0 BPS" : "0.0 BPS";
-                String estProfitStr = isRunning ? "+1,250,000 (3.1M/hr)" : "0 / hr";
+                String estProfitStr = isRunning ? "Calculating..." : "0 / hr";
 
-                return String.format("{\"status\":\"ok\",\"playerName\":\"%s\",\"activeMacro\":\"%s\",\"subState\":\"%s\",\"runtime\":\"%s\",\"isRunning\":%b,\"bps\":\"%s\",\"estProfit\":\"%s\",\"fps\":%d}",
-                        playerName, macroName, subState, runtimeStr, isRunning, bpsStr, estProfitStr, fps);
+                return String.format("{\"status\":\"ok\",\"playerName\":\"%s\",\"activeMacro\":\"%s\",\"isRunning\":%b,\"bps\":\"%s\",\"estProfit\":\"%s\",\"fps\":%d}",
+                        playerName, macroName, isRunning, bpsStr, estProfitStr, fps);
             } else if ("spotify_auth".equals(action)) {
                 com.vertexai.integration.spotify.SpotifyManager.getInstance().startAuthFlow();
                 return "{\"status\":\"ok\"}";

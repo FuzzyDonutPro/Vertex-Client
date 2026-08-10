@@ -22,24 +22,17 @@ public class Fishing {
 
         @ConfigOption(
                 name = "Fishing Rod",
-                desc = "Fishing rod item name OR hotbar slot (1-9) to hold while fishing"
+                desc = "Fishing rod item name to hold while fishing"
         )
         @ConfigEditorText
         public String fishingRod = "";
-
-        @ConfigOption(
-                name = "Fishing Rod Hotbar Slot (1-9)",
-                desc = "Hotbar slot number (1-9) for fishing rod. Set to 0 to use item name string."
-        )
-        @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
-        public int fishingRodSlot = 0;
 
         @ConfigOption(
                 name = "Set Fishing Rod",
                 desc = "Set the fishing rod name from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable fishingRodButton = ConfigActions::setFishingRod;
+        public transient Runnable setFishingRodButton = ConfigActions::setFishingRod;
 
         @ConfigOption(
                 name = "Cast Delay (ms)",
@@ -74,45 +67,31 @@ public class Fishing {
 
         @ConfigOption(
                 name = "Galatea Axe",
-                desc = "Axe item name OR hotbar slot (1-9) for sea creature melee"
+                desc = "Axe used for melee finish on Galatea mobs"
         )
         @ConfigEditorText
         public String galateaAxe = "";
-
-        @ConfigOption(
-                name = "Galatea Axe Slot (1-9)",
-                desc = "Hotbar slot (1-9) for Galatea axe. Set to 0 to use item name string."
-        )
-        @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
-        public int galateaAxeSlot = 0;
 
         @ConfigOption(
                 name = "Set Galatea Axe",
                 desc = "Set the Galatea axe from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable galateaAxeButton = ConfigActions::setGalateaAxe;
+        public transient Runnable setGalateaAxeButton = ConfigActions::setGalateaAxe;
 
         @ConfigOption(
                 name = "Fishing Weapon",
-                desc = "Optional secondary weapon item name OR hotbar slot (1-9)"
+                desc = "Optional secondary weapon used when Kill Mode is Slayer Weapon"
         )
         @ConfigEditorText
         public String galateaFishingWeapon = "";
-
-        @ConfigOption(
-                name = "Fishing Weapon Slot (1-9)",
-                desc = "Hotbar slot (1-9) for secondary weapon. Set to 0 to use item name string."
-        )
-        @ConfigEditorSlider(minValue = 0, maxValue = 9, minStep = 1)
-        public int galateaFishingWeaponSlot = 0;
 
         @ConfigOption(
                 name = "Set Fishing Weapon",
                 desc = "Set the optional secondary weapon from your currently held item"
         )
         @ConfigEditorButton(buttonText = "Set from hand")
-        public transient Runnable galateaFishingWeaponButton = ConfigActions::setGalateaFishingWeapon;
+        public transient Runnable setGalateaFishingWeaponButton = ConfigActions::setGalateaFishingWeapon;
 
         @ConfigOption(
                 name = "Kill Mode",

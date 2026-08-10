@@ -1,8 +1,8 @@
 package com.vertexai.render;
 
 import lombok.Getter;
-import com.vertexai.macro.AbstractFeature;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.AbstractFeature;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.util.RenderUtil;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.core.BlockPos;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 
 /**
- * WorldESP â€” Renders 3D ESP boxes for:
+ * WorldESP — Renders 3D ESP boxes for:
  * 1. Target block currently being mined by the Mining Macro
  * 2. Secret & Dungeon Chests
  * 3. Garden Visitors & NPCs
@@ -90,39 +90,36 @@ public class WorldESP extends AbstractFeature {
 
     @Override
     public void onWorldRender(WorldRenderContextWrapper context) {
-        var config = com.vertexai.Vertex.config();
         if (!enabled || mc.player == null) return;
-        if (config != null && config.utilities != null && !config.utilities.enableWorldEsp) return;
-
-        boolean seeThrough = config != null && config.utilities != null && config.utilities.renderEspThroughWalls;
 
         // A. Render 3D ESP on the block currently being mined by Mining Macro (Bright Emerald Green)
         BlockMiner miner = BlockMiner.getInstance();
         if (miner != null && miner.isRunning() && miner.getTargetBlockPos() != null) {
             BlockPos targetMiningBlock = miner.getTargetBlockPos();
             Color miningColor = new Color(34, 197, 94, 220); // Bright Emerald Green
-            RenderUtil.drawBlock(targetMiningBlock, miningColor, seeThrough);
-            RenderUtil.outlineBlock(targetMiningBlock, new Color(255, 255, 255, 240), seeThrough);
+            RenderUtil.drawBlock(targetMiningBlock, miningColor);
+            RenderUtil.outlineBlock(targetMiningBlock, new Color(255, 255, 255, 240));
         }
 
         // B. Render 3D ESP on Secret / Dungeon Chests (Amber Gold)
         Color chestColor = new Color(245, 158, 11, 200); // Amber Gold
         for (BlockPos chestPos : chestBlocks) {
-            RenderUtil.outlineBlock(chestPos, chestColor, seeThrough);
+            RenderUtil.outlineBlock(chestPos, chestColor);
         }
 
         // C. Render 3D ESP on Garden Visitors (Violet Purple Box)
         Color visitorColor = new Color(168, 85, 247, 200); // Violet Purple
         for (LivingEntity visitor : gardenVisitors) {
             AABB boundingBox = visitor.getBoundingBox();
-            RenderUtil.drawAABB(boundingBox, visitorColor, false, seeThrough);
+            RenderUtil.drawAABB(boundingBox, visitorColor, false);
         }
 
         // D. 5x5 NoRender Zone Box Indicator
+        var config = com.vertexai.Vertex.config();
         if (config != null && config.misc.noRenderMode && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
             BlockPos p = mc.player.blockPosition();
             AABB zoneBox = new AABB(p.getX() - 2, p.getY() - 1, p.getZ() - 2, p.getX() + 3, p.getY() + 3, p.getZ() + 3);
-            RenderUtil.drawAABB(zoneBox, new Color(59, 130, 246, 160), false, seeThrough);
+            RenderUtil.drawAABB(zoneBox, new Color(59, 130, 246, 160), false);
         }
     }
 }

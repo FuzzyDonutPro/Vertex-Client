@@ -22,12 +22,12 @@ public class HUD {
 
     @ConfigOption(name = "Enable Inventory HUD", desc = "Show inventory overlay on top of hotbar")
     @ConfigEditorBoolean
-    public boolean enableInventoryHud = false;
+    public boolean enableInventoryHud = true;
     public VertexConfig.HUDPos inventoryHUD = new VertexConfig.HUDPos(0, 52, 2, 1.0f);
 
     @ConfigOption(name = "Enable Profit HUD", desc = "Show Bazaar profit tracker and item count overlay")
     @ConfigEditorBoolean
-    public boolean enableProfitHud = false;
+    public boolean enableProfitHud = true;
     public VertexConfig.HUDPos profitHUD = new VertexConfig.HUDPos(5, 120, 0, 1.0f);
 
     @ConfigOption(name = "Enable Commission HUD", desc = "Show the commission overlay")
@@ -58,10 +58,11 @@ public class HUD {
     @ConfigOption(name = "Enable Spotify HUD", desc = "Show Spotify media player overlay")
     @ConfigEditorBoolean
     public boolean enableSpotifyHud = true;
-    public VertexConfig.HUDPos spotifyHUD = new VertexConfig.HUDPos(5, 230, 0, 1.0f);
 
-    @ConfigOption(name = "Enable Mining HUD", desc = "Show custom Mining Macro overlay with status, target, speed, and rates")
-    @ConfigEditorBoolean
+    @ConfigOption(
+            name = "Mining HUD",
+            desc = "Enable the mining overlay"
+    )
     public boolean enableMiningHud = true;
-    public VertexConfig.HUDPos miningHUD = new VertexConfig.HUDPos(5, 130, 0, 1.0f);
+    public VertexConfig.HUDPos spotifyHUD = new VertexConfig.HUDPos(5, 230, 0, 1.0f);
 }

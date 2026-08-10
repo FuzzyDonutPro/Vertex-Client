@@ -222,8 +222,7 @@ public class PathFinder {
             
             // Jump (y+1)
             BlockPos jumpPos = pos.offset(dx, 1, dz);
-            // Verify vertical clearance above starting position (headroom Y+2) AND destination block (pos+dx,dz at Y+1)
-            if (isWalkable(world, jumpPos) && isAir(world, pos.above(2)) && isAir(world, pos.offset(dx, 1, dz))) {
+            if (isWalkable(world, jumpPos) && isAir(world, pos.above(2))) {
                 boolean clear = true;
                 if (isDiag) {
                     // Check corners for Y=0, Y=1 (body) and Y=2 (head during jump)
@@ -309,7 +308,8 @@ public class PathFinder {
 
     private static double calculateHazardCost(Level world, BlockPos pos) {
         double penalty = 0.0;
-        if (world.getBlockState(pos).is(Blocks.WATER)) penalty += 500.0; // Huge cost penalty for water pathfinding
+        BlockState state = world.getBlockState(pos);
+        if (state.is(Blocks.WATER)) penalty += 5.0;
 
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {

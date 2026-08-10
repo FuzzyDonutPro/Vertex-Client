@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.CommissionMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.CommissionMacro.Commission;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 import com.vertexai.util.CommissionUtil;

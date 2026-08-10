@@ -1,6 +1,6 @@
 package com.vertexai.mixin.client;
 
-import com.vertexai.macro.impl.misc.PerspectiveMod;
+import com.vertexai.feature.impl.PerspectiveMod;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -21,7 +21,7 @@ public abstract class MixinCamera {
     @Inject(method = "setup", at = @At("TAIL"))
     private void onSetupCamera(Level level, Entity entity, boolean detached, boolean thirdPersonReverse, float partialTick, CallbackInfo ci) {
         PerspectiveMod mod = PerspectiveMod.getInstance();
-        if (mod.isActive()) {
+        if (mod.isRunning()) {
             double x = Mth.lerp(partialTick, entity.xo, entity.getX());
             double y = Mth.lerp(partialTick, entity.yo, entity.getY()) + entity.getEyeHeight();
             double z = Mth.lerp(partialTick, entity.zo, entity.getZ());
@@ -35,7 +35,7 @@ public abstract class MixinCamera {
     @Inject(method = "getMaxZoom", at = @At("HEAD"), cancellable = true)
     private void onGetMaxZoom(float desiredCameraDistance, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
         PerspectiveMod mod = PerspectiveMod.getInstance();
-        if (mod.isActive()) {
+        if (mod.isRunning()) {
             cir.setReturnValue(desiredCameraDistance);
         }
     }

@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.CommissionMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.mining.AutoDrillRefuel.AutoDrillRefuel;
+import com.vertexai.feature.impl.AutoDrillRefuel.AutoDrillRefuel;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
 
 public class RefuelState implements CommissionMacroState {

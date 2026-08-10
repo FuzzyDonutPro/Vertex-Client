@@ -141,27 +141,6 @@ public class Failsafe {
     public int cropChangeReactionDelay = 2000;
 
     @ConfigOption(
-            name = "Enable Admin / Staff Detector",
-            desc = "Automatically evacuates lobby (/l) if a Hypixel Admin or Staff member is detected"
-    )
-    @ConfigEditorBoolean
-    public boolean enableStaffDetector = true;
-
-    @ConfigOption(
-            name = "Enable Player Stare Failsafe",
-            desc = "Triggers a failsafe if another player stands near and stares directly at you"
-    )
-    @ConfigEditorBoolean
-    public boolean enablePlayerStareFailsafe = true;
-
-    @ConfigOption(
-            name = "Player Stare Threshold (ms)",
-            desc = "Duration in milliseconds a player must stare at you to trigger a failsafe"
-    )
-    @ConfigEditorSlider(minValue = 500, maxValue = 5000, minStep = 250)
-    public int playerStareThresholdMs = 1000;
-
-    @ConfigOption(
             name = "Manual Failsafe Stop Keybind",
             desc = "Pressing this key (Default: G) immediately stops active failsafe alerts and reaction playbacks"
     )

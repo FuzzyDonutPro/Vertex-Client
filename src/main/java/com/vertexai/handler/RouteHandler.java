@@ -8,7 +8,7 @@ import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import com.vertexai.Vertex;
 import com.vertexai.VertexClient;
-import com.vertexai.macro.impl.navigation.RouteBuilder;
+import com.vertexai.feature.impl.RouteBuilder;
 import com.vertexai.util.Logger;
 import com.vertexai.util.helper.route.Route;
 import com.vertexai.util.helper.route.RouteWaypoint;
@@ -428,14 +428,14 @@ public class RouteHandler {
     }
 
     public synchronized void savePathfinderData() {
-        while (com.vertexai.macro.impl.navigation.PathfinderRouteBuilder.getInstance().isRunning()) {
+        while (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning()) {
             try {
                 boolean shouldSave;
                 synchronized (saveLock) {
-                    while (com.vertexai.macro.impl.navigation.PathfinderRouteBuilder.getInstance().isRunning() && !this.pathfinderDirty) {
+                    while (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning() && !this.pathfinderDirty) {
                         saveLock.wait(500L);
                     }
-                    if (!com.vertexai.macro.impl.navigation.PathfinderRouteBuilder.getInstance().isRunning()) {
+                    if (!com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning()) {
                         break;
                     }
 
@@ -474,7 +474,7 @@ public class RouteHandler {
             this.selectedRoute.drawRoute();
         }
         
-        if (com.vertexai.macro.impl.navigation.PathfinderRouteBuilder.getInstance().isRunning() && this.selectedPathfinderRoute != null && !this.selectedPathfinderRoute.isEmpty()) {
+        if (com.vertexai.feature.impl.PathfinderRouteBuilder.getInstance().isRunning() && this.selectedPathfinderRoute != null && !this.selectedPathfinderRoute.isEmpty()) {
             this.selectedPathfinderRoute.drawRoute();
         }
     }

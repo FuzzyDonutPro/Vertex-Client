@@ -32,13 +32,13 @@ public class StatusHUD extends TextHud {
 
     @Override
     protected int getAccentColor() {
-        return 0xFF3B82F6; // Primary Blue
+        return 0xFF38BDF8; // Cyan / Sky Blue Theme Accent
     }
 
     @Override
     protected void getLines(List<String> lines, boolean example) {
         if (example) {
-            lines.add("§f§lVERTEX STATUS");
+            lines.add("§f§lVERTEX §8| §b§lSTATUS §a●");
             lines.add("§8§m------------------------");
             lines.add("§8» §7State: §aCrop/Wart S-Shape");
             lines.add("§8» §7Macro Time: §f00:24:15");
@@ -46,17 +46,19 @@ public class StatusHUD extends TextHud {
             return;
         }
 
-        lines.add("§f§lVERTEX STATUS");
+        MacroManager mm = MacroManager.getInstance();
+        AbstractMacro active = mm.getActiveMacro();
+        boolean isRunning = active != null && active.isEnabled();
+        boolean failsafe = FailsafeManager.getInstance().triggeredFailsafe.isPresent();
+
+        String statusIndicator = failsafe ? "§c✖" : (isRunning ? "§a●" : "§7○");
+        lines.add("§f§lVERTEX §8| §b§lSTATUS " + statusIndicator);
         lines.add("§8§m------------------------");
 
         if (mc.player == null) {
             lines.add("§8» §cOffline");
             return;
         }
-
-        MacroManager mm = MacroManager.getInstance();
-        AbstractMacro active = mm.getActiveMacro();
-        boolean isRunning = active != null && active.isEnabled();
 
         // 1. Current State
         String stateStr;
@@ -115,14 +117,5 @@ public class StatusHUD extends TextHud {
     public void resetProfit() {
         this.totalProfit = 0;
         this.macroStartTime = -1;
-    }
-
-    @Override
-    protected boolean shouldShow() {
-        if (!enabled || mc.player == null || mc.level == null) return false;
-        if (com.vertexai.macro.impl.mining.BlockMiner.BlockMiner.getInstance().isEnabled()) {
-            return false;
-        }
-        return com.vertexai.macro.MacroManager.getInstance().isRunning();
     }
 }

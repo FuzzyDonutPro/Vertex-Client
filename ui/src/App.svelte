@@ -2,7 +2,12 @@
     import { onMount } from 'svelte';
     import './app.css';
     import SpotifyWidget from './lib/components/SpotifyWidget.svelte';
-    import PlexusBackground from './lib/components/PlexusBackground.svelte';
+    import MiningHUD from './lib/components/MiningHUD.svelte';
+
+    let isConfigOpen = false;
+    let miningTarget = 'Searching...';
+    let miningSpeed = 2000;
+    let miningHudEnabled = false;
 
     let currentTab = 'farming';
     let searchQuery = '';
@@ -32,6 +37,11 @@
         
         const savedScale = localStorage.getItem('vertex_uiScale');
         if (savedScale) uiScale = parseFloat(savedScale);
+
+        window.setConfigState = (state) => {
+            isConfigOpen = state;
+        };
+
 
         window.setUiScale = (scale) => {
             if (!localStorage.getItem('vertex_uiScale')) {
@@ -186,34 +196,33 @@
         'visitor': { catIds: ['farming'], allowedFieldIds: ['autoAcceptTrades', 'refuseUnprofitable'] },
         'pest_hunter': { catIds: ['farming'], allowedFieldIds: ['pestVacuum', 'pestBrokerTrade'] },
 
-        'commission': { catIds: ['commission'], allowedFieldIds: ['commClaimMethod', 'prioritiseTitanium', 'altMiningTool', 'altMiningToolSlot', 'altMiningToolButton', 'commSwapBeforeClaiming', 'slayerWeapon', 'slayerWeaponSlot', 'slayerWeaponButton', 'forgePathing'] },
+        'commission': { catIds: ['commission', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'altMiningTool', 'setAltMiningToolButton', 'slayerWeapon', 'setSlayerWeaponButton', 'commClaimMethod', 'prioritiseTitanium', 'commSwapBeforeClaiming', 'commissionLocation', 'etherwarpPath'] },
         'gemstone': { catIds: ['routeMiner'], allowedFieldIds: ['routeFile', 'pickaxeSwap'] },
-        'mining_general': { catIds: ['miningMacro'], allowedFieldIds: ['oreType', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'allowPathfinder', 'pathfinderMode'] },
-        'powder': { catIds: ['powderMacro'], allowedFieldIds: ['powderType', 'powderLocation', 'chestSolver'] },
-        'glacial': { catIds: ['miningMacro', 'commission'], allowedFieldIds: ['coldThreshold', 'allowPathfinder'] },
+        'mining_general': { catIds: ['miningMacro', 'general'], allowedFieldIds: ['miningTool', 'setMiningToolButton', 'oreType', 'pathfinderMode', 'precisionMiner', 'mineGrayMithril', 'mineGrayTerracottaMithril', 'mineGreenMithril', 'mineBlueMithril', 'mineTitanium', 'mithrilPriorityGrayDefault', 'mithrilPriorityGreenDefault', 'mithrilPriorityBlueDefault', 'mithrilPriorityTitaniumDefault', 'usePickaxeAbility', 'randomizedRotations', 'oreRespawnWaitThreshold'] },
+        'powder': { catIds: ['powderMacro'], allowedFieldIds: ['chestSolver', 'powderMining'] },
+        'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
+        'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
 
-        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoWeaponSwap', 'autoRogueSword', 'killAuraRange', 'autoHealEnabled', 'autoHealThreshold'] },
-        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoWeaponSwap', 'autoRogueSword', 'killAuraRange', 'autoHealEnabled', 'autoHealThreshold'] },
+        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
         'kuudra': { catIds: ['combat'], allowedFieldIds: ['autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
 
-        'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill'] },
+        'fishing': { catIds: ['fishing'], allowedFieldIds: ['rodAutoCast', 'seaCreatureKill', 'bobberSensitivity'] },
         'trophy_fishing': { catIds: ['fishing'], allowedFieldIds: ['trophyFishHook', 'obfuscatedFillet'] },
 
-        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'treecapitatorSwap', 'logBreakDelay'] },
+        'foraging': { catIds: ['foraging'], allowedFieldIds: ['foragingTreeType', 'foragingPark', 'foragingHub', 'foragingFig'] },
         'alchemy': { catIds: ['misc'], allowedFieldIds: ['potionRecipe', 'batchSize'] },
         'flip': { catIds: ['bazaarFlipper'], allowedFieldIds: ['bazaarMargin', 'orderAutoUpdate'] },
-        'diana': { catIds: ['combat', 'misc'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
+        'diana': { catIds: ['combat'], allowedFieldIds: ['burrowFinder', 'inquisitorHunter'] }
     };
 
     function getMacroSettingsList(macro) {
         if (!macro || !dynamicConfigSchema) return [];
         
         let filter = macroSettingFilters[macro.id];
-        let catIds = filter && filter.catIds && filter.catIds.length > 0 
-            ? filter.catIds 
-            : (categoryMapping[macro.category] || [macro.category]);
+        let catIds = filter ? filter.catIds : (categoryMapping[macro.category] || [macro.category]);
         
         let result = [];
         for (let catId of catIds) {
@@ -227,13 +236,13 @@
             }
         }
         
-        // If specific allowedFieldIds returned nothing, fallback to all settings in the macro's primary category
         if (result.length === 0 && catIds.length > 0) {
-            let primaryCatId = catIds[0];
-            let catObj = dynamicConfigSchema[primaryCatId];
-            if (catObj && catObj.settings) {
-                for (let setting of catObj.settings) {
-                    result.push({ catId: primaryCatId, ...setting });
+            for (let catId of catIds) {
+                let catObj = dynamicConfigSchema[catId];
+                if (catObj && catObj.settings) {
+                    for (let setting of catObj.settings) {
+                        result.push({ catId, ...setting });
+                    }
                 }
             }
         }
@@ -241,69 +250,25 @@
         return result;
     }
 
-    function fetchConfigSchema() {
+    async function executeButtonAction(catId, fieldId) {
         if (window.cefQuery) {
             window.cefQuery({
-                request: 'get_config_schema',
-                onSuccess: function(response) {
-                    try {
-                        let data = JSON.parse(response);
-                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
-                            dynamicConfigSchema = dynamicConfigSchema;
-                        }
-                    } catch (e) {}
+                request: `click_button:${catId}:${fieldId}`,
+                onSuccess: function() {
+                    setTimeout(loadDynamicSchema, 500);
                 }
             });
+        } else {
+            try {
+                await fetch(`/api/config/button?categoryId=${encodeURIComponent(catId)}&fieldId=${encodeURIComponent(fieldId)}`);
+                setTimeout(loadDynamicSchema, 500);
+            } catch(e) {}
         }
-        fetch('/api/config/schema')
-            .then(res => res.json())
-            .then(data => {
-                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    dynamicConfigSchema = { ...defaultConfigSchema, ...data };
-                    dynamicConfigSchema = dynamicConfigSchema;
-                }
-            })
-            .catch(() => {});
-    }
-
-    function executeButtonAction(catId, fieldId) {
-        playUiSound();
-        let targetCat = catId && catId !== 'undefined' ? catId : 'general';
-        if (window.cefQuery) {
-            window.cefQuery({
-                request: `click_button:${targetCat}:${fieldId}`,
-                onSuccess: function(response) {
-                    try {
-                        let data = JSON.parse(response);
-                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
-                            dynamicConfigSchema = dynamicConfigSchema;
-                        } else {
-                            fetchConfigSchema();
-                        }
-                    } catch (e) {
-                        fetchConfigSchema();
-                    }
-                }
-            });
-        }
-        fetch(`/api/config/button?catId=${encodeURIComponent(targetCat)}&fieldId=${encodeURIComponent(fieldId)}`, { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    dynamicConfigSchema = { ...defaultConfigSchema, ...data };
-                    dynamicConfigSchema = dynamicConfigSchema;
-                } else {
-                    fetchConfigSchema();
-                }
-            })
-            .catch(() => fetchConfigSchema());
     }
 
     let macros = [
         // Farming & Garden
-        { id: 'crop', category: 'farming', title: 'Crop/Wart S-Shape Macro', desc: 'Auto 45┬░ S-Shape lane traversal for Wheat, Carrot, Potato & Nether Wart.', running: false, target: 'Wheat', options: ['Wheat', 'Carrot', 'Potato', 'Nether Wart'] },
+        { id: 'crop', category: 'farming', title: 'Crop/Wart S-Shape Macro', desc: 'Auto 45° S-Shape lane traversal for Wheat, Carrot, Potato & Nether Wart.', running: false, target: 'Wheat', options: ['Wheat', 'Carrot', 'Potato', 'Nether Wart'] },
         { id: 'sugarcane', category: 'farming', title: 'Sugarcane & Cactus Straight Macro', desc: 'Straight lane traversal for Sugarcane & Cactus plots.', running: false, target: 'Sugar Cane', options: ['Sugar Cane', 'Cactus'] },
         { id: 'melon_pumpkin', category: 'farming', title: 'Melon & Pumpkin Macro', desc: 'Auto lane traversal specifically tuned for Melon & Pumpkin farms.', running: false, target: 'Melon', options: ['Melon', 'Pumpkin'] },
         { id: 'farm_builder', category: 'farming', title: 'Garden Plot Auto Farm Builder', desc: 'Auto-builds preset infinite farm layouts across Garden plots.', running: false, target: 'Preset S-Shape' },
@@ -313,9 +278,10 @@
         // Mining & Commissions
         { id: 'commission', category: 'mining', title: 'Commission Auto-Miner', desc: 'Dwarven Mines & Crystal Hollows commission route solver with Etherwarp.', running: false, target: 'Dwarven Mines', options: ['Dwarven Mines', 'Crystal Hollows', 'Glacite Mineshafts'] },
         { id: 'gemstone', category: 'mining', title: 'Gemstone Etherwarp Route Miner', desc: 'Follows custom JSON waypoint routes with 0-tick Etherwarp & Pickaxe swap.', running: false, target: 'Ruby Route #1', options: ['Ruby Route #1', 'Jasper Route #1', 'Sapphire Route #2', 'Topaz Magma Fields'] },
-        { id: 'mining_general', category: 'mining', title: 'Mithril & Ore Miner', desc: 'Auto-mines Mithril, Titanium, Gemstones & All Ores with smooth head rotation.', running: false, target: 'Mithril & Titanium', options: ['Mithril & Titanium', 'Diamond', 'Emerald', 'Redstone', 'Lapis', 'Gold', 'Iron', 'Coal', 'Hardstone', 'Gemstones', 'Glacite', 'Tungsten', 'Umber'] },
+        { id: 'mining_general', category: 'mining', title: 'Mithril & Ore Miner', desc: 'Auto-mines Mithril & Titanium ores with smooth head rotation.', running: false, target: 'Titanium & Mithril' },
         { id: 'powder', category: 'mining', title: 'Chest & Mithril Powder Miner', desc: 'Uncovers and loots buried treasure chests in Crystal Hollows for Powder.', running: false, target: 'Chest Solver + Mining' },
         { id: 'glacial', category: 'mining', title: 'Glacial Cave Ice/Mithril Miner', desc: 'Auto-mines Glacite & Glacial Ice in Mineshafts with pathfinder.', running: false, target: 'Glacial Ice' },
+        { id: 'nuker', category: 'mining', title: 'Custom Block & Ore Nuker', desc: 'High-speed block nuker with range & FOV filters.', running: false, target: 'Mithril Ores' },
 
         // Slayer & Combat
         { id: 'slayer', category: 'slayer', title: 'Slayer Boss Macro', desc: 'Auto-spawns and slays Slayer bosses (Revenant, Tarantula, Sven, Voidgloom).', running: false, target: 'Revenant Horror', options: ['Revenant Horror', 'Tarantula Broodfather', 'Sven Packmaster', 'Voidgloom Seraph'] },
@@ -351,81 +317,58 @@
 
     let dynamicConfigSchema = defaultConfigSchema;
 
-    function applyConfigSchema(data) {
-        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-            dynamicConfigSchema = { ...defaultConfigSchema, ...data };
+    async function loadDynamicSchema() {
+        try {
+            const res = await fetch('/api/config/schema');
+            const data = await res.json();
+            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                dynamicConfigSchema = { ...defaultConfigSchema, ...data };
 
-            // Two-way sync card targets with loaded Java config
-            if (data.combat && data.combat.settings) {
-                let mk = data.combat.settings.find(s => s.id === 'mobKillerTarget');
-                if (mk && mk.options) {
-                    let card = macros.find(m => m.id === 'mob_killer');
-                    let idx = parseInt(mk.value);
-                    if (card && !isNaN(idx) && mk.options[idx]) {
-                        card.target = mk.options[idx];
+                // Two-way sync card targets with loaded Java config
+                if (data.combat && data.combat.settings) {
+                    let mk = data.combat.settings.find(s => s.id === 'mobKillerTarget');
+                    if (mk && mk.options) {
+                        let card = macros.find(m => m.id === 'mob_killer');
+                        let idx = parseInt(mk.value);
+                        if (card && !isNaN(idx) && mk.options[idx]) {
+                            card.target = mk.options[idx];
+                        }
+                    }
+                    let sl = data.combat.settings.find(s => s.id === 'slayerTarget');
+                    if (sl && sl.options) {
+                        let card = macros.find(m => m.id === 'slayer');
+                        let idx = parseInt(sl.value);
+                        if (card && !isNaN(idx) && sl.options[idx]) {
+                            card.target = sl.options[idx];
+                        }
                     }
                 }
-                let sl = data.combat.settings.find(s => s.id === 'slayerTarget');
-                if (sl && sl.options) {
-                    let card = macros.find(m => m.id === 'slayer');
-                    let idx = parseInt(sl.value);
-                    if (card && !isNaN(idx) && sl.options[idx]) {
-                        card.target = sl.options[idx];
+                if (data.foraging && data.foraging.settings) {
+                    let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
+                    if (fg && fg.options) {
+                        let card = macros.find(m => m.id === 'foraging');
+                        let idx = parseInt(fg.value);
+                        if (card && !isNaN(idx) && fg.options[idx]) {
+                            card.target = fg.options[idx];
+                        }
                     }
                 }
+                macros = [...macros];
             }
-            if (data.foraging && data.foraging.settings) {
-                let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
-                if (fg && fg.options) {
-                    let card = macros.find(m => m.id === 'foraging');
-                    let idx = parseInt(fg.value);
-                    if (card && !isNaN(idx) && fg.options[idx]) {
-                        card.target = fg.options[idx];
-                    }
-                }
-            }
-            if (data.miningMacro && data.miningMacro.settings) {
-                let oreTypeSetting = data.miningMacro.settings.find(s => s.id === 'oreType');
-                if (oreTypeSetting) {
-                    let card = macros.find(m => m.id === 'mining_general');
-                    let idx = parseInt(oreTypeSetting.value);
-                    if (card && card.options && !isNaN(idx) && card.options[idx]) {
-                        card.target = card.options[idx];
-                    }
-                }
-            }
-            macros = [...macros];
-        }
+        } catch(e) { console.error(e); }
     }
 
     onMount(() => {
         fetchStatus();
         const interval = setInterval(fetchStatus, 2000);
-        
-        if (window.cefQuery) {
-            window.cefQuery({
-                request: 'get_config_schema',
-                onSuccess: function(response) {
-                    try {
-                        const data = JSON.parse(response);
-                        applyConfigSchema(data);
-                    } catch (e) {
-                        console.error("Failed to parse MCEF config schema:", e);
-                    }
-                },
-                onFailure: function() {}
-            });
-        }
-        
-        fetch('/api/config/schema')
-            .then(res => res.json())
-            .then(data => applyConfigSchema(data))
-            .catch(e => console.error(e));
-        
+        loadDynamicSchema();
         return () => clearInterval(interval);
     });
 
     function updateConfigValue(categoryId, fieldId, value) {
+        dynamicConfigSchema = dynamicConfigSchema; // Force Svelte reactivity update for all nested config state
+        macros = macros;
+        
         if (fieldId === 'guiFont') {
             selectedFont = fontsList[parseInt(value)] || 'Outfit';
         }
@@ -443,6 +386,7 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
+                    macros = [...macros];
                 }
             }
         }
@@ -454,6 +398,7 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
+                    macros = [...macros];
                 }
             }
         }
@@ -465,23 +410,10 @@
                 if (!isNaN(idx) && setting.options[idx]) {
                     card.target = setting.options[idx];
                     setting.value = idx;
+                    macros = [...macros];
                 }
             }
         }
-        if (fieldId === 'oreType' && dynamicConfigSchema.miningMacro) {
-            let setting = dynamicConfigSchema.miningMacro.settings.find(s => s.id === 'oreType');
-            let card = macros.find(m => m.id === 'mining_general');
-            let idx = parseInt(value);
-            if (card && card.options && !isNaN(idx) && card.options[idx]) {
-                card.target = card.options[idx];
-            }
-            if (setting) {
-                setting.value = idx;
-            }
-        }
-
-        dynamicConfigSchema = dynamicConfigSchema; // Force Svelte reactivity update
-        macros = [...macros];
 
         if (window.cefQuery) {
             window.cefQuery({
@@ -587,14 +519,6 @@
                     updateConfigValue('foraging', 'foragingTreeType', idx);
                 }
             }
-        } else if (id === 'mining_general') {
-            let macro = macros.find(m => m.id === 'mining_general');
-            if (macro && macro.options) {
-                let idx = macro.options.indexOf(target);
-                if (idx !== -1) {
-                    updateConfigValue('miningMacro', 'oreType', idx);
-                }
-            }
         }
 
         if (window.cefQuery) {
@@ -603,22 +527,8 @@
         fetch(`/api/macro/target?id=${encodeURIComponent(id)}&target=${encodeURIComponent(target)}`).catch(() => {});
     }
 
-    function saveConfig() {
-        playUiSound();
-        if (window.cefQuery) {
-            window.cefQuery({ request: 'save_config' });
-        }
-        fetch('/api/config/save', { method: 'POST' }).catch(() => {});
-    }
-
     function openMacroSettings(macro) {
-        playUiSound();
         activeMacroSettingsModal = macro;
-    }
-
-    function closeMacroSettings() {
-        saveConfig();
-        activeMacroSettingsModal = null;
     }
 
     function openConfigGui() {
@@ -689,8 +599,9 @@
     }
 </script>
 
-<div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-screen h-screen flex items-center justify-center bg-black/60 select-none overflow-hidden relative">
-    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative z-10">
+<div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-screen h-screen flex items-center justify-center {isConfigOpen ? 'bg-black/60' : 'bg-transparent pointer-events-none'} select-none overflow-hidden relative">
+{#if isConfigOpen}
+    <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
     
     <!-- Sidebar Navigation -->
     <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-4 flex flex-col justify-between shrink-0 select-none overflow-y-auto max-h-full custom-scrollbar">
@@ -701,7 +612,7 @@
                 </div>
                 <div>
                     <h1 class="font-outfit text-[15px] font-bold tracking-wide bg-gradient-to-r from-white to-sky-400 bg-clip-text text-transparent leading-none">VERTEX CLIENT</h1>
-                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-0.5">Fabric v1.21.11 ΓÇó v1.0.0</span>
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-0.5">Fabric v1.21.11 • v1.0.0</span>
                 </div>
             </div>
 
@@ -757,7 +668,7 @@
             <div class="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-400 flex items-center justify-center font-bold text-xs">V</div>
             <div>
                 <h4 class="text-[11px] font-semibold leading-tight">{playerName}</h4>
-                <p class="text-[9px] text-emerald-400">ΓùÅ Connected {#if liveFps > 0}ΓÇó {liveFps} FPS{/if}</p>
+                <p class="text-[9px] text-emerald-400">● Connected {#if liveFps > 0}• {liveFps} FPS{/if}</p>
             </div>
         </div>
 
@@ -800,16 +711,16 @@
             <div class="grid grid-cols-2 gap-3">
                 {#each filteredMacros as macro}
                 <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-300 hover:border-sky-400/40 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] min-w-0 relative group" 
-                     on:contextmenu|preventDefault={() => { playUiSound(); openMacroSettings(macro); }}
-                     on:auxclick={(e) => { if (e.button === 2) { playUiSound(); openMacroSettings(macro); } }}
-                     on:mousedown={(e) => { if (e.button === 2) { playUiSound(); openMacroSettings(macro); } }}>
+                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-300 hover:border-sky-400/40 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] min-w-0 relative group {macro.expanded ? 'col-span-2 border-sky-400/60 bg-slate-900/95 shadow-[0_0_25px_rgba(56,189,248,0.2)]' : ''}" 
+                     on:contextmenu|preventDefault={() => { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; }}
+                     on:auxclick={(e) => { if (e.button === 2) { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; } }}
+                     on:mousedown={(e) => { if (e.button === 2) { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; } }}>
                     <div class="flex justify-between items-start gap-2">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-[12px] font-semibold text-white truncate flex-1">{macro.title}</div>
-                                <button title="Configure Settings" class="text-slate-400 hover:text-sky-400 text-[12px] px-1.5 py-0.5 bg-white/5 rounded transition-colors cursor-pointer shrink-0" on:click|stopPropagation={() => { playUiSound(); openMacroSettings(macro); }}>
-                                    Config
+                                <button title="Configure Settings" class="text-slate-400 hover:text-sky-400 text-[12px] px-1.5 py-0.5 bg-white/5 rounded transition-colors cursor-pointer shrink-0" on:click|stopPropagation={() => { playUiSound(); macro.expanded = !macro.expanded; macros = [...macros]; }}>
+                                    {macro.expanded ? 'Close' : 'Config'}
                                 </button>
                             </div>
                             <div class="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">{macro.desc}</div>
@@ -837,6 +748,85 @@
                             <button class="px-3 py-1 rounded-lg text-[10px] font-semibold bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-[0_2px_8px_rgba(56,189,248,0.3)] transition-all cursor-pointer whitespace-nowrap shrink-0" on:click|stopPropagation={() => { playUiSound(); toggleMacro(macro.id); }}>Start Macro</button>
                         {/if}
                     </div>
+
+                    <!-- Embedded Inline Settings Drawer (Renders on Right Click) -->
+                    {#if macro.expanded}
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2.5" on:click|stopPropagation>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">{macro.title} Fine-Tuning</span>
+                                <button class="text-[9px] text-slate-400 hover:text-white" on:click={() => { macro.expanded = false; macros = [...macros]; }}>✕ Close</button>
+                            </div>
+
+                            {#if dynamicConfigSchema}
+                                <div class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+                                    {#each getMacroSettingsList(macro) as setting}
+                                        <div class="bg-slate-950/80 p-2 rounded-lg border border-white/5 flex flex-col justify-between gap-1.5">
+                                            <div class="text-[10px] font-medium text-slate-200 truncate">{setting.name}</div>
+                                            
+                                            {#if setting.type === 'boolean'}
+                                                <label class="flex items-center gap-2 cursor-pointer select-none">
+                                                    <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                                        setting.value = e.target.checked; 
+                                                        if (dynamicConfigSchema[setting.catId]) {
+                                                            let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                                            if (orig) orig.value = e.target.checked;
+                                                        }
+                                                        updateConfigValue(setting.catId, setting.id, setting.value); 
+                                                    }} class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                                                    <span class="text-[9px] text-slate-300">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                                </label>
+                                            {:else if setting.type === 'slider'}
+                                                <div class="flex items-center gap-1.5">
+                                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                                        setting.value = parseFloat(e.target.value); 
+                                                        if (dynamicConfigSchema[setting.catId]) {
+                                                            let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                                            if (orig) orig.value = parseFloat(e.target.value);
+                                                        }
+                                                        updateConfigValue(setting.catId, setting.id, setting.value); 
+                                                    }} class="flex-1 accent-sky-400 cursor-pointer h-1" />
+                                                    <span class="text-[9px] text-sky-400 font-mono w-7 text-right">{setting.value}</span>
+                                                </div>
+                                            {:else if setting.type === 'text'}
+                                                <input type="text" value={setting.value} on:input={(e) => { 
+                                                    setting.value = e.target.value; 
+                                                    if (dynamicConfigSchema[setting.catId]) {
+                                                        let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = e.target.value;
+                                                    }
+                                                    updateConfigValue(setting.catId, setting.id, setting.value); 
+                                                }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded text-[9px] outline-none w-full" />
+                                            {:else if setting.type === 'dropdown'}
+                                                <select value={setting.value} on:change={(e) => { 
+                                                    setting.value = parseInt(e.target.value); 
+                                                    if (dynamicConfigSchema[setting.catId]) {
+                                                        let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = parseInt(e.target.value);
+                                                    }
+                                                    updateConfigValue(setting.catId, setting.id, setting.value); 
+                                                }} class="bg-slate-900 border border-white/10 text-white px-1.5 py-1 rounded text-[9px] outline-none w-full">
+                                                    {#each setting.options as opt, i}
+                                                        <option value={i} selected={setting.value === i}>{opt}</option>
+                                                    {/each}
+                                                </select>
+                                            {:else if setting.type === 'keybind'}
+                                                <button class="bg-slate-900 border border-white/10 text-slate-300 px-2 py-1 rounded text-[9px] w-full flex items-center justify-between font-mono" on:click={(e) => { e.stopPropagation(); startKeybindListen(setting.catId, setting); }}>
+                                                    <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Rebind'}</span>
+                                                    <span class="text-sky-400 font-bold bg-sky-500/10 px-1 rounded">{getKeyName(setting.value)}</span>
+                                                </button>
+                                            {:else if setting.type === 'button'}
+                                                <button class="px-2 py-1 rounded text-[9px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-95 w-full justify-center" on:click={() => executeButtonAction(setting.catId, setting.id)}>
+                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                    <span>{setting.buttonText || 'Set from hand'}</span>
+                                                </button>
+                                            {/if}
+                                        </div>
+                                    {/each}
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
                 {/each}
             </div>
@@ -863,7 +853,14 @@
                             <div class="flex justify-start">
                                 {#if setting.type === 'boolean'}
                                     <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
-                                        <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue('utilities', setting.id, setting.value); }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                            setting.value = e.target.checked; 
+                                            if (dynamicConfigSchema['utilities']) {
+                                                let orig = dynamicConfigSchema['utilities'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = e.target.checked;
+                                            }
+                                            updateConfigValue('utilities', setting.id, setting.value); 
+                                        }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                     </label>
                                 {/if}
@@ -885,7 +882,7 @@
                 </div>
                 
                 {#if dynamicConfigSchema}
-                    {#each ['general', 'delays', 'miningMacro', 'farming', 'combat', 'fishing', 'foraging', 'gui'] as catId}
+                    {#each ['delays'] as catId}
                         {#if dynamicConfigSchema[catId]}
                             <div class="mt-3 mb-1 pl-1">
                                 <h4 class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">{dynamicConfigSchema[catId].name}</h4>
@@ -900,27 +897,53 @@
                                     <div class="flex justify-start">
                                         {#if setting.type === 'boolean'}
                                             <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
-                                                <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue(catId, setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                                <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                                    setting.value = e.target.checked; 
+                                                    if (dynamicConfigSchema[catId]) {
+                                                        let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = e.target.checked;
+                                                    }
+                                                    updateConfigValue(catId, setting.id, setting.value); 
+                                                }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                                 <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                             </label>
                                         {:else if setting.type === 'slider'}
                                             <div class="flex items-center gap-3 w-full">
-                                                <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
+                                                <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                                    setting.value = parseFloat(e.target.value); 
+                                                    if (dynamicConfigSchema[catId]) {
+                                                        let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = parseFloat(e.target.value);
+                                                    }
+                                                    updateConfigValue(catId, setting.id, setting.value); 
+                                                }} class="flex-1 accent-sky-400 cursor-pointer" />
                                                 <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                             </div>
                                         {:else if setting.type === 'text'}
-                                            <div class="flex items-center w-full">
-                                                <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
-                                            </div>
+                                            <input type="text" value={setting.value} on:input={(e) => { 
+                                                setting.value = e.target.value; 
+                                                if (dynamicConfigSchema[catId]) {
+                                                    let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                    if (orig) orig.value = e.target.value;
+                                                }
+                                                updateConfigValue(catId, setting.id, setting.value); 
+                                            }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
                                         {:else if setting.type === 'dropdown'}
-                                            <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(catId, setting.id, e.target.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                            <select value={setting.value} on:change={(e) => { 
+                                                setting.value = parseInt(e.target.value); 
+                                                if (dynamicConfigSchema[catId]) {
+                                                    let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                    if (orig) orig.value = parseInt(e.target.value);
+                                                }
+                                                updateConfigValue(catId, setting.id, setting.value); 
+                                            }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
                                                 {#each setting.options as opt, i}
-                                                    <option value={i}>{opt}</option>
+                                                    <option value={i} selected={setting.value === i}>{opt}</option>
                                                 {/each}
                                             </select>
                                         {:else if setting.type === 'keybind'}
-                                            <button class="bg-slate-900 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-[10px] w-full hover:text-white hover:border-sky-500/50 transition-colors shadow-sm font-mono flex items-center justify-between" on:click={(e) => { e.stopPropagation(); startKeybindListen(catId, setting); }}>
-                                                <span>{activeKeybindListening && activeKeybindListening.settingId === setting.id ? 'Listening...' : 'Change Keybind'}</span>
+                                            <button class="bg-slate-900 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-[10px] w-full hover:text-white hover:border-sky-500/50 transition-colors shadow-sm font-mono flex items-center justify-between" on:click={openConfigGui}>
+                                                <span>Change Keybind</span>
                                                 <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-2 py-0.5 rounded">
                                                     {getKeyName(setting.value)}
                                                 </span>
@@ -966,18 +989,39 @@
                             <div class="flex justify-start">
                                 {#if setting.type === 'boolean'}
                                     <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
-                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.checked)} class="w-4 h-4 accent-red-500 cursor-pointer" />
+                                        <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                            setting.value = e.target.checked; 
+                                            if (dynamicConfigSchema['failsafe']) {
+                                                let orig = dynamicConfigSchema['failsafe'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = e.target.checked;
+                                            }
+                                            updateConfigValue('failsafe', setting.id, setting.value); 
+                                        }} class="w-4 h-4 accent-red-500 cursor-pointer" />
                                         <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                     </label>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('failsafe', setting.id, setting.value); }} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                            setting.value = parseFloat(e.target.value); 
+                                            if (dynamicConfigSchema['failsafe']) {
+                                                let orig = dynamicConfigSchema['failsafe'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = parseFloat(e.target.value);
+                                            }
+                                            updateConfigValue('failsafe', setting.id, setting.value); 
+                                        }} class="flex-1 accent-red-500 cursor-pointer h-1.5 bg-slate-900 rounded-lg appearance-none" />
                                         <span class="text-[10px] text-red-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-red-500/20">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
-                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('failsafe', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-red-500/50 transition-colors">
+                                    <select value={setting.value} on:change={(e) => { 
+                                        setting.value = parseInt(e.target.value); 
+                                        if (dynamicConfigSchema['failsafe']) {
+                                            let orig = dynamicConfigSchema['failsafe'].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = parseInt(e.target.value);
+                                        }
+                                        updateConfigValue('failsafe', setting.id, setting.value); 
+                                    }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-red-500/50 transition-colors">
                                         {#each setting.options as opt, i}
-                                            <option value={i}>{opt}</option>
+                                            <option value={i} selected={setting.value === i}>{opt}</option>
                                         {/each}
                                     </select>
                                 {/if}
@@ -1055,22 +1099,50 @@
                             <div class="flex justify-start">
                                 {#if setting.type === 'boolean'}
                                     <div class="flex items-center gap-2 mt-1">
-                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                            setting.value = e.target.checked; 
+                                            if (dynamicConfigSchema['gui']) {
+                                                let orig = dynamicConfigSchema['gui'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = e.target.checked;
+                                            }
+                                            updateConfigValue('gui', setting.id, setting.value); 
+                                        }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                     </div>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('gui', setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                            setting.value = parseFloat(e.target.value); 
+                                            if (dynamicConfigSchema['gui']) {
+                                                let orig = dynamicConfigSchema['gui'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = parseFloat(e.target.value);
+                                            }
+                                            updateConfigValue('gui', setting.id, setting.value); 
+                                        }} class="flex-1 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
-                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                    <select value={setting.value} on:change={(e) => { 
+                                        setting.value = parseInt(e.target.value); 
+                                        if (dynamicConfigSchema['gui']) {
+                                            let orig = dynamicConfigSchema['gui'].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = parseInt(e.target.value);
+                                        }
+                                        updateConfigValue('gui', setting.id, setting.value); 
+                                    }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
                                         {#each setting.options as opt, i}
-                                            <option value={i}>{opt}</option>
+                                            <option value={i} selected={setting.value === i}>{opt}</option>
                                         {/each}
                                     </select>
                                 {:else if setting.type === 'text'}
-                                    <input type="text" bind:value={setting.value} on:change={(e) => updateConfigValue('gui', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
+                                    <input type="text" value={setting.value} on:input={(e) => { 
+                                        setting.value = e.target.value; 
+                                        if (dynamicConfigSchema['gui']) {
+                                            let orig = dynamicConfigSchema['gui'].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = e.target.value;
+                                        }
+                                        updateConfigValue('gui', setting.id, setting.value); 
+                                    }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
                                 {/if}
                             </div>
                         </div>
@@ -1098,18 +1170,39 @@
                             <div class="flex justify-start">
                                 {#if setting.type === 'boolean'}
                                     <div class="flex items-center gap-2 mt-1">
-                                        <input type="checkbox" bind:checked={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.checked)} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                        <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                            setting.value = e.target.checked; 
+                                            if (dynamicConfigSchema['animations']) {
+                                                let orig = dynamicConfigSchema['animations'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = e.target.checked;
+                                            }
+                                            updateConfigValue('animations', setting.id, setting.value); 
+                                        }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                     </div>
                                 {:else if setting.type === 'slider'}
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue('animations', setting.id, setting.value); }} class="flex-1 accent-sky-400 cursor-pointer" />
+                                        <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                            setting.value = parseFloat(e.target.value); 
+                                            if (dynamicConfigSchema['animations']) {
+                                                let orig = dynamicConfigSchema['animations'].settings.find(s => s.id === setting.id);
+                                                if (orig) orig.value = parseFloat(e.target.value);
+                                            }
+                                            updateConfigValue('animations', setting.id, setting.value); 
+                                        }} class="flex-1 accent-sky-400 cursor-pointer" />
                                         <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
                                     </div>
                                 {:else if setting.type === 'dropdown'}
-                                    <select bind:value={setting.value} on:change={(e) => updateConfigValue('animations', setting.id, e.target.value)} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                    <select value={setting.value} on:change={(e) => { 
+                                        setting.value = parseInt(e.target.value); 
+                                        if (dynamicConfigSchema['animations']) {
+                                            let orig = dynamicConfigSchema['animations'].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = parseInt(e.target.value);
+                                        }
+                                        updateConfigValue('animations', setting.id, setting.value); 
+                                    }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
                                         {#each setting.options as opt, i}
-                                            <option value={i}>{opt}</option>
+                                            <option value={i} selected={setting.value === i}>{opt}</option>
                                         {/each}
                                     </select>
                                 {/if}
@@ -1135,7 +1228,7 @@
                     <p class="text-[10px] text-sky-400 font-mono mt-0.5">Per-Macro Configuration & Fine-Tuning</p>
                 </div>
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <button class="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 bg-white/5 rounded-lg cursor-pointer" on:click={closeMacroSettings}>Γ£ò</button>
+                <button class="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 bg-white/5 rounded-lg cursor-pointer" on:click={closeMacroSettings}>✕</button>
             </div>
 
             <div class="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
@@ -1149,25 +1242,48 @@
                             
                             {#if setting.type === 'boolean'}
                                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                                    <input type="checkbox" checked={setting.value} on:change={(e) => { setting.value = e.target.checked; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                    <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                        setting.value = e.target.checked; 
+                                        if (dynamicConfigSchema[setting.catId]) {
+                                            let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = e.target.checked;
+                                        }
+                                        updateConfigValue(setting.catId, setting.id, setting.value); 
+                                    }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
                                     <span class="text-[10px] text-slate-300 font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
                                 </label>
                             {:else if setting.type === 'slider'}
                                 <div class="flex items-center gap-2">
                                     <span class="text-[10px] text-sky-400 font-mono w-8 text-right">{setting.value}</span>
-                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="w-[100px] accent-sky-400 cursor-pointer" />
+                                    <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                        setting.value = parseFloat(e.target.value); 
+                                        if (dynamicConfigSchema[setting.catId]) {
+                                            let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                            if (orig) orig.value = parseFloat(e.target.value);
+                                        }
+                                        updateConfigValue(setting.catId, setting.id, setting.value); 
+                                    }} class="w-[100px] accent-sky-400 cursor-pointer" />
                                 </div>
                             {:else if setting.type === 'text'}
-                                <div class="flex items-center gap-1.5">
-                                    <input type="text" value={setting.value} on:input={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
-                                    <button title="Set from currently held item in hand" class="px-2 py-1 rounded-lg text-[9px] font-semibold bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/30 transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1" on:click={() => executeButtonAction(setting.catId, setting.id + 'Button')}>
-                                        <span>Hand</span>
-                                    </button>
-                                </div>
+                                <input type="text" value={setting.value} on:input={(e) => { 
+                                    setting.value = e.target.value; 
+                                    if (dynamicConfigSchema[setting.catId]) {
+                                        let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                        if (orig) orig.value = e.target.value;
+                                    }
+                                    updateConfigValue(setting.catId, setting.id, setting.value); 
+                                }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]" />
                             {:else if setting.type === 'dropdown'}
-                                <select value={setting.value} on:change={(e) => { setting.value = e.target.value; updateConfigValue(setting.catId, setting.id, setting.value); }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]">
+                                <select value={setting.value} on:change={(e) => { 
+                                    setting.value = parseInt(e.target.value); 
+                                    if (dynamicConfigSchema[setting.catId]) {
+                                        let orig = dynamicConfigSchema[setting.catId].settings.find(s => s.id === setting.id);
+                                        if (orig) orig.value = parseInt(e.target.value);
+                                    }
+                                    updateConfigValue(setting.catId, setting.id, setting.value); 
+                                }} class="bg-slate-900 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none w-[120px]">
                                     {#each setting.options as opt, i}
-                                        <option value={i}>{opt}</option>
+                                        <option value={i} selected={setting.value === i}>{opt}</option>
                                     {/each}
                                 </select>
                             {:else if setting.type === 'keybind'}
@@ -1180,7 +1296,7 @@
                             {:else if setting.type === 'button'}
                                 <button class="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95" on:click={() => executeButtonAction(setting.catId, setting.id)}>
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    <span>{setting.buttonText || 'Action'}</span>
+                                    <span>{setting.buttonText || setting.value || 'Set from hand'}</span>
                                 </button>
                             {/if}
                         </div>
@@ -1199,4 +1315,9 @@
     </div>
     {/if}
     </div>
+{/if}
+
+{#if !isConfigOpen && miningHudEnabled}
+    <MiningHUD isRunning={activeMacroName === 'Mining Macro' && isRunning} runtime={runtime} target={miningTarget} speed={miningSpeed} themeColorClass={themeMap[selectedTheme]?.borderColor || 'border-sky-400'} themeGradientClass={themeMap[selectedTheme]?.buttonGradient || 'from-sky-400 to-sky-600'} />
+{/if}
 </div>

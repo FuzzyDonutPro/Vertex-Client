@@ -3,7 +3,7 @@ package com.vertexai.macro.impl.ForagingMacro.states;
 import com.vertexai.Vertex;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacroState;
-import com.vertexai.macro.impl.navigation.Pathfinder;
+import com.vertexai.feature.impl.Pathfinder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
@@ -135,33 +135,10 @@ public class PathfindingState implements ForagingMacroState {
             }
         }
 
-        List<BlockPos> visibleLogs = validBlocks.stream()
-                .filter(pos -> hasLineOfSight(eyePos, pos))
-                .toList();
-
-        if (!visibleLogs.isEmpty()) {
-            return visibleLogs.stream()
-                    .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
-                            .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
-                    .orElse(null);
-        }
-
         return validBlocks.stream()
-                .min(Comparator.comparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+                .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
+                        .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
                 .orElse(null);
-    }
-
-    private boolean hasLineOfSight(Vec3 eyePos, BlockPos targetPos) {
-        if (mc.level == null || mc.player == null) return false;
-        Vec3 targetCenter = Vec3.atCenterOf(targetPos);
-        net.minecraft.world.phys.BlockHitResult result = mc.level.clip(new net.minecraft.world.level.ClipContext(
-                eyePos,
-                targetCenter,
-                net.minecraft.world.level.ClipContext.Block.COLLIDER,
-                net.minecraft.world.level.ClipContext.Fluid.NONE,
-                mc.player
-        ));
-        return result.getType() == net.minecraft.world.phys.HitResult.Type.MISS || result.getBlockPos().equals(targetPos);
     }
 
     private boolean isTreeCluster(BlockPos startPos, String mode) {
@@ -177,8 +154,8 @@ public class PathfindingState implements ForagingMacroState {
             BlockPos current = queue.poll();
             count++;
 
-            if (count >= 1) {
-                return true; // Valid tree log cluster found
+            if (count >= 10) {
+                return true; // Cluster has at least 10 connected logs (real tree!)
             }
 
             for (int dx = -1; dx <= 1; dx++) {

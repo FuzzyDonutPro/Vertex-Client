@@ -2,9 +2,10 @@ package com.vertexai.event;
 
 import com.vertexai.Vertex;
 import com.vertexai.failsafe.FailsafeManager;
-import com.vertexai.macro.AbstractFeature;
-import com.vertexai.macro.FeatureManager;
-import com.vertexai.macro.impl.navigation.RouteBuilder;
+import com.vertexai.feature.AbstractFeature;
+import com.vertexai.feature.FeatureManager;
+import com.vertexai.feature.impl.RouteBuilder;
+import com.vertexai.gui.VertexAIScreen;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.handler.RotationHandler;
@@ -21,16 +22,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 
 /**
- * Central event manager that registers all Fabric callbacks with robust exception handling.
+ * Central event manager that registers all Fabric callbacks.
  */
 public class EventManager {
 
-    private static boolean registered = false;
-
-    public static synchronized void registerAll() {
-        if (registered) return;
-        registered = true;
-
+    public static void registerAll() {
         registerInternalEventBus();
         registerTickEvents();
         registerRenderEvents();
@@ -38,110 +34,64 @@ public class EventManager {
     }
 
     private static void registerInternalEventBus() {
-        UpdateScoreboardEvent.register(event -> {
-            try {
-                GameStateHandler.getInstance().onScoreboardUpdate(event);
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
-        });
-
-        UpdateScoreboardLineEvent.register(event -> {
-            try {
-                ScoreboardUtil.onScoreboardLineUpdate(event);
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
-        });
+        UpdateScoreboardEvent.register(GameStateHandler.getInstance()::onScoreboardUpdate);
+        UpdateScoreboardLineEvent.register(ScoreboardUtil::onScoreboardLineUpdate);
 
         UpdateTablistEvent.register(event -> {
-            try {
-                TabListParser.updateCache();
-                GameStateHandler.getInstance().onTablistUpdate(event);
-                MacroManager.getInstance().onTablistUpdate(event);
-                AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
-                for (int i = 0; i < active.length; i++) {
-                    if (active[i] != null) active[i].handleTablistUpdate(event);
-                }
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
+            TabListParser.updateCache();
+            GameStateHandler.getInstance().onTablistUpdate(event);
+            MacroManager.getInstance().onTablistUpdate(event);
+            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleTablistUpdate(event));
         });
 
-        UpdateTablistFooterEvent.register(event -> {
-            try {
-                GameStateHandler.getInstance().onTablistFooterUpdate(event);
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
-        });
+        UpdateTablistFooterEvent.register(GameStateHandler.getInstance()::onTablistFooterUpdate);
     }
 
     private static void registerTickEvents() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.level == null || client.player == null) return;
 
-            try {
-                GameStateHandler.getInstance().onTick();
-                RotationHandler.getInstance().onTick();
-                GraphHandler.instance.onTick();
-                MacroManager.getInstance().onTick();
-                FailsafeManager.getInstance().onTick();
+            // Tick all managers
+            GameStateHandler.getInstance().onTick();
+            RotationHandler.getInstance().onTick();
+            GraphHandler.instance.onTick();
+            MacroManager.getInstance().onTick();
+            FailsafeManager.getInstance().onTick();
 
-                AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
-                for (int i = 0; i < active.length; i++) {
-                    if (active[i] != null) active[i].handleTick();
-                }
+            // Tick all features
+            FeatureManager.getInstance().allFeatures.forEach(AbstractFeature::handleTick);
 
-                ScoreboardUtil.update();
-                TablistUtil.update();
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
+            // Update utilities
+            ScoreboardUtil.update();
+            TablistUtil.update();
         });
     }
 
     private static void registerRenderEvents() {
         WorldRenderEvents.END_MAIN.register(ctx -> {
+            com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
 
-            try {
-                com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
-                RenderUtil.beginWorldRender(context);
-                RotationHandler.getInstance().onWorldRender(context);
-                RouteHandler.getInstance().onWorldRender(context);
-                GraphHandler.instance.onWorldRender(context);
-                MacroManager.getInstance().onWorldRender(context);
-
-                AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
-                for (int i = 0; i < active.length; i++) {
-                    if (active[i] != null) active[i].handleWorldRender(context);
-                }
-
-                RenderUtil.endWorldRender();
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
+            RenderUtil.beginWorldRender(context);
+            RotationHandler.getInstance().onWorldRender(context);
+            RouteHandler.getInstance().onWorldRender(context);
+            GraphHandler.instance.onWorldRender(context);
+            MacroManager.getInstance().onWorldRender(context);
+            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+            RenderUtil.endWorldRender();
         });
 
+        // HUD rendering
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((guiGraphics, tickCounter) -> {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
 
-            try {
-                HUDManager.getInstance().onHudRender(guiGraphics);
-                MacroManager.getInstance().onHudRender(guiGraphics);
+            HUDManager.getInstance().onHudRender(guiGraphics);
+            MacroManager.getInstance().onHudRender(guiGraphics);
+            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));
 
-                AbstractFeature[] active = FeatureManager.getInstance().getActiveFeatures();
-                for (int i = 0; i < active.length; i++) {
-                    if (active[i] != null) active[i].handleHudRender(guiGraphics);
-                }
-
-                RenderUtil.renderQueuedLineOverlays(guiGraphics);
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
+            RenderUtil.renderQueuedLineOverlays(guiGraphics);
         });
     }
 
@@ -149,15 +99,11 @@ public class EventManager {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.level == null || client.player == null) return;
 
-            try {
-                handleConfigGuiShortcut(client);
-                handleRouteBuilderShortcut(client);
-                handleFailsafeStopShortcut(client);
-                GraphHandler.instance.onInput();
-                MacroManager.getInstance().onInput();
-            } catch (Throwable t) {
-                if (Vertex.config() != null && Vertex.config().debug.debugMode) t.printStackTrace();
-            }
+            handleConfigGuiShortcut(client);
+            handleRouteBuilderShortcut(client);
+            handleFailsafeStopShortcut(client);
+            GraphHandler.instance.onInput();
+            MacroManager.getInstance().onInput();
         });
     }
 
@@ -166,9 +112,9 @@ public class EventManager {
         if (config == null || config.failsafe == null) return;
 
         int key = config.failsafe.failsafeStopKeybind;
-        if (key != 0 && KeyPressUtil.wasPressed(client.getWindow(), key, client.screen == null)) {
-            if (FailsafeManager.getInstance().isFailsafeActiveOrTriggered()) {
-                FailsafeManager.getInstance().stopFailsafes();
+        if (key != 0 && com.vertexai.util.KeyPressUtil.wasPressed(client.getWindow(), key, client.screen == null)) {
+            if (com.vertexai.failsafe.FailsafeManager.getInstance().isFailsafeActiveOrTriggered()) {
+                com.vertexai.failsafe.FailsafeManager.getInstance().stopFailsafes();
             }
         }
     }
@@ -177,8 +123,9 @@ public class EventManager {
         var config = Vertex.config();
         if (config == null) return;
 
-        int key = config.general.openConfigGuiKeybind;
+        int key = config.general.openConfigGuiKeybind; // Default: GLFW_KEY_RIGHT_SHIFT
         if (KeyPressUtil.wasPressed(client.getWindow(), key, client.screen == null)) {
+            System.out.println("[vertexai/DEBUG] EventManager: KeyPressUtil detected openConfigGuiKeybind (" + key + ")! Opening WebDashboardScreen...");
             client.setScreen(new com.vertexai.gui.web.WebDashboardScreen());
         }
     }

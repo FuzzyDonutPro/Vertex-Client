@@ -1,7 +1,7 @@
 package com.vertexai.macro.impl.NukerMacro.states;
 
 import com.vertexai.Vertex;
-import com.vertexai.macro.impl.mining.BlockMiner.BlockMiner;
+import com.vertexai.feature.impl.BlockMiner.BlockMiner;
 import com.vertexai.macro.impl.NukerMacro.NukerMacro;
 import com.vertexai.macro.impl.NukerMacro.NukerMacroState;
 import com.vertexai.util.helper.MineableBlock;

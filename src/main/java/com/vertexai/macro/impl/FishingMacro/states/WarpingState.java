@@ -1,6 +1,6 @@
 package com.vertexai.macro.impl.FishingMacro.states;
 
-import com.vertexai.macro.impl.misc.AutoWarp;
+import com.vertexai.feature.impl.AutoWarp;
 import com.vertexai.handler.GameStateHandler;
 import com.vertexai.macro.impl.FishingMacro.FishingMacro;
 import com.vertexai.util.helper.Clock;
