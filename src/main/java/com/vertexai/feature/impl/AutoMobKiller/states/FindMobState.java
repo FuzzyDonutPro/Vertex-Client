@@ -45,6 +45,12 @@ public class FindMobState implements AutoMobKillerState {
             if (noMobLogTimer.passed()) {
                 log("No mobs found yet, continuing to search...");
                 noMobLogTimer.schedule(2_000);
+                
+                // Clear blacklist periodically to retry stuck mobs
+                if (!mobKiller.getBlacklistedMobs().isEmpty()) {
+                    log("Clearing blacklist to retry mobs...");
+                    mobKiller.getBlacklistedMobs().clear();
+                }
             }
 
             if (!noMobAnchorTimer.isScheduled()) {
@@ -104,6 +110,23 @@ public class FindMobState implements AutoMobKillerState {
     private void moveTowardSearchAnchor(AutoMobKiller mobKiller) {
         AutoMobKiller.SlayerProfile profile = mobKiller.getSlayerProfile();
         if (!profile.hasAnchorPoint() || mc.player == null) {
+            // If there's no anchor point (e.g. Generic profile), just wander randomly
+            if (mc.player != null && (!anchorRepathTimer.isScheduled() || anchorRepathTimer.passed())) {
+                BlockPos randomWander = mc.player.blockPosition().offset(
+                        (int)(Math.random() * 10 - 5),
+                        0,
+                        (int)(Math.random() * 10 - 5)
+                );
+                
+                Pathfinder pathfinder = Pathfinder.getInstance();
+                pathfinder.setSprintState(Vertex.config().commission.dwarvenCommission.mobKillerSprint);
+                pathfinder.setInterpolationState(Vertex.config().commission.dwarvenCommission.mobKillerInterpolate);
+                pathfinder.stopAndRequeue(randomWander);
+                if (!pathfinder.isRunning()) {
+                    pathfinder.start();
+                }
+                anchorRepathTimer.schedule(SEARCH_ANCHOR_REPATH_MS);
+            }
             return;
         }
 
