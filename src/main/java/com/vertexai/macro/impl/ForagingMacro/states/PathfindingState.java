@@ -118,7 +118,7 @@ public class PathfindingState implements ForagingMacroState {
         if (mc.player == null || mc.level == null) return null;
         Vec3 eyePos = mc.player.getEyePosition();
         BlockPos playerPos = mc.player.blockPosition();
-        List<BlockPos> validBlocks = new ArrayList<>();
+        List<BlockPos> validBlocks = new java.util.ArrayList<>();
         int searchRadius = 30;
 
         for (int x = -searchRadius; x <= searchRadius; x++) {
@@ -127,7 +127,7 @@ public class PathfindingState implements ForagingMacroState {
                     BlockPos pos = playerPos.offset(x, y, z);
                     if (blacklistedBlocks.contains(pos)) continue;
 
-                    Block block = mc.level.getBlockState(pos).getBlock();
+                    net.minecraft.world.level.block.Block block = mc.level.getBlockState(pos).getBlock();
                     if (isLogBlock(block, mode) && isTreeCluster(pos, mode)) {
                         validBlocks.add(pos);
                     }
@@ -135,10 +135,25 @@ public class PathfindingState implements ForagingMacroState {
             }
         }
 
-        return validBlocks.stream()
-                .min(Comparator.<BlockPos>comparingInt(pos -> pos.getY())
-                        .thenComparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+        BlockPos closest = validBlocks.stream()
+                .min(java.util.Comparator.<BlockPos>comparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
                 .orElse(null);
+
+        if (closest != null) {
+            // Traverse down to find the bottom-most log of this tree
+            BlockPos current = closest;
+            while (true) {
+                BlockPos below = current.below();
+                if (blacklistedBlocks.contains(below)) break;
+                if (!isLogBlock(mc.level.getBlockState(below).getBlock(), mode)) {
+                    break;
+                }
+                current = below;
+            }
+            return current;
+        }
+
+        return null;
     }
 
     private boolean isTreeCluster(BlockPos startPos, String mode) {
