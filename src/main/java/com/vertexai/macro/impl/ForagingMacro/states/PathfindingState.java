@@ -24,10 +24,13 @@ public class PathfindingState implements ForagingMacroState {
     private final com.vertexai.util.helper.Clock pathTimeout = new com.vertexai.util.helper.Clock();
     private final java.util.Set<BlockPos> blacklistedBlocks = new java.util.HashSet<>();
 
+    private final com.vertexai.util.helper.Clock blacklistClearClock = new com.vertexai.util.helper.Clock();
+
     @Override
     public void onStart(ForagingMacro macro) {
         log("Searching for closest log block...");
         blacklistedBlocks.clear();
+        blacklistClearClock.schedule(15000L);
         startPathfindingToNewTarget(macro);
     }
 
@@ -39,6 +42,21 @@ public class PathfindingState implements ForagingMacroState {
         if (this.targetBlock == null || mc.level.isEmptyBlock(this.targetBlock)) {
             startPathfindingToNewTarget(macro);
             if (this.targetBlock == null) {
+                if (!blacklistedBlocks.isEmpty() && blacklistClearClock.passed()) {
+                    log("No logs found. Clearing blacklist to retry...");
+                    blacklistedBlocks.clear();
+                    blacklistClearClock.schedule(15000L);
+                }
+
+                if (!Pathfinder.getInstance().isRunning()) {
+                    BlockPos randomWander = mc.player.blockPosition().offset(
+                            (int)(Math.random() * 10 - 5),
+                            0,
+                            (int)(Math.random() * 10 - 5)
+                    );
+                    Pathfinder.getInstance().stopAndRequeue(randomWander);
+                    Pathfinder.getInstance().start();
+                }
                 return this; // No logs in area
             }
         }
