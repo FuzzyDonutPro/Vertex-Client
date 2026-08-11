@@ -80,4 +80,18 @@ public class Misc {
             minStep = 0.1f
     )
     public float fastBreakSpeed = 1.5f;
+
+    @ConfigOption(
+            name = "Enable Nick Hider",
+            desc = "Hides your username in chat, nametags, and scoreboard"
+    )
+    @ConfigEditorBoolean
+    public boolean enableNickHider = false;
+
+    @ConfigOption(
+            name = "Nick Hider Name",
+            desc = "The fake name to display instead of your real username"
+    )
+    @io.github.notenoughupdates.moulconfig.annotations.ConfigEditorText
+    public String nickHiderName = "Player";
 }

@@ -12,7 +12,12 @@
     "MixinEntity",
     "MinecraftAccessor",
     "MixinItemInHandRenderer",
-    "MixinLivingEntity"
+    "MixinLivingEntity",
+    "MixinChatComponent",
+    "MixinEntityRenderer",
+    "MixinFont",
+    "MixinPlayerTabOverlay",
+    "MixinPlayerTeam"
   ],
   "injectors": {
     "defaultRequire": 1
