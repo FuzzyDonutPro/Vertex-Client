@@ -58,6 +58,12 @@ public class PartialBlockHelper {
         }
 
         VoxelShape shape = state.getCollisionShape(world, pos);
-        return shape.isEmpty();
+        if (shape.isEmpty()) {
+            return true;
+        }
+
+        // Also allow small blocks you can step over (carpets, bottom slabs, snow layers)
+        double maxY = shape.max(net.minecraft.core.Direction.Axis.Y);
+        return maxY <= 0.6; // Player step height is 0.6
     }
 }

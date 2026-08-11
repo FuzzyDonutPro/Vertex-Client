@@ -273,8 +273,20 @@ public class PathFinder {
             return false;
         }
 
+        // If the current block has collision but isAir is true, it's a passable partial block (carpet, slab)
+        // This means it provides its own floor and we walk inside it.
+        BlockState currentState = world.getBlockState(pos);
+        if (!currentState.getCollisionShape(world, pos).isEmpty()) {
+            return true;
+        }
+
         BlockState belowState = world.getBlockState(below);
         net.minecraft.world.phys.shapes.VoxelShape shape = belowState.getCollisionShape(world, below);
+
+        // If the block below is a passable partial block with collision (e.g. carpet), we walk IN it, not ON it.
+        if (PartialBlockHelper.isPassablePartialBlock(world, below) && !shape.isEmpty()) {
+            return false;
+        }
         
         if ((belowState.is(net.minecraft.tags.BlockTags.FENCES) || belowState.is(net.minecraft.tags.BlockTags.WALLS)) &&
             !PartialBlockHelper.isPassablePartialBlock(world, below)) {
