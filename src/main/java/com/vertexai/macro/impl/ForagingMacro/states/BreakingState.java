@@ -39,6 +39,7 @@ public class BreakingState implements ForagingMacroState {
         if (mc.level.isEmptyBlock(targetPos)) {
             if (!logBroken) {
                 logBroken = true;
+                macro.lastLogBreakTime = System.currentTimeMillis();
                 postBreakTimer.schedule(150L); // 150ms post-break pause for Treecapitator/Jungle Axe server packet sync
             }
             if (postBreakTimer.passed()) {
@@ -79,6 +80,14 @@ public class BreakingState implements ForagingMacroState {
         if (axeSlot == -1) axeSlot = InventoryUtil.getHotbarSlotOfItem("Axe");
         if (axeSlot != -1 && mc.player.getInventory().getSelectedSlot() != axeSlot) {
             mc.player.getInventory().setSelectedSlot(axeSlot);
+        }
+
+        // Check delay before breaking
+        long currentDelay = com.vertexai.Vertex.config().foraging.foragingDelay;
+        if (System.currentTimeMillis() - macro.lastLogBreakTime < currentDelay) {
+            KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
+            breakDelay.reset();
+            return this;
         }
 
         // Regular Mining / Breaking logic (Hold left click)

@@ -14,6 +14,7 @@ public class ForagingMacro extends AbstractMacro {
 
     private BlockPos targetBlockPos;
     private String currentForagingMode = "";
+    public long lastLogBreakTime = 0;
 
     public static ForagingMacro getInstance() { return instance; }
     public BlockPos getTargetBlockPos() { return targetBlockPos; }

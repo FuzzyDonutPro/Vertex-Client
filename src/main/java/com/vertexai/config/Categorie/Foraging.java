@@ -39,4 +39,15 @@ public class Foraging {
     @ConfigOption(name = "Hub", desc = "Downgraded version of the Park Foraging script, but it's a good start and nice for new accounts.")
     @ConfigEditorBoolean
     public boolean foragingHub = false;
+
+    @ConfigOption(
+            name = "Foraging Delay",
+            desc = "Delay between breaking logs (in milliseconds)"
+    )
+    @io.github.notenoughupdates.moulconfig.annotations.ConfigEditorSlider(
+            minValue = 0,
+            maxValue = 5000,
+            minStep = 50
+    )
+    public int foragingDelay = 2000;
 }
