@@ -51,6 +51,7 @@ public class MobKillerMacro extends AbstractMacro {
                 targetList.add("Spider");
                 targetList.add("Silverfish");
             }
+            case 11 -> targetList.add("Enderman");
             default -> {
                 targetList.add("Zombie");
                 targetList.add("Zombie Villager");

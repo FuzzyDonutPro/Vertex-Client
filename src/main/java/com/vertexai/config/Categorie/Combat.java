@@ -35,7 +35,8 @@ public class Combat {
             "Sludge",
             "Yog",
             "Graveyard Zombies",
-            "Spider's Den Spiders & Silverfish"
+            "Spider's Den Spiders & Silverfish",
+            "Endermen"
     })
     public int mobKillerTarget = 9; // Default: Graveyard Zombies
 
