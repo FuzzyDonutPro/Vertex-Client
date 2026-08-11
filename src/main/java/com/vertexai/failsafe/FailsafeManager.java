@@ -40,7 +40,8 @@ public class FailsafeManager {
                 PlayerFailsafe.getInstance(),
                 SlotChangeFailsafe.getInstance(),
                 FlagFailsafe.getInstance(),
-                CropChangeFailsafe.getInstance()
+                CropChangeFailsafe.getInstance(),
+                IdleFailsafe.getInstance()
         ));
     }
 

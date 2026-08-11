@@ -86,6 +86,7 @@ public abstract class AbstractFailsafe {
         PLAYER_PROFILE_OPEN,
         NAME_MENTION,
         FLAG,
-        CROP_CHANGE
+        CROP_CHANGE,
+        IDLE
     }
 }

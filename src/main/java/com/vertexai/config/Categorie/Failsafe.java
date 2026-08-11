@@ -68,6 +68,20 @@ public class Failsafe {
     public int flagTimeWindow = 5;
 
     @ConfigOption(
+            name = "Enable Idle Failsafe",
+            desc = "Triggers a failsafe if your position/rotation does not change for a set time (Useful for moving macros)"
+    )
+    @ConfigEditorBoolean
+    public boolean enableIdleFailsafe = false;
+
+    @ConfigOption(
+            name = "Idle Failsafe Time (Seconds)",
+            desc = "Time in seconds without moving to trigger the failsafe"
+    )
+    @ConfigEditorSlider(minValue = 10, maxValue = 120, minStep = 5)
+    public int idleFailsafeTime = 30;
+
+    @ConfigOption(
             name = "Name Mention Failsafe Behaviour",
             desc = "The action Name Mention Failsafe will take when your name is mentioned in chat"
     )
