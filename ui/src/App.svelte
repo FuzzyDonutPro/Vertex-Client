@@ -293,7 +293,7 @@
 
         // Slayer & Combat
         { id: 'slayer', category: 'slayer', title: 'Slayer Boss Macro', desc: 'Auto-spawns and slays Slayer bosses (Revenant, Tarantula, Sven, Voidgloom).', running: false, target: 'Revenant Horror', options: ['Revenant Horror', 'Tarantula Broodfather', 'Sven Packmaster', 'Voidgloom Seraph'] },
-        { id: 'mob_killer', category: 'slayer', title: 'General Mob Killer', desc: 'Auto-pathfinds and grinds area mobs for EXP, drops, and bestiary.', running: false, target: 'Graveyard Zombies', options: ['Zealots', 'Ghosts', 'Ice Walkers', 'Treasure Hoarders', 'Goblins', 'Glacite Walkers', 'Automotons', 'Sludge', 'Yog', 'Graveyard Zombies', "Spider's Den Spiders & Silverfish"] },
+        { id: 'mob_killer', category: 'slayer', title: 'Combat Macro', desc: 'Auto-pathfinds and grinds area mobs for EXP, drops, and bestiary.', running: false, target: 'Graveyard Zombies', options: ['Zealots', 'Ghosts', 'Ice Walkers', 'Treasure Hoarders', 'Goblins', 'Glacite Walkers', 'Automotons', 'Sludge', 'Yog', 'Graveyard Zombies', "Spider's Den Spiders & Silverfish", 'Endermen'] },
         { id: 'zealot', category: 'slayer', title: 'End Zealot & Bruiser Farmer', desc: 'Auto-pathfinds and kills Zealots & Special Zealot Bruisers in The End.', running: false, target: 'Special Zealots' },
         { id: 'dungeon', category: 'slayer', title: 'Dungeons & Catacombs Solver', desc: 'Auto room clear, secret finder & boss room combat helper.', running: false, target: 'Catacombs Floor 7' },
         { id: 'kuudra', category: 'slayer', title: 'Kuudra Boss Suite', desc: 'Auto-Supply Rush, Cannon Build/Fueling, Pod Head Stun, and Core DPS.', running: false, target: 'Kuudra T5', options: ['Kuudra T1', 'Kuudra T2', 'Kuudra T3', 'Kuudra T4', 'Kuudra T5'] },
