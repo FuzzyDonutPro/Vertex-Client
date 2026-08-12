@@ -54,7 +54,7 @@ public class VertexConfig extends Config {
     public BazaarFlipper bazaarFlipper = new BazaarFlipper();
     @Category(name = "Utilities", desc = "Utility and QoL Settings")
     public Utilities utilities = new Utilities();
-    @Category(name = "Other", desc = "Other Settings")
+    @Category(name = "Misc", desc = "Misc Settings")
     public Misc misc = new Misc();
     @Category(name = "Webhook", desc = "Discord Webhook Settings")
     public Webhook webhook = new Webhook();
