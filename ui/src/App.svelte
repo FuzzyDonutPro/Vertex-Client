@@ -845,33 +845,82 @@
                     <button class="text-[10px] text-sky-400 font-semibold border border-sky-400/30 px-3 py-1.5 rounded-lg bg-sky-400/10 hover:bg-sky-400/20 transition-colors" on:click={openConfigGui}>Open In-Game Settings</button>
                 </div>
                 
-                {#if dynamicConfigSchema && dynamicConfigSchema.utilities}
-                    <div class="grid grid-cols-2 gap-3">
-                    {#each dynamicConfigSchema.utilities.settings as setting}
-                        <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
-                            <div>
-                                <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
-                                <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                {#if dynamicConfigSchema}
+                    {#each ['utilities', 'misc'] as catId}
+                        {#if dynamicConfigSchema[catId]}
+                            <div class="mt-3 mb-1 pl-1">
+                                <h4 class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">{dynamicConfigSchema[catId].name}</h4>
                             </div>
-                            <div class="flex justify-start">
-                                {#if setting.type === 'boolean'}
-                                    <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
-                                        <input type="checkbox" checked={setting.value} on:change={(e) => { 
-                                            setting.value = e.target.checked; 
-                                            if (dynamicConfigSchema['utilities']) {
-                                                let orig = dynamicConfigSchema['utilities'].settings.find(s => s.id === setting.id);
-                                                if (orig) orig.value = e.target.checked;
-                                            }
-                                            updateConfigValue('utilities', setting.id, setting.value); 
-                                        }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
-                                        <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
-                                    </label>
-                                {/if}
+                            <div class="grid grid-cols-2 gap-3">
+                            {#each dynamicConfigSchema[catId].settings as setting}
+                                <div class="bg-slate-800/70 border border-white/10 p-3.5 rounded-xl flex flex-col justify-between gap-3 h-full">
+                                    <div>
+                                        <h3 class="text-[12px] font-semibold text-white">{setting.name}</h3>
+                                        <p class="text-[10px] text-slate-400 mt-1 leading-tight">{setting.desc}</p>
+                                    </div>
+                                    <div class="flex justify-start">
+                                        {#if setting.type === 'boolean'}
+                                            <label class="flex items-center gap-2 mt-1 cursor-pointer select-none">
+                                                <input type="checkbox" checked={setting.value} on:change={(e) => { 
+                                                    setting.value = e.target.checked; 
+                                                    if (dynamicConfigSchema[catId]) {
+                                                        let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = e.target.checked;
+                                                    }
+                                                    updateConfigValue(catId, setting.id, setting.value); 
+                                                }} class="w-4 h-4 accent-sky-400 cursor-pointer" />
+                                                <span class="text-[10px] text-slate-300 uppercase tracking-wide font-semibold">{setting.value ? 'Enabled' : 'Disabled'}</span>
+                                            </label>
+                                        {:else if setting.type === 'slider'}
+                                            <div class="flex items-center gap-3 w-full">
+                                                <input type="range" min={setting.min} max={setting.max} step={setting.step} value={setting.value} on:input={(e) => { 
+                                                    setting.value = parseFloat(e.target.value); 
+                                                    if (dynamicConfigSchema[catId]) {
+                                                        let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                        if (orig) orig.value = parseFloat(e.target.value);
+                                                    }
+                                                    updateConfigValue(catId, setting.id, setting.value); 
+                                                }} class="flex-1 accent-sky-400 cursor-pointer" />
+                                                <span class="text-[10px] text-sky-400 font-mono w-10 text-right bg-slate-900/80 px-2 py-1 rounded border border-white/5">{setting.value}</span>
+                                            </div>
+                                        {:else if setting.type === 'text'}
+                                            <input type="text" value={setting.value} on:input={(e) => { 
+                                                setting.value = e.target.value; 
+                                                if (dynamicConfigSchema[catId]) {
+                                                    let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                    if (orig) orig.value = e.target.value;
+                                                }
+                                                updateConfigValue(catId, setting.id, setting.value); 
+                                            }} class="bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors" />
+                                        {:else if setting.type === 'dropdown'}
+                                            <select value={setting.value} on:change={(e) => { 
+                                                setting.value = parseInt(e.target.value); 
+                                                if (dynamicConfigSchema[catId]) {
+                                                    let orig = dynamicConfigSchema[catId].settings.find(s => s.id === setting.id);
+                                                    if (orig) orig.value = parseInt(e.target.value);
+                                                }
+                                                updateConfigValue(catId, setting.id, setting.value); 
+                                            }} class="bg-slate-900 border border-white/10 text-white px-2 py-1.5 rounded-lg text-[10px] outline-none w-full focus:border-sky-500/50 transition-colors">
+                                                {#each setting.options as opt, i}
+                                                    <option value={i} selected={setting.value === i}>{opt}</option>
+                                                {/each}
+                                            </select>
+                                        {:else if setting.type === 'keybind'}
+                                            <button class="bg-slate-900 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-[10px] w-full hover:text-white hover:border-sky-500/50 transition-colors shadow-sm font-mono flex items-center justify-between" on:click={openConfigGui}>
+                                                <span>Change Keybind</span>
+                                                <span class="text-sky-400 font-bold bg-sky-500/10 border border-sky-400/20 px-2 py-0.5 rounded">
+                                                    {getKeyName(setting.value)}
+                                                </span>
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/each}
                             </div>
-                        </div>
+                        {/if}
                     {/each}
-                    </div>
                 {:else}
+                    <div class="text-xs text-slate-400 text-center py-10">Loading utilities configuration schema from Java...</div>
                     <div class="text-xs text-slate-400 text-center py-10">Loading utilities configuration schema from Java...</div>
                 {/if}
             </div>
@@ -1328,3 +1377,4 @@
     <MiningHUD isRunning={activeMacroName === 'Mining Macro' && isRunning} runtime={runtime} target={miningTarget} speed={miningSpeed} themeGradientClass={currentThemeObj?.bgGradient || 'from-sky-400 to-sky-600'} />
 {/if}
 </div>
+
