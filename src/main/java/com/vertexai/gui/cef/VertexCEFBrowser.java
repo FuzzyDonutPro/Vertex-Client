@@ -87,6 +87,13 @@ public class VertexCEFBrowser {
         // Intentionally keep browser instance alive for instant re-opening
     }
 
+    public void shutdown() {
+        if (browser != null) {
+            browser.close();
+            browser = null;
+        }
+    }
+
     public void injectMouseMove(int mouseX, int mouseY, int modifiers, boolean isLeave) {
         if (browser != null) {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();

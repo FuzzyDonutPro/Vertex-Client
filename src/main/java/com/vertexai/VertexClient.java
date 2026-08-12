@@ -94,6 +94,7 @@ public class VertexClient implements ClientModInitializer {
                 configManager.saveConfig();
             }
             com.vertexai.gui.cef.VertexUIServer.stop();
+            com.vertexai.gui.cef.VertexCEFBrowser.getInstance().shutdown();
         });
 
         ClientCommandRegistrationCallback.EVENT.register(
