@@ -21,7 +21,7 @@ public class Combat {
     public int slayerTarget = 0; // Default: Revenant Horror
 
     @ConfigOption(
-            name = "Mob Killer Target",
+            name = "Combat Macro Target",
             desc = "Select the general area mob to farm for combat EXP, drops, and bestiary"
     )
     @ConfigEditorDropdown(values = {

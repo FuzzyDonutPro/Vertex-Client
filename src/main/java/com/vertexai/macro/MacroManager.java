@@ -53,7 +53,7 @@ public class MacroManager {
             case 7:
                 return com.vertexai.macro.impl.KuudraMacro.KuudraMacro.getInstance();
             case 8:
-                return com.vertexai.macro.impl.MobKillerMacro.MobKillerMacro.getInstance();
+                return com.vertexai.macro.impl.CombatMacro.CombatMacro.getInstance();
             default:
                 return CommissionMacro.getInstance();
         }

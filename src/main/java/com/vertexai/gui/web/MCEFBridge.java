@@ -95,7 +95,7 @@ public class MCEFBridge {
                             targetMacro = com.vertexai.macro.impl.SlayerMacro.SlayerMacro.getInstance();
                             break;
                         case "mob_killer":
-                            targetMacro = com.vertexai.macro.impl.MobKillerMacro.MobKillerMacro.getInstance();
+                            targetMacro = com.vertexai.macro.impl.CombatMacro.CombatMacro.getInstance();
                             break;
                         case "kuudra":
                             targetMacro = com.vertexai.macro.impl.KuudraMacro.KuudraMacro.getInstance();

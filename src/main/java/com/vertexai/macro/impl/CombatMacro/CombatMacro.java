@@ -1,4 +1,4 @@
-package com.vertexai.macro.impl.MobKillerMacro;
+package com.vertexai.macro.impl.CombatMacro;
 
 import com.vertexai.Vertex;
 import com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller;
@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MobKillerMacro — Dedicated macro for farming general combat mobs (Zealots, Ghosts, Goblins, etc.).
+ * CombatMacro - Dedicated macro for farming general combat mobs (Zealots, Ghosts, Goblins, etc.).
  * Fully separated from Slayer Boss Quests.
  */
-public class MobKillerMacro extends AbstractMacro {
+public class CombatMacro extends AbstractMacro {
 
     @Getter
-    private static final MobKillerMacro instance = new MobKillerMacro();
+    private static final CombatMacro instance = new CombatMacro();
 
     @Override
     public String getName() {
-        return "Mob Killer Macro";
+        return "Combat Macro";
     }
 
     @Override
