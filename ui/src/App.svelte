@@ -703,7 +703,7 @@
         <div>
             <div class="mb-5">
                 <h1 class="font-outfit text-[17px] font-extrabold tracking-widest text-white leading-none">VERTEX CLIENT</h1>
-                <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-1">Fabric v1.21.11 • v1.0.6</span>
+                <span class="text-[9px] text-slate-400 uppercase tracking-widest block mt-1">Fabric v1.21.11 • v1.0.8</span>
             </div>
 
             <ul class="flex flex-col gap-1">
