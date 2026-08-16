@@ -27,4 +27,10 @@ public interface MinecraftAccessor {
 
     @Accessor("rightClickDelay")
     void setRightClickDelayTimer(int delay);
+
+    @org.spongepowered.asm.mixin.gen.Invoker("startAttack")
+    boolean invokeStartAttack();
+
+    @org.spongepowered.asm.mixin.gen.Invoker("startUseItem")
+    void invokeStartUseItem();
 }

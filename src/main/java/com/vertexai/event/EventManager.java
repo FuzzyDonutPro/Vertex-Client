@@ -87,6 +87,11 @@ public class EventManager {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
 
+            // Render high-res Svelte Chromium web overlay (StatusHUD, HUD widgets) only when macro is running
+            if (mc.screen == null && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
+                com.vertexai.gui.cef.VertexCEFBrowser.getInstance().render(guiGraphics, 0, 0, 0);
+            }
+
             HUDManager.getInstance().onHudRender(guiGraphics);
             MacroManager.getInstance().onHudRender(guiGraphics);
             FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));

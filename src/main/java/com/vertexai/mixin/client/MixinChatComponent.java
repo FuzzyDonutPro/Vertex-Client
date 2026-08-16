@@ -10,8 +10,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ChatComponent.class)
 public class MixinChatComponent {
     
-    @ModifyVariable(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;ILnet/minecraft/client/GuiMessageTag;Z)V", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    @ModifyVariable(method = "addMessage", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private Component onAddMessage(Component message) {
         return NickHiderUtil.replaceName(message);
     }
 }
+

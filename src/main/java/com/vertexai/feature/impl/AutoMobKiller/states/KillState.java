@@ -91,8 +91,7 @@ public class KillState implements AutoMobKillerState {
                 if (rogueSlot != -1) {
                     int mana = com.vertexai.util.ManaTracker.getCurrentMana();
                     if (mana >= 50) {
-                        InventoryUtil.holdItem("Rogue");
-                        KeyBindUtil.rightClick();
+                        com.vertexai.util.UseItemAbility.useItemAbility("Rogue", rogueSlot, 120);
                         rogueTimer.schedule(3000L);
                         log("Auto Rogue Sword speed boost! Mana: " + mana);
                     }
@@ -165,11 +164,15 @@ public class KillState implements AutoMobKillerState {
         }
 
         // Smooth rotation through RotationHandler anti-cheat humanized engine
-        RotationHandler.getInstance().easeTo(new RotationConfiguration(
-                new com.vertexai.util.helper.Target(mobKiller.getTargetMob()),
-                90L,
-                null
-        ));
+        if (!reaimTimer.isScheduled() || reaimTimer.passed() || !RotationHandler.getInstance().isEnabled()) {
+            long rotateTime = 75L + (long)(Math.random() * 40);
+            RotationHandler.getInstance().easeTo(new RotationConfiguration(
+                    new com.vertexai.util.helper.Target(mobKiller.getTargetMob()),
+                    rotateTime,
+                    null
+            ));
+            reaimTimer.schedule(rotateTime + 10L);
+        }
 
         // Crosshair Raycast Target Lock: If crosshair touches ANY valid mob (never players!), lock onto it instantly
         if (mc.hitResult instanceof EntityHitResult hitResult && hitResult.getEntity() instanceof LivingEntity hitLiving) {

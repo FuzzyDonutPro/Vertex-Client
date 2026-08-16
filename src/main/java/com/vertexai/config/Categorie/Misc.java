@@ -65,11 +65,12 @@ public class Misc {
     public int maxRightCps = 12;
 
     @ConfigOption(
-            name = "NoRender Mode (5x5 Area)",
-            desc = "Only renders a 5x5 area around the player while a macro is running to save frames"
+            name = "Fast Break",
+            desc = "Speeds up block breaking packets"
     )
     @ConfigEditorBoolean
-    public boolean noRenderMode = false;
+    public boolean fastBreak = false;
+
     @ConfigOption(
             name = "Fast Break Speed",
             desc = "Speed multiplier for Fast Break (1.0x = Normal, 2.0x = 2x Ticks Break Speed)"
@@ -82,6 +83,13 @@ public class Misc {
     public float fastBreakSpeed = 1.5f;
 
     @ConfigOption(
+            name = "NoRender Mode (5x5 Area)",
+            desc = "Only renders a 5x5 area around the player while a macro is running to save frames"
+    )
+    @ConfigEditorBoolean
+    public boolean noRenderMode = false;
+
+    @ConfigOption(
             name = "Enable Nick Hider",
             desc = "Hides your username in chat, nametags, and scoreboard"
     )
@@ -90,8 +98,8 @@ public class Misc {
 
     @ConfigOption(
             name = "Nick Hider Name",
-            desc = "The fake name to display instead of your real username"
+            desc = "The fake name to display instead of your real username (Default: Vertex User)"
     )
     @io.github.notenoughupdates.moulconfig.annotations.ConfigEditorText
-    public String nickHiderName = "Player";
+    public String nickHiderName = "Vertex User";
 }

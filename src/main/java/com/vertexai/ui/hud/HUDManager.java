@@ -72,14 +72,16 @@ public class HUDManager {
 
     private boolean isEnabledInConfig(AbstractHUDElement element) {
         HUD hud = Vertex.config().hud;
-        if (element instanceof StatusHUD) return hud.enableStatusHud;
+        // Legacy per-macro text HUDs silenced in favor of the unified Svelte Chromium HUD
+        if (element instanceof StatusHUD) return false;
+        if (element instanceof ProfitHUD) return false;
+        if (element instanceof CommissionHUD) return false;
+        if (element instanceof GlacialCommissionHUD) return false;
+        if (element instanceof MacroHUD) return false;
+        if (element instanceof FishingHUD) return false;
+
         if (element instanceof InventoryHUD) return hud.enableInventoryHud;
-        if (element instanceof ProfitHUD) return hud.enableProfitHud;
-        if (element instanceof CommissionHUD) return hud.enableCommissionHud;
-        if (element instanceof GlacialCommissionHUD) return hud.enableGlacialHud;
-        if (element instanceof MacroHUD) return hud.enableDebugHud;
         if (element instanceof RouteBuilderHUD) return hud.enableRouteBuilderHud;
-        if (element instanceof FishingHUD) return hud.enableFishingHud;
         if (element instanceof com.vertexai.client.overlay.SpotifyHudElement) return hud.enableSpotifyHud;
         return true;
     }

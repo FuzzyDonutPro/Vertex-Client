@@ -83,6 +83,28 @@ public class FindMobState implements AutoMobKillerState {
             return null;
         }
 
+        // 1. Top priority: Active Slayer Boss spawned anywhere in range
+        LivingEntity bestBoss = null;
+        double bestBossDistSq = Double.MAX_VALUE;
+
+        for (LivingEntity mob : mobs) {
+            if (mob == null || !mob.isAlive()) continue;
+            double distanceSq = mc.player.distanceToSqr(mob);
+            if (distanceSq >= (42 * 42)) continue;
+
+            if (EntityUtil.isSlayerBoss(mob)) {
+                if (distanceSq < bestBossDistSq) {
+                    bestBossDistSq = distanceSq;
+                    bestBoss = mob;
+                }
+            }
+        }
+
+        if (bestBoss != null) {
+            return bestBoss;
+        }
+
+        // 2. Normal combat mob prioritization
         double bestDistanceSq = Double.MAX_VALUE;
         LivingEntity bestMob = null;
 

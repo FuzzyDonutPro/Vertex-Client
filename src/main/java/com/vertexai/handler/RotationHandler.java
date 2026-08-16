@@ -21,10 +21,10 @@ import java.util.Random;
 public class RotationHandler {
 
     private static final Logger log = LoggerFactory.getLogger(RotationHandler.class);
-    private static final float MAX_YAW_SPEED_DEG_PER_SEC = 240f;
+    private static final float MAX_YAW_SPEED_DEG_PER_SEC = 420f;
     private static final float MAX_PITCH_SPEED_DEG_PER_SEC = 180f;
-    private static final float NEAR_SLOWDOWN_DEG = 10f;
-    private static final float MIN_SPEED_FACTOR = 0.35f;
+    private static final float NEAR_SLOWDOWN_DEG = 8f;
+    private static final float MIN_SPEED_FACTOR = 0.5f;
     private static final float OVERSHOOT_CHANCE = 0.05f;
     private static final float OVERSHOOT_YAW_MIN = 0.4f;
     private static final float OVERSHOOT_YAW_MAX = 0.9f;
@@ -75,6 +75,7 @@ public class RotationHandler {
     }
 
     public void easeTo(RotationConfiguration configuration) {
+        boolean alreadyRunning = this.enabled && this.configuration != null && this.target != null;
         this.configuration = configuration;
         this.startTime = System.currentTimeMillis();
         this.lastUpdateMs = this.startTime;
@@ -84,12 +85,12 @@ public class RotationHandler {
         Angle change = AngleUtil.getNeededChange(this.startRotation, this.target.getTargetAngle());
         this.endTime = this.startTime + getTime(pythagoras(change.getYaw(), change.getPitch()), configuration.time());
 
-        this.randomMultiplier1 = randomMultiplier2 = random.nextBoolean() ? Vertex.config().debug.rotationCurve : -Vertex.config().debug.rotationCurve;
-
-        this.lastBezierYaw = 0;
-        this.lastBezierPitch = 0;
-
-        initOvershoot(change);
+        if (!alreadyRunning) {
+            this.randomMultiplier1 = randomMultiplier2 = random.nextBoolean() ? Vertex.config().debug.rotationCurve : -Vertex.config().debug.rotationCurve;
+            this.lastBezierYaw = 0;
+            this.lastBezierPitch = 0;
+            initOvershoot(change);
+        }
 
         if (configuration.rotationType() == RotationConfiguration.RotationType.SERVER) {
             if (serverSideYaw == 0 && serverSidePitch == 0) {
@@ -134,23 +135,37 @@ public class RotationHandler {
             return;
         }
 
-        Angle desiredDelta;
-        
-        com.vertexai.pathing.aim.HumanAimSimulator.loadProfile();
-        float[] nextAngles = com.vertexai.pathing.aim.HumanAimSimulator.getNextAngle(
-            mc.player.getYRot(), mc.player.getXRot(), target.getTargetAngle().getYaw(), target.getTargetAngle().getPitch()
-        );
-        
-        float yawDelta = Mth.wrapDegrees(nextAngles[0] - mc.player.getYRot());
-        float pitchDelta = Mth.clamp(nextAngles[1] - mc.player.getXRot(), -90f - mc.player.getXRot(), 90f - mc.player.getXRot());
-        desiredDelta = new Angle(yawDelta, pitchDelta);
-        Angle appliedDelta = applyHumanizedDelta(desiredDelta, mc.player.getYRot(), mc.player.getXRot());
+        long now = System.currentTimeMillis();
+        float dtSec = (now - lastUpdateMs) / 1000f;
+        dtSec = Math.min(0.05f, Math.max(0.001f, dtSec));
+        lastUpdateMs = now;
 
-        mc.player.setYRot(mc.player.getYRot() + appliedDelta.getYaw());
-        mc.player.setXRot(mc.player.getXRot() + appliedDelta.getPitch());
+        Angle targetAngle = target.getTargetAngle();
+        float currentYaw = mc.player.getYRot();
+        float currentPitch = mc.player.getXRot();
 
-        lastBezierYaw += appliedDelta.getYaw();
-        lastBezierPitch += appliedDelta.getPitch();
+        float dYaw = AngleUtil.getNeededYawChange(currentYaw, targetAngle.getYaw());
+        float dPitch = targetAngle.getPitch() - currentPitch;
+
+        // Exponential smoothing for organic humanized camera glide
+        float yawSpeed = 10.5f;
+        float pitchSpeed = 8.5f;
+
+        float yawFactor = 1.0f - (float) Math.exp(-yawSpeed * dtSec);
+        float pitchFactor = 1.0f - (float) Math.exp(-pitchSpeed * dtSec);
+
+        float appliedYaw = dYaw * yawFactor;
+        float appliedPitch = dPitch * pitchFactor;
+
+        float maxYawStep = MAX_YAW_SPEED_DEG_PER_SEC * dtSec;
+        float maxPitchStep = MAX_PITCH_SPEED_DEG_PER_SEC * dtSec;
+
+        appliedYaw = Mth.clamp(appliedYaw, -maxYawStep, maxYawStep);
+        appliedPitch = Mth.clamp(appliedPitch, -maxPitchStep, maxPitchStep);
+
+        mc.player.setYRot(currentYaw + appliedYaw);
+        mc.player.setXRot(Mth.clamp(currentPitch + appliedPitch, -90.0f, 90.0f));
+
         if (System.currentTimeMillis() > this.endTime || this.stopRequested) {
             handleRotationEnd();
         }
@@ -206,7 +221,6 @@ public class RotationHandler {
     private void handleRotationEnd() {
         if (!this.stopRequested) {
             if (this.configuration.followTarget()) {
-                System.out.println("Following Target");
                 this.easeTo(configuration);
                 this.followingTarget = true;
                 return;

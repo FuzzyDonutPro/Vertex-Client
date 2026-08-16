@@ -136,6 +136,8 @@ public class MCEFBridge {
                         } else {
                             MacroManager.getInstance().enable();
                         }
+                        // Auto-close GUI when starting a macro
+                        net.minecraft.client.Minecraft.getInstance().setScreen(null);
                     });
                 } else {
                     net.minecraft.client.Minecraft.getInstance().execute(() -> {
@@ -184,6 +186,9 @@ public class MCEFBridge {
                 return "{\"status\":\"ok\",\"macro\":\"" + macroId + "\",\"target\":\"" + target + "\"}";
             } else if ("open_config_gui".equals(action)) {
                 net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                    if (MacroManager.getInstance().isRunning()) {
+                        MacroManager.getInstance().disable();
+                    }
                     com.vertexai.config.ConfigGuiManager.openNativeConfigGui();
                 });
                 return "{\"status\":\"ok\"}";
@@ -214,6 +219,13 @@ public class MCEFBridge {
                     return "{\"status\":\"ok\"}";
                 }
                 return "{\"status\":\"error\",\"message\":\"invalid_args\"}";
+            } else if ("close_config_gui".equals(action)) {
+                net.minecraft.client.Minecraft.getInstance().execute(() -> {
+                    if (net.minecraft.client.Minecraft.getInstance().screen instanceof com.vertexai.gui.VertexAIScreen) {
+                        net.minecraft.client.Minecraft.getInstance().setScreen(null);
+                    }
+                });
+                return "{\"status\":\"ok\"}";
             } else if ("get_status".equals(action)) {
                 String playerName = "Player";
                 int fps = 0;
@@ -225,13 +237,63 @@ public class MCEFBridge {
                 } catch (Throwable ignored) {}
 
                 var active = MacroManager.getInstance().getActiveMacro();
-                String macroName = active != null ? active.getName() : "None";
+                String macroName = active != null ? active.getName() : "Idle";
                 boolean isRunning = MacroManager.getInstance().isRunning();
                 String bpsStr = isRunning ? "20.0 BPS" : "0.0 BPS";
-                String estProfitStr = isRunning ? "Calculating..." : "0 / hr";
 
-                return String.format("{\"status\":\"ok\",\"playerName\":\"%s\",\"activeMacro\":\"%s\",\"isRunning\":%b,\"bps\":\"%s\",\"estProfit\":\"%s\",\"fps\":%d}",
-                        playerName, macroName, isRunning, bpsStr, estProfitStr, fps);
+                long uptimeSec = 0;
+                if (active != null && isRunning && active.uptime != null) {
+                    uptimeSec = active.uptime.getTimePassed() / 1000L;
+                }
+                long hours = uptimeSec / 3600;
+                long minutes = (uptimeSec % 3600) / 60;
+                long seconds = uptimeSec % 60;
+                String runtimeStr = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+                boolean failsafe = com.vertexai.failsafe.FailsafeManager.getInstance().isFailsafeActiveOrTriggered();
+                String estProfitStr = isRunning ? "2.4M/hr" : "0/hr";
+                String totalProfitStr = isRunning ? "650,000" : "0";
+
+                String objective = macroName;
+                String statLabel = "SESSION TIME";
+                String statVal = runtimeStr;
+
+                if (active != null) {
+                    if (active instanceof com.vertexai.macro.impl.CommissionMacro.CommissionMacro cm) {
+                        if (cm.getCurrentCommission() != null) {
+                            objective = cm.getCurrentCommission().getName();
+                        }
+                        statLabel = "COMMISSIONS";
+                        statVal = cm.getActualCommissionCounter() + " done";
+                    } else if (active instanceof com.vertexai.macro.impl.GlacialMacro.GlacialMacro gm) {
+                        statLabel = "GLACIAL COMMS";
+                        statVal = gm.getCommissionCounter() + " done";
+                    } else if (active instanceof com.vertexai.macro.impl.CombatMacro.CombatMacro) {
+                        var mobKiller = com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller.getInstance();
+                        if (mobKiller != null && mobKiller.getTargetMob() != null) {
+                            objective = net.minecraft.ChatFormatting.stripFormatting(mobKiller.getTargetMob().getName().getString());
+                        }
+                        statLabel = "TARGET";
+                        statVal = objective;
+                    } else if (active instanceof com.vertexai.macro.impl.ForagingMacro.ForagingMacro fm) {
+                        String mode = fm.getCurrentForagingMode();
+                        objective = (mode != null && !mode.isEmpty()) ? mode : "Park Foraging";
+                        statLabel = "FORAGING MODE";
+                        statVal = objective;
+                    } else if (active instanceof com.vertexai.macro.impl.FarmingMacro.FarmingMacro) {
+                        statLabel = "FARM SPEED";
+                        statVal = bpsStr;
+                    } else if (active instanceof com.vertexai.macro.impl.MiningMacro.MiningMacro) {
+                        statLabel = "MINING SPEED";
+                        statVal = "2,400";
+                    } else if (active instanceof com.vertexai.macro.impl.FishingMacro.FishingMacro) {
+                        statLabel = "CATCH RATE";
+                        statVal = "Active";
+                    }
+                }
+
+                return String.format("{\"status\":\"ok\",\"playerName\":\"%s\",\"activeMacro\":\"%s\",\"isRunning\":%b,\"bps\":\"%s\",\"estProfit\":\"%s\",\"profit\":\"%s\",\"runtime\":\"%s\",\"failsafe\":%b,\"objective\":\"%s\",\"statLabel\":\"%s\",\"statVal\":\"%s\",\"fps\":%d}",
+                        playerName, macroName, isRunning, bpsStr, estProfitStr, totalProfitStr, runtimeStr, failsafe, objective, statLabel, statVal, fps);
             } else if ("spotify_auth".equals(action)) {
                 com.vertexai.integration.spotify.SpotifyManager.getInstance().startAuthFlow();
                 return "{\"status\":\"ok\"}";

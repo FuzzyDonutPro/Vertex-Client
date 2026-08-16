@@ -58,6 +58,9 @@ public class StartingState implements SlayerMacroState {
             return this;
         }
         
+        log("Ensuring Slayer quest is active via Maddox Batphone (Tier " + Vertex.config().combat.getSlayerTierRoman() + ")...");
+        com.vertexai.feature.impl.SlayerQoL.SlayerQoL.getInstance().startQuestIfNeeded();
+
         log("Starting AutoMobKiller with targets: " + String.join(", ", targetList));
         AutoMobKiller.getInstance().start(targetList, weapon, pickaxe, AutoMobKiller.SlayerProfile.GENERIC);
         

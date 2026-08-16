@@ -31,7 +31,6 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
         node = listOfNodes.toList()
     }
 
-    // english is not my strong suit
     fun getSmoothedPath(): List<BlockPos> {
         if (smoothPath.isNotEmpty()) return smoothPath
 
@@ -43,7 +42,6 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
                 var prevDx = path[1].x - path[0].x
                 var prevDy = path[1].y - path[0].y
                 var prevDz = path[1].z - path[0].z
-                var lastPreservedY = path[0].y
                 
                 for (i in 1 until path.size - 1) {
                     val curr = path[i]
@@ -52,22 +50,12 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
                     val dy = next.y - curr.y
                     val dz = next.z - curr.z
                     
-                    val hasJumpBoost = net.minecraft.client.Minecraft.getInstance().player?.hasEffect(net.minecraft.world.effect.MobEffects.JUMP_BOOST) == true
-                    var shouldPreserve = dx != prevDx || dy != prevDy || dz != prevDz
+                    // Strict preservation: Keep every direction turn and every vertical elevation step
+                    val isDirectionChange = dx != prevDx || dz != prevDz
+                    val isVerticalChange = dy != 0 || prevDy != 0
                     
-                    if (dy != 0 || prevDy != 0) {
-                        if (hasJumpBoost) {
-                            if (Math.abs(curr.y - lastPreservedY) >= 2) {
-                                shouldPreserve = true
-                            }
-                        } else {
-                            shouldPreserve = true
-                        }
-                    }
-                    
-                    if (shouldPreserve) {
+                    if (isDirectionChange || isVerticalChange) {
                         smooth.add(curr)
-                        lastPreservedY = curr.y
                         prevDx = dx
                         prevDy = dy
                         prevDz = dz
@@ -96,7 +84,6 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
                 var prevDx = path[1].x - path[0].x
                 var prevDy = path[1].y - path[0].y
                 var prevDz = path[1].z - path[0].z
-                var lastPreservedY = path[0].y
                 
                 for (i in 1 until path.size - 1) {
                     val curr = path[i]
@@ -105,22 +92,11 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
                     val dy = next.y - curr.y
                     val dz = next.z - curr.z
                     
-                    val hasJumpBoost = net.minecraft.client.Minecraft.getInstance().player?.hasEffect(net.minecraft.world.effect.MobEffects.JUMP_BOOST) == true
-                    var shouldPreserve = dx != prevDx || dy != prevDy || dz != prevDz
+                    val isDirectionChange = dx != prevDx || dz != prevDz
+                    val isVerticalChange = dy != 0 || prevDy != 0
                     
-                    if (dy != 0 || prevDy != 0) {
-                        if (hasJumpBoost) {
-                            if (Math.abs(curr.y - lastPreservedY) >= 2) {
-                                shouldPreserve = true
-                            }
-                        } else {
-                            shouldPreserve = true
-                        }
-                    }
-                    
-                    if (shouldPreserve) {
+                    if (isDirectionChange || isVerticalChange) {
                         smooth.add(curr)
-                        lastPreservedY = curr.y
                         prevDx = dx
                         prevDy = dy
                         prevDz = dz
@@ -129,7 +105,6 @@ class Path(start: PathNode, end: PathNode, val goal: Goal, val ctx: CalculationC
                 smooth.add(path.last())
             }
         }
-        return smooth.toList()
+        return smooth
     }
-
 }

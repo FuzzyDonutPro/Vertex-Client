@@ -134,6 +134,12 @@ public class VertexCEFBrowser {
         }
     }
 
+    public void injectCharTyped(char c, int modifiers) {
+        if (browser != null && c != 0) {
+            browser.sendKeyTyped(c, modifiers);
+        }
+    }
+
     public MCEFBrowser getBrowser() {
         return browser;
     }

@@ -52,7 +52,7 @@ public class HumanAimSimulator {
         float dPitch = targetPitch - currentPitch;
 
         if (loadedProfile == null || loadedProfile.ticks.isEmpty()) {
-            // Humanized organic S-curve interpolation
+            // Humanized organic S-curve interpolation (softened pitch)
             float absYaw = Math.abs(dYaw);
             float absPitch = Math.abs(dPitch);
 
@@ -62,22 +62,19 @@ public class HumanAimSimulator {
             float yawCurve = yawProgress * yawProgress * (3.0f - 2.0f * yawProgress);
             float pitchCurve = pitchProgress * pitchProgress * (3.0f - 2.0f * pitchProgress);
 
-            float baseStepYaw = isPathfinding ? (0.16f + yawCurve * 0.26f) : (0.14f + yawCurve * 0.28f);
-            float baseStepPitch = isPathfinding ? (0.18f + pitchCurve * 0.24f) : (0.15f + pitchCurve * 0.27f);
+            float baseStepYaw = isPathfinding ? (0.16f + yawCurve * 0.26f) : (0.12f + yawCurve * 0.24f);
+            // Divided vertical pitch rotation speed by 3 for calm, steady tracking
+            float baseStepPitch = (isPathfinding ? (0.18f + pitchCurve * 0.24f) : (0.13f + pitchCurve * 0.23f)) / 3.0f;
 
-            // Micro-variance per tick (±8%)
-            float varianceYaw = (random.nextFloat() * 0.16f - 0.08f) * baseStepYaw;
-            float variancePitch = (random.nextFloat() * 0.16f - 0.08f) * baseStepPitch;
+            // Micro-variance per tick (±10%)
+            float varianceYaw = (random.nextFloat() * 0.20f - 0.10f) * baseStepYaw;
+            float variancePitch = (random.nextFloat() * 0.20f - 0.10f) * baseStepPitch;
 
-            float stepYaw = Math.max(0.08f, Math.min(0.85f, baseStepYaw + varianceYaw));
-            float stepPitch = Math.max(0.08f, Math.min(0.85f, baseStepPitch + variancePitch));
+            float stepYaw = Math.max(0.06f, Math.min(0.75f, baseStepYaw + varianceYaw));
+            float stepPitch = Math.max(0.02f, Math.min(0.25f, baseStepPitch + variancePitch));
 
             newYaw = currentYaw + (dYaw * stepYaw);
             newPitch = currentPitch + (dPitch * stepPitch);
-
-            // Subtle pitch breathing effect (simulates natural mouse hold variance)
-            double breathing = Math.sin(System.currentTimeMillis() * 0.003) * 0.06;
-            newPitch += (float) breathing;
         } else {
             // 1. Calculate remaining distance
             if (Math.abs(dYaw) < 0.3f && Math.abs(dPitch) < 0.3f) {
@@ -91,7 +88,8 @@ public class HumanAimSimulator {
                 float pitchRatio = Math.abs(dPitch) > 0.01f ? Math.min(1.0f, Math.abs(dPitch) / 20.0f) : 1.0f;
                 
                 float appliedYawDelta = Math.max(Math.abs(dYaw) * 0.22f, Math.abs(sample.deltaYaw) * yawRatio) * Math.signum(dYaw);
-                float appliedPitchDelta = Math.max(Math.abs(dPitch) * 0.22f, Math.abs(sample.deltaPitch) * pitchRatio) * Math.signum(dPitch);
+                // Divided vertical pitch rotation speed by 3
+                float appliedPitchDelta = (Math.max(Math.abs(dPitch) * 0.22f, Math.abs(sample.deltaPitch) * pitchRatio) * Math.signum(dPitch)) / 3.0f;
 
                 if (Math.abs(appliedYawDelta) > Math.abs(dYaw)) appliedYawDelta = dYaw;
                 if (Math.abs(appliedPitchDelta) > Math.abs(dPitch)) appliedPitchDelta = dPitch;

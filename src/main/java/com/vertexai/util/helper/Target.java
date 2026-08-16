@@ -41,7 +41,7 @@ public class Target {
         this.angle = angle;
     }
 
-    // Ensures Rotation Always Ends
+    // Ensures Rotation Always Ends with organic, humanized aimpoint offset
     public Angle getTargetAngle() {
         if (blockPos != null) {
             return AngleUtil.getRotation(blockPos);
@@ -52,8 +52,14 @@ public class Target {
         }
 
         if (entity != null) {
-            double targetY = entity.getY() + (entity.getBbHeight() * 0.55);
-            return AngleUtil.getRotation(new Vec3(entity.getX(), targetY, entity.getZ()));
+            long now = System.currentTimeMillis();
+            // Slow organic aim point drift within the mob's hitbox instead of robotic dead-center lock
+            double swayX = Math.sin(now * 0.0023) * (entity.getBbWidth() * 0.22);
+            double swayZ = Math.cos(now * 0.0029) * (entity.getBbWidth() * 0.22);
+            double swayY = Math.sin(now * 0.0017) * (entity.getBbHeight() * 0.14);
+
+            double targetY = entity.getY() + (entity.getBbHeight() * 0.52) + swayY;
+            return AngleUtil.getRotation(new Vec3(entity.getX() + swayX, targetY, entity.getZ() + swayZ));
         }
 
         return angle;

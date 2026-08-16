@@ -25,7 +25,7 @@ public class VertexUIServer {
         try {
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", PORT), 0);
             server.createContext("/", new AssetHandler());
-            server.setExecutor(null);
+            server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(4));
             server.start();
             Logger.sendLog("[VertexUIServer] HTTP Local Server started at http://127.0.0.1:" + PORT);
         } catch (Exception e) {

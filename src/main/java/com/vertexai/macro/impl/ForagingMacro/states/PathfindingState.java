@@ -1,16 +1,18 @@
 package com.vertexai.macro.impl.ForagingMacro.states;
 
-import com.vertexai.Vertex;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.macro.impl.ForagingMacro.ForagingMacroState;
 import com.vertexai.feature.impl.Pathfinder;
+import com.vertexai.pathfinder.helper.BlockStateAccessor;
+import com.vertexai.pathfinder.movement.MovementHelper;
+import com.vertexai.util.BlockUtil;
+import com.vertexai.util.helper.Clock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -21,16 +23,12 @@ public class PathfindingState implements ForagingMacroState {
 
     private final Minecraft mc = Minecraft.getInstance();
     private BlockPos targetBlock;
-    private final com.vertexai.util.helper.Clock pathTimeout = new com.vertexai.util.helper.Clock();
-    private final java.util.Set<BlockPos> blacklistedBlocks = new java.util.HashSet<>();
-
-    private final com.vertexai.util.helper.Clock blacklistClearClock = new com.vertexai.util.helper.Clock();
+    private final Clock pathTimeout = new Clock();
+    private final Clock wanderCooldown = new Clock();
 
     @Override
     public void onStart(ForagingMacro macro) {
-        log("Searching for closest log block...");
-        blacklistedBlocks.clear();
-        blacklistClearClock.schedule(15000L);
+        log("Searching for closest unmined tree at head height...");
         startPathfindingToNewTarget(macro);
     }
 
@@ -38,36 +36,39 @@ public class PathfindingState implements ForagingMacroState {
     public ForagingMacroState onTick(ForagingMacro macro) {
         if (mc.player == null || mc.level == null) return this;
 
-        // If no target, try finding one
-        if (this.targetBlock == null || mc.level.isEmptyBlock(this.targetBlock)) {
-            startPathfindingToNewTarget(macro);
-            if (this.targetBlock == null) {
-                if (!blacklistedBlocks.isEmpty() && blacklistClearClock.passed()) {
-                    log("No logs found. Clearing blacklist to retry...");
-                    blacklistedBlocks.clear();
-                    blacklistClearClock.schedule(15000L);
-                }
-
-                if (!Pathfinder.getInstance().isRunning()) {
-                    BlockPos randomWander = mc.player.blockPosition().offset(
-                            (int)(Math.random() * 10 - 5),
-                            0,
-                            (int)(Math.random() * 10 - 5)
-                    );
-                    Pathfinder.getInstance().stopAndRequeue(randomWander);
-                    Pathfinder.getInstance().start();
-                }
-                return this; // No logs in area
-            }
+        // Check if ANY valid unmined tree log of target mode is already within reach (<= 4.2 blocks)
+        BlockPos immediateLog = findImmediateReachableLog(macro, macro.getCurrentForagingMode());
+        if (immediateLog != null) {
+            macro.setTargetBlockPos(immediateLog);
+            this.targetBlock = immediateLog;
+            Pathfinder.getInstance().stop();
+            return new BreakingState();
         }
 
-        // Check if pathfinder failed or timed out
-        if ((!Pathfinder.getInstance().isRunning() && Pathfinder.getInstance().failed()) || (pathTimeout.isScheduled() && pathTimeout.passed())) {
-            log("Pathfinding to log " + this.targetBlock.toShortString() + " failed/timed out, blacklisting...");
-            blacklistedBlocks.add(this.targetBlock);
-            this.targetBlock = null;
-            Pathfinder.getInstance().stop();
-            return this;
+        // If no target or target already broken/blacklisted, find a new one
+        if (this.targetBlock == null || mc.level.isEmptyBlock(this.targetBlock) || macro.isBlockBlacklisted(this.targetBlock)) {
+            startPathfindingToNewTarget(macro);
+            if (this.targetBlock == null) {
+                if (!macro.isBlacklistEmpty() && macro.blacklistClearClock.passed()) {
+                    log("No fresh trees found. Clearing blacklist to scan for respawned trees...");
+                    macro.clearBlacklist();
+                    macro.blacklistClearClock.schedule(10000L);
+                }
+
+                // Throttle wander requests to prevent thread starvation and path spam
+                if (!Pathfinder.getInstance().isRunning() && (!wanderCooldown.isScheduled() || wanderCooldown.passed())) {
+                    wanderCooldown.schedule(2500L);
+                    BlockPos randomWander = mc.player.blockPosition().offset(
+                            (int)(Math.random() * 14 - 7),
+                            0,
+                            (int)(Math.random() * 14 - 7)
+                    );
+                    BlockPos standable = findStandablePosNear(randomWander);
+                    Pathfinder.getInstance().stopAndRequeue(standable);
+                    Pathfinder.getInstance().start();
+                }
+                return this;
+            }
         }
 
         // Measure distance from eye position to target log center
@@ -75,10 +76,30 @@ public class PathfindingState implements ForagingMacroState {
         Vec3 targetCenter = Vec3.atCenterOf(this.targetBlock);
         double distanceSq = eyePos.distanceToSqr(targetCenter);
 
-        // Vanilla block reach limit is 4.5 blocks (4.5^2 = 20.25 sq blocks)
+        // Within reach limit (4.5 blocks = 20.25 sq blocks)
         if (distanceSq <= 20.25) {
             Pathfinder.getInstance().stop();
             return new BreakingState();
+        }
+
+        // Check if pathfinder stopped or failed
+        if (!Pathfinder.getInstance().isRunning()) {
+            if (Pathfinder.getInstance().failed() || (pathTimeout.isScheduled() && pathTimeout.passed()) || distanceSq > 20.25) {
+                log("Pathfinding to log " + this.targetBlock.toShortString() + " finished but out of reach / failed, blacklisting tree...");
+                macro.blacklistTreeCluster(this.targetBlock);
+                this.targetBlock = null;
+                Pathfinder.getInstance().stop();
+                return this;
+            }
+        }
+
+        // Timeout check while running
+        if (pathTimeout.isScheduled() && pathTimeout.passed()) {
+            log("Pathfinding to log " + this.targetBlock.toShortString() + " timed out, blacklisting tree...");
+            macro.blacklistTreeCluster(this.targetBlock);
+            this.targetBlock = null;
+            Pathfinder.getInstance().stop();
+            return this;
         }
 
         return this;
@@ -90,40 +111,88 @@ public class PathfindingState implements ForagingMacroState {
     }
 
     private void startPathfindingToNewTarget(ForagingMacro macro) {
-        this.targetBlock = findClosestLogBlock(macro.getCurrentForagingMode());
+        this.targetBlock = findClosestLogBlock(macro, macro.getCurrentForagingMode());
         if (this.targetBlock != null) {
             macro.setTargetBlockPos(this.targetBlock);
             log("Found target log at " + this.targetBlock.toShortString());
 
-            // Pathfind to adjacent standable ground position instead of inside solid log
+            Vec3 eyePos = mc.player.getEyePosition();
+            Vec3 targetCenter = Vec3.atCenterOf(this.targetBlock);
+            double distanceSq = eyePos.distanceToSqr(targetCenter);
+
+            if (distanceSq <= 20.25) {
+                // Already in reach, no need to pathfind
+                return;
+            }
+
+            // Pathfind to adjacent standable ground position
             BlockPos standablePos = findStandablePosNear(this.targetBlock);
             Pathfinder.getInstance().stopAndRequeue(standablePos);
             Pathfinder.getInstance().start();
-            pathTimeout.schedule(10000L); // 10 second max pathfinding timeout
+            pathTimeout.schedule(8000L); // 8 second max pathfinding timeout
         } else {
-            log("No log blocks found nearby.");
+            log("No unmined tree logs found nearby.");
         }
+    }
+
+    private BlockPos findImmediateReachableLog(ForagingMacro macro, String mode) {
+        if (mc.player == null || mc.level == null) return null;
+        Vec3 eyePos = mc.player.getEyePosition();
+        BlockPos playerPos = mc.player.blockPosition();
+
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dy = -2; dy <= 4; dy++) {
+                for (int dz = -4; dz <= 4; dz++) {
+                    BlockPos pos = playerPos.offset(dx, dy, dz);
+                    if (macro.isBlockBlacklisted(pos)) continue;
+
+                    Block block = mc.level.getBlockState(pos).getBlock();
+                    if (ForagingMacro.isLogBlock(block, mode) && ForagingMacro.isFullTree(mc.level, pos, mode)) {
+                        double d = Vec3.atCenterOf(pos).distanceToSqr(eyePos);
+                        if (d <= 18.0) { // <= 4.2 blocks reach
+                            double heightPenalty = Math.abs((pos.getY() + 0.5) - eyePos.y) * 2.0;
+                            double score = d + heightPenalty;
+                            if (score < bestDist) {
+                                bestDist = score;
+                                best = pos;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private BlockPos findStandablePosNear(BlockPos logPos) {
         if (mc.level == null || mc.player == null) return logPos;
         BlockPos playerPos = mc.player.blockPosition();
+        BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
 
         BlockPos bestPos = null;
         double bestDist = Double.MAX_VALUE;
 
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    BlockPos pos = logPos.offset(dx, dy, dz);
-                    if (mc.level.getBlockState(pos).isAir() &&
-                        mc.level.getBlockState(pos.above()).isAir() &&
-                        !mc.level.getBlockState(pos.below()).isAir()) {
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    int x = logPos.getX() + dx;
+                    int y = logPos.getY() + dy;
+                    int z = logPos.getZ() + dz;
 
-                        double d = pos.distSqr(playerPos);
-                        if (d < bestDist) {
-                            bestDist = d;
-                            bestPos = pos;
+                    if (MovementHelper.INSTANCE.canStandOn(bsa, x, y, z, bsa.get(x, y, z)) &&
+                        MovementHelper.INSTANCE.canWalkThrough(bsa, x, y + 1, z, bsa.get(x, y + 1, z)) &&
+                        MovementHelper.INSTANCE.canWalkThrough(bsa, x, y + 2, z, bsa.get(x, y + 2, z))) {
+
+                        BlockPos standPos = new BlockPos(x, y + 1, z);
+                        double distFromPlayer = standPos.distSqr(playerPos);
+                        double distToLog = standPos.distSqr(logPos);
+
+                        if (distToLog <= 16 && distFromPlayer < bestDist) {
+                            bestDist = distFromPlayer;
+                            bestPos = standPos;
                         }
                     }
                 }
@@ -132,117 +201,34 @@ public class PathfindingState implements ForagingMacroState {
         return bestPos != null ? bestPos : logPos;
     }
 
-    private BlockPos findClosestLogBlock(String mode) {
+    private BlockPos findClosestLogBlock(ForagingMacro macro, String mode) {
         if (mc.player == null || mc.level == null) return null;
         Vec3 eyePos = mc.player.getEyePosition();
         BlockPos playerPos = mc.player.blockPosition();
-        List<BlockPos> validBlocks = new java.util.ArrayList<>();
-        int searchRadius = 30;
+        List<BlockPos> validBlocks = new ArrayList<>();
+        int searchRadius = 32;
 
         for (int x = -searchRadius; x <= searchRadius; x++) {
-            for (int y = -8; y <= 20; y++) {
+            for (int y = -10; y <= 24; y++) {
                 for (int z = -searchRadius; z <= searchRadius; z++) {
                     BlockPos pos = playerPos.offset(x, y, z);
-                    if (blacklistedBlocks.contains(pos)) continue;
+                    if (macro.isBlockBlacklisted(pos)) continue;
 
-                    net.minecraft.world.level.block.Block block = mc.level.getBlockState(pos).getBlock();
-                    if (isLogBlock(block, mode) && isTreeCluster(pos, mode)) {
+                    Block block = mc.level.getBlockState(pos).getBlock();
+                    if (ForagingMacro.isLogBlock(block, mode) && ForagingMacro.isFullTree(mc.level, pos, mode)) {
                         validBlocks.add(pos);
                     }
                 }
             }
         }
 
-        BlockPos closest = validBlocks.stream()
-                .min(java.util.Comparator.<BlockPos>comparingDouble(pos -> Vec3.atCenterOf(pos).distanceToSqr(eyePos)))
+        // Target the closest tree, prioritizing logs directly at eye / head height
+        return validBlocks.stream()
+                .min(Comparator.comparingDouble(pos -> {
+                    double dist2D = Math.hypot(pos.getX() + 0.5 - eyePos.x, pos.getZ() + 0.5 - eyePos.z);
+                    double headHeightDiff = Math.abs((pos.getY() + 0.5) - eyePos.y);
+                    return dist2D + (headHeightDiff * 1.5);
+                }))
                 .orElse(null);
-
-        if (closest != null) {
-            // Traverse down to find the bottom-most log of this tree
-            BlockPos current = closest;
-            while (true) {
-                BlockPos below = current.below();
-                if (blacklistedBlocks.contains(below)) break;
-                if (!isLogBlock(mc.level.getBlockState(below).getBlock(), mode)) {
-                    break;
-                }
-                current = below;
-            }
-            return current;
-        }
-
-        return null;
-    }
-
-    private boolean isTreeCluster(BlockPos startPos, String mode) {
-        Set<BlockPos> visited = new HashSet<>();
-        Queue<BlockPos> queue = new ArrayDeque<>();
-
-        queue.add(startPos);
-        visited.add(startPos);
-
-        int count = 0;
-
-        while (!queue.isEmpty()) {
-            BlockPos current = queue.poll();
-            count++;
-
-            if (count >= 10) {
-                return true; // Cluster has at least 10 connected logs (real tree!)
-            }
-
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        if (dx == 0 && dy == 0 && dz == 0) continue;
-                        BlockPos neighbor = current.offset(dx, dy, dz);
-                        if (!visited.contains(neighbor) && !blacklistedBlocks.contains(neighbor)) {
-                            Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
-                            if (isLogBlock(neighborBlock, mode)) {
-                                visited.add(neighbor);
-                                queue.add(neighbor);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return count >= 10;
-    }
-
-    private boolean isLogBlock(Block block, String mode) {
-        if (block == null) return false;
-        String id = block.getDescriptionId().toLowerCase(java.util.Locale.ROOT);
-        
-        // Exclude stripped logs and non-log wooden structures (planks, fences, stairs, slabs, trapdoors, doors, signs, etc.)
-        if (id.contains("stripped") || id.contains("planks") || id.contains("fence") || 
-            id.contains("stairs") || id.contains("slab") || id.contains("door") || 
-            id.contains("sign") || id.contains("plate") || id.contains("button") || 
-            id.contains("gate") || id.contains("table") || id.contains("chest") || 
-            id.contains("barrel") || id.contains("composter") || id.contains("boat")) {
-            return false;
-        }
-
-        // Must explicitly be a log or wood block
-        boolean isLogOrWood = id.contains("log") || id.contains("wood");
-        if (!isLogOrWood) return false;
-
-        String m = mode != null ? mode.toLowerCase(java.util.Locale.ROOT) : "";
-
-        if (m.contains("dark")) {
-            return id.contains("dark_oak");
-        } else if (m.contains("acacia")) {
-            return id.contains("acacia");
-        } else if (m.contains("jungle") || m.contains("mangrove")) {
-            return id.contains("jungle") || id.contains("mangrove");
-        } else if (m.contains("spruce")) {
-            return id.contains("spruce");
-        } else if (m.contains("oak")) {
-            return id.contains("oak") && !id.contains("dark");
-        } else if (m.contains("birch")) {
-            return id.contains("birch");
-        }
-        return true;
     }
 }

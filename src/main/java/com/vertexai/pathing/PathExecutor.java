@@ -47,8 +47,11 @@ public class PathExecutor {
         BlockPos target = currentPath.get(lookIndex);
         Vec3 targetVec = new Vec3(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
 
-        // Advance to next node if close enough
-        if (player.position().distanceTo(targetVec) < 0.6) {
+        // Advance to next node if close enough (strict horizontal distance, generous vertical distance for slabs/stairs)
+        double hDistSq = (targetVec.x - player.getX()) * (targetVec.x - player.getX()) + (targetVec.z - player.getZ()) * (targetVec.z - player.getZ());
+        double vDist = Math.abs(targetVec.y - player.getY());
+        
+        if (hDistSq < (0.35 * 0.35) && vDist < 1.2) {
             pathIndex++;
             if (pathIndex >= currentPath.size()) {
                 stopMovement();
@@ -68,8 +71,8 @@ public class PathExecutor {
         float targetYaw = (float) (Mth.atan2(dZ, dX) * (180D / Math.PI)) - 90.0F;
         float rawPitch = (float) -(Mth.atan2(dY, horizDist) * (180D / Math.PI));
         
-        // Cap pitch to max 40% downwards (+36.0 degrees) so character never looks straight down on arrival
-        float targetPitch = Math.max(-90.0f, Math.min(36.0f, rawPitch));
+        // Soften vertical camera motion by dividing by 1.4 instead of hard capping
+        float targetPitch = (float) (rawPitch / 1.4);
 
         com.vertexai.pathing.aim.HumanAimSimulator.loadProfile(); // Ensure it's loaded
         float[] nextAngles = com.vertexai.pathing.aim.HumanAimSimulator.getNextAnglePathfinding(

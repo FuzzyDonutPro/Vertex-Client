@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertex Client — Next-Gen Minecraft Automation & Macros</title>
+    <meta name="description" content="Vertex Client is the premier high-performance automation suite for Minecraft Fabric 1.21.1. Featuring autonomous Slayer, Mining, Farming, Foraging, and intelligent Anti-Detection engines.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 22 22 22 12 2"></polygon>
+                    </svg>
+                </div>
+                <span class="brand-name">VERTEX<span class="brand-accent">.AI</span></span>
+                <span class="badge-version">v1.0.4</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#macros" class="nav-link">Macro Suite</a>
+                <a href="#simulator" class="nav-link">Interactive GUI</a>
+                <a href="#humanization" class="nav-link">Anti-Detection</a>
+                <a href="#install" class="nav-link">Installation</a>
+            </nav>
+
+            <div class="nav-actions">
+                <a href="#download" class="btn btn-primary btn-sm">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download JAR</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="hero-section">
+            <div class="hero-container">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Fabric 1.21.1 Native Client Suite</span>
+                </div>
+
+                <h1 class="hero-title">
+                    The Pinnacle of <br>
+                    <span class="gradient-text">Autonomous Skyblock</span> Automation.
+                </h1>
+
+                <p class="hero-subtitle">
+                    Engineered with state-of-the-art Bezier curve aim humanization, Chromium Embedded Framework GUI, Maddox auto-calling, 50-log tree cluster flood-fill, and multi-layered anti-staff failsafes.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary btn-lg">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Download Vertex 1.0.4</span>
+                    </a>
+                    <a href="#simulator" class="btn btn-secondary btn-lg">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span>Try Interactive Web GUI</span>
+                    </a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">12+</div>
+                        <div class="stat-label">Specialized Macros</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-card">
+                        <div class="stat-value">0ms</div>
+                        <div class="stat-label">Slayer Maddox Reaction</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Humanized Bezier Curves</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-card">
+                        <div class="stat-value">CEF 2.0</div>
+                        <div class="stat-label">Modern Web Glass UI</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Features Overview -->
+        <section id="features" class="section">
+            <div class="section-header">
+                <span class="section-tag">ENGINEERING EXCELLENCE</span>
+                <h2 class="section-title">Built Different. From Core to Interface.</h2>
+                <p class="section-desc">Every subsystem inside Vertex Client is custom architected for efficiency, undetectable smoothness, and zero downtime.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Multi-Layer Failsafe Suite</h3>
+                    <p class="feature-text">Staff check detection, unexpected teleport alarms, rotation anomaly trackers, bedrock cage unglitchers, and Discord webhook notifications.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="m4.93 4.93 4.24 4.24"></path>
+                            <path d="m14.83 9.17 4.24-4.24"></path>
+                            <path d="m14.83 14.83 4.24 4.24"></path>
+                            <path d="m9.17 14.83-4.24 4.24"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">True Bezier Aim Simulation</h3>
+                    <p class="feature-text">Dynamic cubic bezier rotational interpolation mimicking authentic mouse acceleration, micro-overshoots, and natural human eye-hand jitter.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Chromium Embedded Svelte UI</h3>
+                    <p class="feature-text">Zero clunky legacy menus. Powered by high-FPS MCEF Svelte frontend with live HUD overlays, card drawers, and instant schema two-way syncing.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Zero-Lag Pathfinding Engine</h3>
+                    <p class="feature-text">Optimized 3D A* navigation with obstacle jump-assist, stuck recovery pulse vectors, and line-of-sight raycasting through Minecraft geometry.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Macro Suite -->
+        <section id="macros" class="section bg-alt">
+            <div class="section-header">
+                <span class="section-tag">AUTONOMOUS MODULES</span>
+                <h2 class="section-title">Specialized Macros For Every Task</h2>
+                <p class="section-desc">Configured out-of-the-box with fine-tuning parameters to adapt to any profile setup.</p>
+            </div>
+
+            <div class="macros-grid">
+                <!-- Slayer Macro -->
+                <div class="macro-card">
+                    <div class="macro-header">
+                        <div class="macro-badge slayer-badge">COMBAT & SLAYER</div>
+                        <span class="macro-version">Tier I - V Ready</span>
+                    </div>
+                    <h3 class="macro-title">Slayer Boss & Mob Annihilator</h3>
+                    <p class="macro-desc">Automated Maddox Batphone and Abiphone auto-calling with chat <code>[OPEN MENU]</code> click interception. Priority hologram nametag target lock, auto weapon swapping, and Rogue speed boosting.</p>
+                    <ul class="macro-features-list">
+                        <li><span>✔</span> Selectable Tiers I through V with automatic quest claiming</li>
+                        <li><span>✔</span> Prioritizes Slayer Bosses & mini-bosses over trash mobs</li>
+                        <li><span>✔</span> Automatic healing wand / orb activation below custom HP %</li>
+                    </ul>
+                </div>
+
+                <!-- Mining Macro -->
+                <div class="macro-card">
+                    <div class="macro-header">
+                        <div class="macro-badge mining-badge">MINING & COMMISSIONS</div>
+                        <span class="macro-version">Smart Speed Sync</span>
+                    </div>
+                    <h3 class="macro-title">Glacite, Gemstone & Route Miner</h3>
+                    <p class="macro-desc">Extracts live player mining speed and pickaxe abilities. Mines Mithril, Gemstones, and Glacite with precision 3D ESP outlines, auto drill refueling (Volta/Oil), and Pickaxe Ability cooldown timing.</p>
+                    <ul class="macro-features-list">
+                        <li><span>✔</span> Intelligent block priority filtering & aim particle tracking</li>
+                        <li><span>✔</span> Automatic drill fuel swapping and machine interaction</li>
+                        <li><span>✔</span> Full Dwarven & Crystal Hollows commission state machine</li>
+                    </ul>
+                </div>
+
+                <!-- Foraging Macro -->
+                <div class="macro-card">
+                    <div class="macro-header">
+                        <div class="macro-badge foraging-badge">FORAGING</div>
+                        <span class="macro-version">5 - 50 Log Engine</span>
+                    </div>
+                    <h3 class="macro-title">Treecapitator Cluster Forager</h3>
+                    <p class="macro-desc">Designed specifically for Treecapitator and Jungle Axe mechanics. Identifies 5-to-50 connected log spreads, breaking only one block per tree to maximize yield without wasting axe durability.</p>
+                    <ul class="macro-features-list">
+                        <li><span>✔</span> 3D BFS flood-fill tree cluster detection</li>
+                        <li><span>✔</span> 12-second block blacklist to prevent hitting empty stumps</li>
+                        <li><span>✔</span> Auto-jump assist over 1-block terrain hurdles</li>
+                    </ul>
+                </div>
+
+                <!-- Farming Macro -->
+                <div class="macro-card">
+                    <div class="macro-header">
+                        <div class="macro-badge farming-badge">GARDEN & FARMING</div>
+                        <span class="macro-version">S-Shape Movement</span>
+                    </div>
+                    <h3 class="macro-title">Crop, Nether Wart & Melon S-Lane</h3>
+                    <p class="macro-desc">Perfect lane-based farming macro with pitch/yaw angle lock, automatic border turnarounds, visitor clearing, and anti-stuck motion correction for endless Garden farming.</p>
+                    <ul class="macro-features-list">
+                        <li><span>✔</span> Supports Sugar Cane, Nether Wart, Wheat, Carrot, Potato, Melon</li>
+                        <li><span>✔</span> Custom keybind state managers with seamless lane transitions</li>
+                        <li><span>✔</span> Auto Pest Hunter and Garden Visitor handler integration</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Web GUI Simulator -->
+        <section id="simulator" class="section">
+            <div class="section-header">
+                <span class="section-tag">LIVE INTERFACE DEMO</span>
+                <h2 class="section-title">Experience Vertex Client Web GUI</h2>
+                <p class="section-desc">Try out the live interactive simulation of the Vertex client interface. Switch tabs, toggle features, adjust sliders, and observe real-time HUD reactions.</p>
+            </div>
+
+            <div class="simulator-wrapper">
+                <div class="sim-window">
+                    <!-- Title Bar -->
+                    <div class="sim-titlebar">
+                        <div class="sim-dots">
+                            <span class="sim-dot dot-red"></span>
+                            <span class="sim-dot dot-yellow"></span>
+                            <span class="sim-dot dot-green"></span>
+                        </div>
+                        <div class="sim-title">VERTEX CLIENT CEF INTERFACE — v1.0.4</div>
+                        <div class="sim-fps">60 FPS (MCEF Web)</div>
+                    </div>
+
+                    <div class="sim-body">
+                        <!-- Sidebar -->
+                        <aside class="sim-sidebar">
+                            <div class="sim-nav-category">MACROS & MODULES</div>
+                            <button class="sim-nav-btn active" data-tab="combat">
+                                <span class="nav-icon">⚔️</span>
+                                <span>Slayer & Combat</span>
+                            </button>
+                            <button class="sim-nav-btn" data-tab="mining">
+                                <span class="nav-icon">⛏️</span>
+                                <span>Mining & Ores</span>
+                            </button>
+                            <button class="sim-nav-btn" data-tab="foraging">
+                                <span class="nav-icon">🪓</span>
+                                <span>Foraging 5-50</span>
+                            </button>
+                            <button class="sim-nav-btn" data-tab="farming">
+                                <span class="nav-icon">🌾</span>
+                                <span>Farming & Garden</span>
+                            </button>
+                            <button class="sim-nav-btn" data-tab="failsafes">
+                                <span class="nav-icon">🛡️</span>
+                                <span>Safety & Failsafes</span>
+                            </button>
+                        </aside>
+
+                        <!-- Main Content Panel -->
+                        <div class="sim-content">
+                            <!-- Tab: Combat -->
+                            <div class="sim-tab-content active" id="tab-combat">
+                                <div class="sim-card-header">
+                                    <div>
+                                        <h3 class="sim-card-title">Slayer Boss & Auto Mob Killer</h3>
+                                        <p class="sim-card-subtitle">Auto-spawns, auto-calls Maddox, and executes configured Slayer tier.</p>
+                                    </div>
+                                    <button class="sim-toggle-btn" id="macro-toggle-combat">START MACRO</button>
+                                </div>
+
+                                <div class="sim-settings-grid">
+                                    <div class="sim-setting-item">
+                                        <label class="sim-label">Target Slayer Boss</label>
+                                        <select class="sim-select" id="slayer-boss-select">
+                                            <option value="sven">Sven Packmaster</option>
+                                            <option value="revenant">Revenant Horror</option>
+                                            <option value="tarantula">Tarantula Broodfather</option>
+                                            <option value="voidgloom">Voidgloom Seraph</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sim-setting-item">
+                                        <label class="sim-label">Slayer Boss Tier</label>
+                                        <select class="sim-select" id="slayer-tier-select">
+                                            <option value="1">Tier I (Easy)</option>
+                                            <option value="2">Tier II (Medium)</option>
+                                            <option value="3">Tier III (Hard)</option>
+                                            <option value="4" selected>Tier IV (Master)</option>
+                                            <option value="5">Tier V (Infernal / Atoned)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sim-setting-item">
+                                        <div class="flex-between">
+                                            <label class="sim-label">Auto-Heal Threshold</label>
+                                            <span class="sim-val" id="heal-val">50%</span>
+                                        </div>
+                                        <input type="range" class="sim-range" id="heal-slider" min="20" max="80" value="50">
+                                    </div>
+
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" id="maddox-auto-check" checked>
+                                            <span>Auto-Dial Maddox Batphone on Boss Death</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Mining -->
+                            <div class="sim-tab-content" id="tab-mining">
+                                <div class="sim-card-header">
+                                    <div>
+                                        <h3 class="sim-card-title">Mining & Gemstone Nuker</h3>
+                                        <p class="sim-card-subtitle">Automates block breaking, drill refuel, and pickaxe speed boosts.</p>
+                                    </div>
+                                    <button class="sim-toggle-btn" id="macro-toggle-mining">START MACRO</button>
+                                </div>
+
+                                <div class="sim-settings-grid">
+                                    <div class="sim-setting-item">
+                                        <label class="sim-label">Target Ore Category</label>
+                                        <select class="sim-select" id="mining-ore-select">
+                                            <option value="mithril">Mithril (Dwarven Mines)</option>
+                                            <option value="gemstone">Ruby / Jasper Gemstones</option>
+                                            <option value="glacite">Glacite / Ice Walker Mines</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sim-setting-item">
+                                        <label class="sim-label">Auto Drill Refuel Fuel</label>
+                                        <select class="sim-select">
+                                            <option>Volta Fuel Unit</option>
+                                            <option>Oil Barrel</option>
+                                            <option>Biofuel</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>Auto-Trigger Pickaxe Ability (Mining Speed Boost)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Foraging -->
+                            <div class="sim-tab-content" id="tab-foraging">
+                                <div class="sim-card-header">
+                                    <div>
+                                        <h3 class="sim-card-title">Treecapitator 5-50 Cluster Forager</h3>
+                                        <p class="sim-card-subtitle">BFS flood-fill cluster scan. Breaks exactly one log per tree.</p>
+                                    </div>
+                                    <button class="sim-toggle-btn" id="macro-toggle-foraging">START MACRO</button>
+                                </div>
+
+                                <div class="sim-settings-grid">
+                                    <div class="sim-setting-item">
+                                        <div class="flex-between">
+                                            <label class="sim-label">Min Cluster Logs</label>
+                                            <span class="sim-val">5 Logs</span>
+                                        </div>
+                                        <input type="range" class="sim-range" min="3" max="10" value="5">
+                                    </div>
+                                    <div class="sim-setting-item">
+                                        <div class="flex-between">
+                                            <label class="sim-label">Max Cluster Cap</label>
+                                            <span class="sim-val">50 Logs</span>
+                                        </div>
+                                        <input type="range" class="sim-range" min="20" max="100" value="50">
+                                    </div>
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>12-Second Tree Respawn Blacklist</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Farming -->
+                            <div class="sim-tab-content" id="tab-farming">
+                                <div class="sim-card-header">
+                                    <div>
+                                        <h3 class="sim-card-title">Crop/Wart S-Shape Farm Macro</h3>
+                                        <p class="sim-card-subtitle">Smooth lane traversal and auto garden recovery.</p>
+                                    </div>
+                                    <button class="sim-toggle-btn" id="macro-toggle-farming">START MACRO</button>
+                                </div>
+
+                                <div class="sim-settings-grid">
+                                    <div class="sim-setting-item">
+                                        <label class="sim-label">Crop Preset</label>
+                                        <select class="sim-select">
+                                            <option>Nether Wart (S-Shape)</option>
+                                            <option>Sugar Cane (Hold Attack)</option>
+                                            <option>Melon / Pumpkin (Dice Pattern)</option>
+                                            <option>Wheat / Carrot / Potato</option>
+                                        </select>
+                                    </div>
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>Anti-Stuck Lane Rotation Flip</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Failsafes -->
+                            <div class="sim-tab-content" id="tab-failsafes">
+                                <div class="sim-card-header">
+                                    <div>
+                                        <h3 class="sim-card-title">Anti-Staff & Failsafe Security</h3>
+                                        <p class="sim-card-subtitle">Multi-tier protection layer against staff checks and anomalies.</p>
+                                    </div>
+                                    <button class="sim-toggle-btn" style="background:#10b981;">ARMED</button>
+                                </div>
+
+                                <div class="sim-settings-grid">
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>Player Proximity Alarm (< 10 blocks)</span>
+                                        </label>
+                                    </div>
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>Bedrock Cage Warp & Immediate Pause</span>
+                                        </label>
+                                    </div>
+                                    <div class="sim-setting-item">
+                                        <label class="sim-checkbox-label">
+                                            <input type="checkbox" checked>
+                                            <span>Staff Check Rotation Velocity Anomaly Alarm</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Simulation HUD Display -->
+                            <div class="sim-hud-box">
+                                <div class="sim-hud-header">
+                                    <span class="hud-indicator"></span>
+                                    <span class="hud-title">ACTIVE HUD OVERLAY STATUS</span>
+                                    <span class="hud-status" id="hud-status-text">MACRO READY — IDLE</span>
+                                </div>
+                                <div class="sim-hud-grid">
+                                    <div class="hud-item">
+                                        <span class="hud-label">CURRENT TARGET:</span>
+                                        <span class="hud-val" id="hud-target-val">Sven Packmaster (Tier IV)</span>
+                                    </div>
+                                    <div class="hud-item">
+                                        <span class="hud-label">ROTATION ENGINE:</span>
+                                        <span class="hud-val text-cyan">Bezier Easing Active</span>
+                                    </div>
+                                    <div class="hud-item">
+                                        <span class="hud-label">SESSION TIME:</span>
+                                        <span class="hud-val font-mono" id="hud-timer">00:00:00</span>
+                                    </div>
+                                    <div class="hud-item">
+                                        <span class="hud-label">FAILSAFE STATUS:</span>
+                                        <span class="hud-val text-green">100% Armed & Safe</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Anti-Detection & Bezier Curve Lab -->
+        <section id="humanization" class="section bg-alt">
+            <div class="section-header">
+                <span class="section-tag">MATHEMATICAL HUMANIZATION</span>
+                <h2 class="section-title">Why Vertex Bypasses Advanced Anti-Cheats</h2>
+                <p class="section-desc">Traditional bots use linear or snap rotations which trigger algorithmic machine learning flags. Vertex generates natural cubic bezier curves with velocity easing and dynamic micro-overshoot.</p>
+            </div>
+
+            <div class="curve-lab-container">
+                <div class="curve-canvas-wrapper">
+                    <canvas id="bezier-canvas" width="600" height="340"></canvas>
+                    <div class="canvas-legend">
+                        <span class="legend-item"><span class="legend-dot dot-bot"></span> Linear Bot Rotation (Detected)</span>
+                        <span class="legend-item"><span class="legend-dot dot-vertex"></span> Vertex Bezier Easing (Humanized)</span>
+                    </div>
+                </div>
+
+                <div class="curve-controls">
+                    <h3 class="curve-title">Interactive Trajectory Testing</h3>
+                    <p class="curve-desc">Click anywhere in the simulation canvas above or adjust parameters below to simulate how Vertex interpolates camera movement.</p>
+
+                    <div class="control-group">
+                        <label class="control-label">Curve Curvature Factor</label>
+                        <input type="range" id="curve-factor" min="1" max="10" value="5" class="sim-range">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Overshoot & Jitter Simulation</label>
+                        <input type="range" id="jitter-factor" min="0" max="10" value="4" class="sim-range">
+                    </div>
+
+                    <button class="btn btn-primary btn-sm" id="btn-replay-curve">Replay Trajectory Animation</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation & Setup Guide -->
+        <section id="install" class="section">
+            <div class="section-header">
+                <span class="section-tag">QUICK INSTALLATION</span>
+                <h2 class="section-title">Zero Friction Setup</h2>
+                <p class="section-desc">Install in less than 60 seconds with Fabric 1.21.1 or Modrinth App.</p>
+            </div>
+
+            <div class="install-steps-grid">
+                <div class="step-card">
+                    <div class="step-num">01</div>
+                    <h3 class="step-title">Install Fabric 1.21.1</h3>
+                    <p class="step-text">Ensure you have Minecraft Fabric 1.21.1 installed with Fabric API.</p>
+                    <div class="code-box">
+                        <code>Fabric Loader >= 0.16.0</code>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-num">02</div>
+                    <h3 class="step-title">Place in Mods Folder</h3>
+                    <p class="step-text">Drop <code>Vertex-Client-v1.0.4.jar</code> directly into your active profile's mods directory.</p>
+                    <div class="code-box">
+                        <code>.minecraft/mods/Vertex-Client-v1.0.4.jar</code>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-num">03</div>
+                    <h3 class="step-title">Launch & Press Right Shift</h3>
+                    <p class="step-text">Launch Minecraft. Press <code>Right Shift</code> in-game to toggle the high-resolution CEF Web GUI!</p>
+                    <div class="code-box">
+                        <code>Keybind: RIGHT_SHIFT (Customizable)</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download CTA Section -->
+        <section id="download" class="section download-section">
+            <div class="download-card">
+                <h2 class="download-title">Elevate Your Hypixel Experience Today</h2>
+                <p class="download-subtitle">Download Vertex Client v1.0.4 and access the cleanest automation platform ever built.</p>
+                <div class="download-actions">
+                    <a href="#" class="btn btn-primary btn-lg" onclick="alert('Vertex Client v1.0.4 is actively compiled and deployed in your Modrinth folder: C:\\Users\\jerem\\AppData\\Roaming\\ModrinthApp\\profiles\\vertex\\mods\\Vertex-Client-v1.0.4.jar'); return false;">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Download Vertex-Client-v1.0.4.jar (11.9 MB)</span>
+                    </a>
+                </div>
+                <div class="download-meta">
+                    <span>Compatible with: Fabric 1.21.1</span>
+                    <span>•</span>
+                    <span>Checksum: SHA-256 Verified</span>
+                    <span>•</span>
+                    <span>Built-in CEF Web Engine</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="brand-name">VERTEX<span class="brand-accent">.AI</span></span>
+                <p class="footer-copy">Advanced Agentic Minecraft Automation Engine.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#macros">Macros</a>
+                <a href="#simulator">Simulator</a>
+                <a href="#humanization">Anti-Detection</a>
+                <a href="#install">Install</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Vertex Client Engineering. Built for peak performance.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

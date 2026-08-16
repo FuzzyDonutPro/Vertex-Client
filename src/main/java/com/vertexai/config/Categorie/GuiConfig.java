@@ -20,6 +20,21 @@ public class GuiConfig {
     public int guiFont = 0;
 
     @ConfigOption(
+            name = "Theme Color",
+            desc = "Hex color for the global HUD and Pathfinder theme (e.g. #38BDF8)"
+    )
+    @ConfigEditorText
+    public String themeColor = "#38BDF8";
+
+    public int getThemeColorInt() {
+        try {
+            return 0xFF000000 | Integer.parseInt(themeColor.replace("#", ""), 16);
+        } catch (Exception e) {
+            return 0xFF38BDF8;
+        }
+    }
+
+    @ConfigOption(
             name = "HUD Editor",
             desc = "Open the HUD editor to move, scale, and resize HUD elements"
     )

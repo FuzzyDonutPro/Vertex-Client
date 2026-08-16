@@ -13,9 +13,11 @@ import com.vertexai.util.*;
 import com.vertexai.util.helper.Angle;
 import com.vertexai.util.helper.Clock;
 import com.vertexai.util.helper.RotationConfiguration;
+import com.vertexai.util.helper.Target;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -48,7 +50,7 @@ public class PathExecutor {
     private static final int STUCK_RECOVERY_TIMEOUT_MS = 400;
     private static PathExecutor instance;
     private final Minecraft mc = Minecraft.getInstance();
-    private final Deque<Path> pathQueue = new LinkedList<>();
+    private final Deque<Path> pathQueue = new java.util.concurrent.ConcurrentLinkedDeque<>();
     private final Map<Long, List<Long>> map = new HashMap<>();
     private final List<BlockPos> blockPath = new ArrayList<>();
     private final Clock stuckTimer = new Clock();
@@ -60,6 +62,7 @@ public class PathExecutor {
     private final List<Runnable> onFailCallbacks = new ArrayList<>();
     private final Random random = new Random();
     private final Clock dynamicPitch = new Clock();
+    private final Clock rotationCooldown = new Clock();
     private boolean enabled = false;
     private String stopReason = "Not started";
     private Path prev;
@@ -73,6 +76,7 @@ public class PathExecutor {
     private int target = 0;
     private int previous = -1;
     private long nodeChangeTime = 0;
+    private BlockPos lastLookTargetNode = null;
 
     private boolean interpolated = true;
     private float interpolYawDiff = 0f;
@@ -117,9 +121,9 @@ public class PathExecutor {
         BlockPos start = path.getStart();
         Path lastPath = (this.curr != null) ? this.curr : this.pathQueue.peekLast();
 
-        if (lastPath != null && !lastPath.getGoal().isAtGoal(start.getX(), start.getY(), start.getZ())) {
+        if (lastPath != null && !lastPath.getEnd().equals(start)) {
             this.stopReason = "Rejected disjoint path segment";
-            error("This path segment does not start at last path's goal. LastpathGoal: " + lastPath.getGoal() + ", ThisPathStart: " + start);
+            error("This path segment does not start at last path's end. LastPathEnd: " + lastPath.getEnd() + ", ThisPathStart: " + start);
             failed = true;
             return;
         }
@@ -156,11 +160,13 @@ public class PathExecutor {
         this.allowSprint = true;
         this.allowInterpolation = false;
         this.nodeChangeTime = 0;
+        this.lastLookTargetNode = null;
         this.interpolated = true;
         this.segmentTimeout.reset();
         this.jumpDelay.reset();
         this.stuckTimer.reset();
         this.stuckRecoveryWindow.reset();
+        this.rotationCooldown.reset();
         this.attemptedStuckRecovery = false;
         this.pendingStuckRecoveryJump = false;
         StrafeUtil.enabled = false;
@@ -190,6 +196,10 @@ public class PathExecutor {
 
     public void clearQueuedPaths() {
         this.pathQueue.clear();
+        this.curr = null;
+        this.target = 0;
+        this.previous = -1;
+        this.interpolated = false;
         this.succeeded = false;
         this.failed = false;
     }
@@ -308,39 +318,41 @@ public class PathExecutor {
 
         Vec3 playerPosVec = mc.player.position();
         
-        // --- REAL-TIME NEAREST NODE TRACKING ---
-        // Dynamically locate the nearest node along the path relative to player position
-        int nearestIdx = 0;
+        // --- REAL-TIME NEAREST NODE TRACKING (Floor-Bounded) ---
+        // Locate the nearest node along the immediate path window on the current Y-floor
+        int searchStart = Math.max(0, this.target - 1);
+        int searchEnd = Math.min(this.target + 3, this.blockPath.size());
+        int nearestIdx = this.target;
         double minDistanceSq = Double.MAX_VALUE;
-        for (int i = 0; i < this.blockPath.size(); i++) {
+        for (int i = searchStart; i < searchEnd; i++) {
             BlockPos node = this.blockPath.get(i);
-            double distSq = playerPosVec.distanceToSqr(node.getX() + 0.5, node.getY(), node.getZ() + 0.5);
-            if (distSq < minDistanceSq) {
-                minDistanceSq = distSq;
-                nearestIdx = i;
+            if (Math.abs(mc.player.getY() - node.getY()) <= 0.6) {
+                double distSq = playerPosVec.distanceToSqr(node.getX() + 0.5, node.getY(), node.getZ() + 0.5);
+                if (distSq < minDistanceSq) {
+                    minDistanceSq = distSq;
+                    nearestIdx = i;
+                }
             }
         }
         
         if (nearestIdx > this.target) {
-            this.previous = nearestIdx - 1;
+            this.previous = this.target;
             this.target = nearestIdx;
         }
 
-        // --- FUTURE NODE SKIPPING (Catch-up) ---
-        // If the player got bumped and accidentally skipped a node but landed on a future node,
-        // instantly advance the target to that future node so it doesn't run backwards.
+        // --- FUTURE NODE SKIPPING (Catch-up, Same-Floor Only) ---
         boolean advanced = false;
-        for (int i = this.blockPath.size() - 1; i > this.target; i--) {
+        for (int i = Math.min(this.target + 2, this.blockPath.size() - 1); i > this.target; i--) {
             BlockPos futureNode = this.blockPath.get(i);
             double hDist = Math.hypot(playerPosVec.x - futureNode.getX() - 0.5, playerPosVec.z - futureNode.getZ() - 0.5);
             double vDist = Math.abs(mc.player.getY() - futureNode.getY());
             
-            if (hDist <= NODE_REACHED_HORIZONTAL_DIST && vDist <= NODE_REACHED_VERTICAL_TOLERANCE) {
+            if (hDist <= 0.55 && vDist <= 0.5) {
                 if (nodeSwitchDelay.passed()) {
                     this.previous = i;
                     this.target = Math.min(i + 1, this.blockPath.size() - 1);
                     nodeSwitchDelay.schedule(50 + random.nextInt(70));
-                    log("skipped missed nodes and caught up to target index: " + this.target);
+                    log("caught up to target index on same floor: " + this.target);
                     advanced = true;
                     break;
                 }
@@ -351,8 +363,27 @@ public class PathExecutor {
         if (!advanced) {
             double horizontalDistToCurrent = Math.hypot(playerPosVec.x - target.getX() - 0.5, playerPosVec.z - target.getZ() - 0.5);
             double verticalDistToCurrent = Math.abs(mc.player.getY() - target.getY());
-            boolean closeToCurrentNode = horizontalDistToCurrent <= NODE_REACHED_HORIZONTAL_DIST
-                    && verticalDistToCurrent <= NODE_REACHED_VERTICAL_TOLERANCE;
+
+            boolean isVerticalTransition = target.getY() != playerPos.getY() 
+                    || (this.previous >= 0 && this.previous < this.blockPath.size() && this.blockPath.get(this.previous).getY() != target.getY());
+            
+            boolean isTurnTransition = false;
+            if (this.target < this.blockPath.size() - 1 && this.previous >= 0 && this.previous < this.blockPath.size()) {
+                BlockPos prev = this.blockPath.get(this.previous);
+                BlockPos next = this.blockPath.get(this.target + 1);
+                int d1x = target.getX() - prev.getX();
+                int d1z = target.getZ() - prev.getZ();
+                int d2x = next.getX() - target.getX();
+                int d2z = next.getZ() - target.getZ();
+                if (d1x != d2x || d1z != d2z) {
+                    isTurnTransition = true;
+                }
+            }
+
+            double reqH = (isVerticalTransition || isTurnTransition) ? 0.50 : NODE_REACHED_HORIZONTAL_DIST;
+            double reqV = isVerticalTransition ? 0.45 : NODE_REACHED_VERTICAL_TOLERANCE;
+
+            boolean closeToCurrentNode = horizontalDistToCurrent <= reqH && verticalDistToCurrent <= reqV;
 
             boolean overshot = false;
             BlockPos prevTarget = (this.previous >= 0 && this.previous < this.blockPath.size()) ? this.blockPath.get(this.previous) : null;
@@ -376,8 +407,8 @@ public class PathExecutor {
                     }
 
                     double progress = (p.x * v.x + p.z * v.z) / vLenSqr;
-                    // If progress is >= 1.0, we have crossed the orthogonal plane of the target node!
-                    if (progress >= 1.0 && verticalDistToCurrent <= NODE_REACHED_VERTICAL_TOLERANCE) {
+                    // If progress is >= 1.0, crossed the orthogonal plane of the target node!
+                    if (progress >= 1.0 && verticalDistToCurrent <= reqV) {
                         overshot = true;
                     }
                 }
@@ -401,17 +432,18 @@ public class PathExecutor {
             target = this.blockPath.get(this.target);
         }
 
-        // --- LOOK AT NEAREST UPCOMING NODE ---
-        // Pick the nearest node ahead along the path for smooth camera orientation
-        int lookIndex = Math.min(this.target, this.blockPath.size() - 1);
-        if (lookIndex < this.blockPath.size() - 1) {
-            BlockPos lookNodeCandidate = this.blockPath.get(lookIndex);
-            double distToLookCandidate = Math.hypot(playerPosVec.x - lookNodeCandidate.getX() - 0.5, playerPosVec.z - lookNodeCandidate.getZ() - 0.5);
-            if (distToLookCandidate < 1.1) {
-                lookIndex = lookIndex + 1;
+        // --- LOOK AT TARGET (Look ahead 4-6 nodes along path, smooth through zigzags) ---
+        int lookIndex = Math.min(this.target + 4, this.blockPath.size() - 1);
+        
+        // Find if there is an elevation change (stairs/hill) ahead within 6 blocks
+        for (int i = this.target; i <= Math.min(this.target + 6, this.blockPath.size() - 1); i++) {
+            BlockPos node = this.blockPath.get(i);
+            if (node.getY() != playerPos.getY()) {
+                lookIndex = i;
+                break;
             }
         }
-        BlockPos lookTargetNode = this.blockPath.get(lookIndex);
+        BlockPos lookTargetNode = this.blockPath.get(Math.min(lookIndex, this.blockPath.size() - 1));
 
         boolean onGround = mc.player.onGround();
 
@@ -423,8 +455,7 @@ public class PathExecutor {
         float yawDiff = rawDiff > 180 ? 360 - rawDiff : rawDiff;
         
         // If we are intentionally standing still to wait for the camera to rotate, reset the stuck timer
-        // so we don't accidentally trigger the anti-stuck failsafe and fail the path!
-        if (yawDiff >= 30 && onGround) {
+        if (yawDiff >= 25 && onGround) {
             this.stuckTimer.reset();
         }
 
@@ -434,36 +465,51 @@ public class PathExecutor {
         // Disable StrafeUtil for realistic client-side movement
         StrafeUtil.enabled = false;
 
-        // Rotate player to face target direction
-        if (yawDiff > 3 && !RotationHandler.getInstance().isEnabled()) {
-            float rotYaw = yaw;
-            float humanError = (float) (random.nextGaussian() * ROTATION_HUMAN_ERROR_FACTOR);
-            rotYaw += humanError;
+        boolean inWater = mc.player.isInWater() || mc.player.isUnderWater();
+        boolean ascendingInWater = inWater && (target.getY() >= playerPos.getY() || (this.target < this.blockPath.size() - 1 && this.blockPath.get(this.target + 1).getY() >= playerPos.getY()));
 
-            float time = Vertex.config().debug.useFixedRotation ? Vertex.config().debug.fixedRotationTime : Math.max(220, (long) (360 - horizontalDistToTarget * Vertex.config().debug.rotationMultiplier));
+        // Calculate natural human pitch (looks up on stairs/hills, down on drops, up in water)
+        float targetPitch;
+        if (ascendingInWater) {
+            targetPitch = -30.0f; // Look up toward surface to swim up
+        } else {
+            double dy = (lookTargetNode.getY() + 0.6) - mc.player.getEyeY();
+            double dxz = Math.max(1.0, horizontalDistToTarget);
+            float calculatedPitch = (float) -Math.toDegrees(Math.atan2(dy, dxz));
+            // Clamp pitch to comfortable human viewing range (-24° up on stairs to +12° down on drops)
+            targetPitch = Mth.clamp(calculatedPitch, -24.0f, 12.0f);
+        }
 
-            if (!dynamicPitch.isScheduled() || dynamicPitch.passed()) {
-                lastPitch = 10 + (18 - 10) * random.nextDouble();
-                dynamicPitch.schedule(1000);
-            }
+        // Rotate player to face look target with a 300ms cooldown before adjusting mouse angle again
+        boolean cooldownPassed = !this.rotationCooldown.isScheduled() || this.rotationCooldown.passed();
+        boolean sharpTurn = yawDiff > 25.0f;
+        boolean needPitchAdjustment = Math.abs(mc.player.getXRot() - targetPitch) > 7.0f;
 
-            float pitchAngle = (float) Math.min(36.0, lastPitch);
+        if (cooldownPassed && (yawDiff > 2.5f || needPitchAdjustment || sharpTurn || ascendingInWater)) {
+            this.rotationCooldown.schedule(300);
+            float time = Vertex.config().debug.useFixedRotation 
+                    ? Vertex.config().debug.fixedRotationTime 
+                    : Math.max(100, Math.min(240, (long) (yawDiff * 2.0f)));
+
             RotationHandler.getInstance().easeTo(
                     new RotationConfiguration(
-                            new Angle(rotYaw, pitchAngle),
-                            (long) time, null
+                            new Target(new Angle(yaw, targetPitch)),
+                            (long) time,
+                            RotationConfiguration.RotationType.CLIENT,
+                            null
                     )
             );
         }
 
-        // Calculate which WASD keys to press based on current player rotation (not target direction)
-        // This makes movement purely client-side and realistic
+        // Calculate which WASD keys to press based on current player rotation (independent of pitch)
         Vec3 targetVec = new Vec3(targetX + 0.5, mc.player.getY(), targetZ + 0.5);
         
         List<KeyMapping> neededKeys = new ArrayList<>();
-        // KeyBindUtil calculates strafing vectors correctly relative to camera angle,
-        // so we never need to stop walking just because we are turning our head.
-        neededKeys.addAll(KeyBindUtil.getNeededKeyPresses(mc.player.position(), targetVec));
+        // If turning sharply on stairs/corners, wait briefly for rotation to align
+        boolean isElevationChange = target.getY() != playerPos.getY();
+        if (!(yawDiff > 55.0f && isElevationChange)) {
+            neededKeys.addAll(KeyBindUtil.getNeededKeyPresses(mc.player.position(), targetVec));
+        }
         
         List<KeyMapping> keyBindings = new ArrayList<>(neededKeys);
 
@@ -473,6 +519,12 @@ public class PathExecutor {
         }
         if (mc.options.keyAttack.isDown()) {
             keyBindings.add(mc.options.keyAttack);
+        }
+
+        // Water ascending & swimming up
+        if (ascendingInWater) {
+            keyBindings.add(mc.options.keyJump);
+            keyBindings.add(mc.options.keyUp);
         }
 
         // Jump only when path requires a one-block step-up and landing space is valid.
@@ -495,8 +547,8 @@ public class PathExecutor {
         // Apply all the calculated key presses
         KeyBindUtil.holdThese(keyBindings.toArray(new KeyMapping[0]));
 
-        // Handle sprinting - sprint whenever moving forward along path
-        boolean shouldSprint = this.allowSprint && yawDiff < 45.0f;
+        // Handle sprinting - walk strictly on elevation changes and sharp turns
+        boolean shouldSprint = this.allowSprint && yawDiff < 25.0f && !isElevationChange;
         KeyBindUtil.setKeyBindState(mc.options.keySprint, shouldSprint);
         if (shouldSprint && mc.player != null && mc.options.keyUp.isDown()) {
             mc.player.setSprinting(true);
@@ -589,6 +641,11 @@ public class PathExecutor {
             return false;
         }
 
+        // Check if destination is too high for vanilla jump (max ~1.25 blocks)
+        if (desiredTarget.getY() - playerPos.getY() > 1) {
+            return false;
+        }
+
         int stepX = Integer.compare(desiredTarget.getX(), playerPos.getX());
         int stepZ = Integer.compare(desiredTarget.getZ(), playerPos.getZ());
         if (stepX == 0 && stepZ == 0) {
@@ -603,11 +660,26 @@ public class PathExecutor {
         int landingX = px + stepX;
         int landingZ = pz + stepZ;
 
+        var landingFeetState = bsa.get(landingX, py, landingZ);
+        var landingStepUpState = bsa.get(landingX, py + 1, landingZ);
+
+        // If stepping onto normal stairs or bottom slabs, vanilla Minecraft handles <=0.6 step height automatically without jumping
+        if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.StairBlock) {
+            if (landingFeetState.getValue(net.minecraft.world.level.block.StairBlock.HALF) == net.minecraft.world.level.block.state.properties.Half.BOTTOM) {
+                return false; // Auto-step smoothly
+            }
+        }
+        if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.SlabBlock) {
+            if (landingFeetState.getValue(net.minecraft.world.level.block.SlabBlock.TYPE) == net.minecraft.world.level.block.state.properties.SlabType.BOTTOM) {
+                return false; // Auto-step smoothly
+            }
+        }
+
         // Block directly ahead at feet level (py + 1)
-        boolean feetBlocked = !MovementHelper.INSTANCE.canWalkThrough(bsa, landingX, py + 1, landingZ, bsa.get(landingX, py + 1, landingZ));
+        boolean feetBlocked = !MovementHelper.INSTANCE.canWalkThrough(bsa, landingX, py + 1, landingZ, landingStepUpState);
 
         // Valid landing surface at py + 1 (1-block step up)
-        boolean validLanding = MovementHelper.INSTANCE.canStandOn(bsa, landingX, py + 1, landingZ, bsa.get(landingX, py + 1, landingZ));
+        boolean validLanding = MovementHelper.INSTANCE.canStandOn(bsa, landingX, py + 1, landingZ, landingStepUpState);
 
         // Player headroom (py + 3)
         boolean hasHeadroom = MovementHelper.INSTANCE.canWalkThrough(bsa, px, py + 3, pz, bsa.get(px, py + 3, pz))

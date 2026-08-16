@@ -121,6 +121,7 @@ public class VertexClient implements ClientModInitializer {
         MacroManager.getInstance();
         FailsafeManager.getInstance();
         FeatureManager.getInstance();
+        FeatureManager.getInstance().enableAll();
         HUDManager.getInstance().loadPositions();
 
         PacketEvent.registerReceived(event -> Minecraft.getInstance().execute(() -> {

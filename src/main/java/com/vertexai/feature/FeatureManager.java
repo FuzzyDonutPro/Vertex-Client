@@ -82,7 +82,7 @@ public class FeatureManager {
 
     public void disableAll() {
         this.allFeatures.forEach(it -> {
-            if (it.isRunning()) {
+            if (it.isRunning() && !it.shouldStartAtLaunch()) {
                 it.stop();
             }
         });
@@ -90,7 +90,7 @@ public class FeatureManager {
 
     public void pauseAll() {
         this.allFeatures.forEach(it -> {
-            if (it.isRunning()) {
+            if (it.isRunning() && !it.shouldStartAtLaunch()) {
                 it.pause();
             }
         });
@@ -98,7 +98,7 @@ public class FeatureManager {
 
     public void resumeAll() {
         this.allFeatures.forEach(it -> {
-            if (it.isRunning()) {
+            if (it.isRunning() && !it.shouldStartAtLaunch()) {
                 it.resume();
             }
         });

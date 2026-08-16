@@ -23,6 +23,7 @@ public class MixinClientConnection {
     private void Vertex$onPacketReceived(ChannelHandlerContext context, Packet<?> packet, CallbackInfo ci) {
         PacketEvent.Received event = new PacketEvent.Received(packet);
         PacketEvent.fireReceived(event);
+        com.vertexai.failsafe.FailsafeManager.getInstance().onPacketReceive(packet);
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -37,3 +38,4 @@ public class MixinClientConnection {
         }
     }
 }
+

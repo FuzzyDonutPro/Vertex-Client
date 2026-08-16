@@ -256,7 +256,8 @@ public class PathFinder {
                         }
                     }
                     if (clear) {
-                        neighbors.add(new NeighborResult(fallPos, baseCost + (drop * 0.2)));
+                        double dropCost = drop == 1 ? 0.2 : Math.pow(drop, 1.5);
+                        neighbors.add(new NeighborResult(fallPos, baseCost + dropCost));
                         break;
                     }
                 }

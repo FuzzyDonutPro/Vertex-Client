@@ -142,7 +142,7 @@ public abstract class TextHud extends AbstractHUDElement {
     }
 
     protected int getAccentColor() {
-        return 0xFF22D3EE;
+        return com.vertexai.Vertex.config().gui.getThemeColorInt();
     }
 
     protected int getPaddingPx() {

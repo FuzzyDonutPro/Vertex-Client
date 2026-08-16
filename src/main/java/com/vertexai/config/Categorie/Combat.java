@@ -21,6 +21,32 @@ public class Combat {
     public int slayerTarget = 0; // Default: Revenant Horror
 
     @ConfigOption(
+            name = "Slayer Boss Tier",
+            desc = "Select the Slayer quest tier to start (Tier 1 to 5)"
+    )
+    @ConfigEditorSlider(
+            minValue = 1.0f,
+            maxValue = 5.0f,
+            minStep = 1.0f
+    )
+    public int slayerTier = 4; // Default: Tier IV (Tier 4)
+
+    public int getSlayerTier() {
+        return Math.max(1, Math.min(5, slayerTier));
+    }
+
+    public String getSlayerTierRoman() {
+        return switch (getSlayerTier()) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            default -> "IV";
+        };
+    }
+
+    @ConfigOption(
             name = "Combat Macro Target",
             desc = "Select the general area mob to farm for combat EXP, drops, and bestiary"
     )

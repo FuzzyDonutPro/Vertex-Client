@@ -6,6 +6,8 @@ import com.vertexai.pathfinder.movement.Movement
 import com.vertexai.pathfinder.movement.MovementHelper
 import com.vertexai.pathfinder.movement.MovementResult
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.StairBlock
+import net.minecraft.world.level.block.state.properties.Half
 
 class MovementAscend(mm: VertexMain, from: BlockPos, to: BlockPos) : Movement(mm, from, to) {
     override fun calculateCost(ctx: CalculationContext, res: MovementResult) {
@@ -51,32 +53,20 @@ class MovementAscend(mm: VertexMain, from: BlockPos, to: BlockPos) : Movement(mm
                 )
             ) return
 
-            // small = half block / stair - in this case it doesnt matter which way the source stair(if it is a stair) is facing
-            // big = fill block
-            // this logic is actually fucking sick ngl
+            val sourceCollision = MovementHelper.collisionMaxY(sourceState, ctx.world, BlockPos(x, y, z))
+            val destCollision = MovementHelper.collisionMaxY(destState, ctx.world, BlockPos(destX, y + 1, destZ))
 
-            val sourceHeight = MovementHelper.collisionMaxY(sourceState, ctx.world, BlockPos(x, y, z))
-            val destHeight = MovementHelper.collisionMaxY(destState, ctx.world, BlockPos(destX, y + 1, destZ))
-//      if (!snow) {
-//        val srcSmall = MovementHelper.isBottomSlab(sourceState);
-//        val destSmall = MovementHelper.isBottomSlab(destState);
-//
-//        val destSmallStair = MovementHelper.isValidStair(destState, destX - x, destZ - z);
-//
-//        if (!srcSmall == !(destSmall || destSmallStair)) {
-//          res.cost = ctx.cost.JUMP_ONE_BLOCK_COST
-//        } else if (!srcSmall) {
-//          res.cost = ctx.cost.ONE_BLOCK_SPRINT_COST;
-//        }
-//      } else {
-            val diff = destHeight - sourceHeight
-//      println("SourceHeight: $sourceHeight, DestHeight: $destHeight, Diff: $diff")
+            val sourceWorldY = y + sourceCollision
+            val destWorldY = (y + 1) + destCollision
+            val diff = destWorldY - sourceWorldY
+
+            val isAscendingStairs = destState.block is StairBlock && destState.getValue(StairBlock.HALF) == Half.BOTTOM
+
             res.cost = when {
-                diff <= 0.5 -> ctx.cost.ONE_BLOCK_SPRINT_COST
-                diff <= 1.125 -> ctx.cost.JUMP_ONE_BLOCK_COST
-                else -> ctx.cost.INF_COST
+                diff <= 0.6 || isAscendingStairs -> ctx.cost.ONE_BLOCK_SPRINT_COST
+                diff <= 1.25 -> ctx.cost.JUMP_ONE_BLOCK_COST
+                else -> ctx.cost.INF_COST // Cannot jump higher than 1.25 blocks
             }
         }
-//    }
     }
 }

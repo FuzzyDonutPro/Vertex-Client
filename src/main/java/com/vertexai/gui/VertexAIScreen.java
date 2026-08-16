@@ -18,6 +18,11 @@ public class VertexAIScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        // Automatically stop any running macro when opening the GUI
+        if (com.vertexai.macro.MacroManager.getInstance().isRunning()) {
+            com.vertexai.macro.MacroManager.getInstance().disable();
+        }
+
         cefBrowser = VertexCEFBrowser.getInstance();
         cefBrowser.resize(this.width, this.height);
         com.vertexai.gui.web.MCEFBridge.isConfigScreenOpen = true;
@@ -37,10 +42,7 @@ public class VertexAIScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        // Render a dark translucent background to prevent in-game rendering underneath from bleeding through too brightly,
-        // and avoid calling renderBackground() which applies a shader blur and crashes with "Can only blur once per frame"
         context.fill(0, 0, this.width, this.height, 0x99000000); // 60% opacity black
-
 
         boolean rendered = false;
         if (cefBrowser != null) {
@@ -48,7 +50,6 @@ public class VertexAIScreen extends Screen {
         }
 
         if (!rendered) {
-            // Render dark glassmorphism loading overlay while CEF is starting
             context.fill(0, 0, this.width, this.height, 0xDD0F172A); // Slate 900 background
             
             String title = "⚡ VERTEX CLIENT UI";
@@ -69,10 +70,25 @@ public class VertexAIScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (cefBrowser != null) {
+        com.vertexai.gui.web.MCEFBridge.isConfigScreenOpen = false;
+        if (cefBrowser != null && cefBrowser.getBrowser() != null) {
+            try {
+                cefBrowser.getBrowser().executeJavaScript("if(window.setConfigState) window.setConfigState(false);", "", 0);
+            } catch (Throwable t) {}
             cefBrowser.close();
         }
         super.onClose();
+    }
+
+    @Override
+    public void removed() {
+        com.vertexai.gui.web.MCEFBridge.isConfigScreenOpen = false;
+        if (cefBrowser != null && cefBrowser.getBrowser() != null) {
+            try {
+                cefBrowser.getBrowser().executeJavaScript("if(window.setConfigState) window.setConfigState(false);", "", 0);
+            } catch (Throwable t) {}
+        }
+        super.removed();
     }
 
     @Override
@@ -126,5 +142,13 @@ public class VertexAIScreen extends Screen {
         }
         return super.keyReleased(event);
     }
-}
 
+    @Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (cefBrowser != null) {
+            cefBrowser.injectCharTyped((char) event.codepoint(), event.modifiers());
+            return true;
+        }
+        return super.charTyped(event);
+    }
+}

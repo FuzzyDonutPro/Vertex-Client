@@ -54,28 +54,6 @@ public class Pathfinder extends AbstractFeature {
     }
 
     public void onRender(PoseStack matrices, Camera camera, Matrix4f projectionMatrix) {
-        Deque<Path> paths = new LinkedList<>(pathExecutor.getPathQueue());
-        if (pathExecutor.getCurrentPath() != null) paths.add(pathExecutor.getCurrentPath());
-        paths.addAll(renderOnlyPathQueue);
-
-        if (!paths.isEmpty()) {
-            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150));
-            for (Path path : paths) {
-                List<BlockPos> bpath = path.getSmoothedPath();
-                for (int i = 0; i < bpath.size(); i++) {
-                    BlockPos p = bpath.get(i);
-                    if (i != 0) {
-                        RenderUtil.drawBlock(p, new Color(0, 255, 0, 150));
-                        RenderUtil.drawThinLine(
-                                new Vec3(bpath.get(i).getX() + 0.5, bpath.get(i).getY() + 1.0, bpath.get(i).getZ() + 0.5),
-                                new Vec3(bpath.get(i - 1).getX() + 0.5, bpath.get(i - 1).getY() + 1.0, bpath.get(i - 1).getZ() + 0.5),
-                                new Color(0, 255, 0, 150),
-                                true
-                        );
-                    }
-                }
-            }
-        }
     }
 
 
@@ -179,17 +157,20 @@ public class Pathfinder extends AbstractFeature {
         log("Queued Path");
     }
 
-    public void stopAndRequeue(BlockPos pos) {
-        if (!this.enabled) {
-            this.queue(pos);
-            return;
-        }
+    private int searchVersion = 0;
 
+    public void stopAndRequeue(BlockPos pos) {
         this.pathQueue.clear();
         this.pathExecutor.clearQueuedPaths();
+        this.searchVersion++; // Increment version to discard stale threads
 
         if (this.finder != null) {
             this.finder.requestStop();
+        }
+
+        if (!this.enabled) {
+            this.queue(PlayerUtil.getBlockStandingOn(), pos);
+            return;
         }
 
         if (this.pathExecutor.getCurrentPath() != null) {
@@ -265,18 +246,21 @@ public class Pathfinder extends AbstractFeature {
         }
 
         Vertex.executor().execute(() -> {
-            log("creating thread. wasPathfinding: " + this.pathfinding);
+            log("creating task. wasPathfinding: " + this.pathfinding);
             if (this.pathfinding) {
                 return;
             }
             this.pathfinding = true;
+            
+            Pair<BlockPos, BlockPos> startEnd = this.pathQueue.poll();
+            if (startEnd == null) {
+                this.pathfinding = false;
+                return;
+            }
+            
+            final int currentSearchVersion = this.searchVersion;
+            
             try {
-                Pair<BlockPos, BlockPos> startEnd = this.pathQueue.poll();
-                if (startEnd == null) {
-                    this.pathfinding = false;
-                    return;
-                }
-
                 long startedAtMs = System.currentTimeMillis();
                 BlockPos start = startEnd.getFirst();
                 BlockPos end = startEnd.getSecond();
@@ -284,12 +268,18 @@ public class Pathfinder extends AbstractFeature {
                 CalculationContext ctx = new CalculationContext(walkSpeed * 1.3, walkSpeed, walkSpeed * 0.3);
                 Goal goal = new Goal(end.getX(), end.getY(), end.getZ(), ctx);
                 Path path;
-                AStarPathFinder.SearchTelemetry searchTelemetry = null;
                 double searchMs = 0.0;
                 boolean sameHeightSegment = start.getY() == end.getY();
                 boolean directWalk = false;
+                
+                if (currentSearchVersion != this.searchVersion) {
+                    log("Aborting stale pathfinding task early");
+                    this.pathfinding = false;
+                    this.skipTick = true;
+                    return;
+                }
+                
                 if (sameHeightSegment && com.vertexai.pathfinder.util.BlockUtil.INSTANCE.canWalkBetween(ctx, start, end)) {
-                    // Skip A* when the entire segment is directly traversable.
                     directWalk = true;
                     finder = null;
                     PathNode startNode = new PathNode(start.getX(), start.getY(), start.getZ(), goal);
@@ -299,8 +289,15 @@ public class Pathfinder extends AbstractFeature {
                     log("Skipping A*: direct walkable segment from " + start + " to " + end);
                 } else {
                     long searchStartNs = System.nanoTime();
-                    // Use the overhauled 8-Way PathFinder engine with a massive 1,000,000 node limit
-                    List<BlockPos> rawPath = com.vertexai.pathing.PathFinder.findPath(mc.level, start, end, 1000000);
+                    // Bound to 50,000 nodes to prevent GC churn, CPU lockups, and memory leaks
+                    List<BlockPos> rawPath = com.vertexai.pathing.PathFinder.findPath(mc.level, start, end, 50000);
+                    
+                    if (currentSearchVersion != this.searchVersion) {
+                        log("Aborting stale pathfinding task after raw search");
+                        this.pathfinding = false;
+                        this.skipTick = true;
+                        return;
+                    }
                     
                     if (rawPath != null && !rawPath.isEmpty()) {
                         PathNode previous = null;
@@ -321,16 +318,18 @@ public class Pathfinder extends AbstractFeature {
                     }
                     
                     searchMs = (System.nanoTime() - searchStartNs) / 1_000_000.0;
-                    searchTelemetry = null;
-                    log("done pathfinding using new 8-Way Engine");
+                    log("done pathfinding using 8-Way Engine (" + String.format("%.2f", searchMs) + "ms)");
                 }
+                
+                if (currentSearchVersion != this.searchVersion) {
+                    log("Aborting stale pathfinding task before queueing");
+                    this.pathfinding = false;
+                    this.skipTick = true;
+                    return;
+                }
+                
                 if (path != null) {
                     List<BlockPos> smoothedPath = path.getSmoothedPath();
-                    int pathLength = path.getPath().size();
-                    int smoothedPathLength = smoothedPath.size();
-                    int iterations = searchTelemetry != null ? searchTelemetry.getIterations() : 0;
-                    int expandedNodes = searchTelemetry != null ? searchTelemetry.getExpandedNodes() : 0;
-                    int openSetPeak = searchTelemetry != null ? searchTelemetry.getOpenSetPeak() : 0;
                     this.lastTelemetry = new PathfindingTelemetry(
                             startedAtMs,
                             System.currentTimeMillis(),
@@ -338,39 +337,33 @@ public class Pathfinder extends AbstractFeature {
                             "",
                             searchMs,
                             path.getSmoothingDurationMs(),
-                            expandedNodes,
-                            openSetPeak,
-                            iterations,
-                            pathLength,
-                            smoothedPathLength,
+                            0,
+                            0,
+                            0,
+                            path.getPath().size(),
+                            smoothedPath.size(),
                             directWalk
                     );
                     if (this.renderOnlyMode) {
                         this.renderOnlyPathQueue.offer(path);
                         this.succeeded = true;
                         send("Render-only preview ready");
-                        log("path preview computed and queued for rendering");
                     } else {
                         PathExecutor.getInstance().queuePath(path);
-                        log("starting pathexec");
                     }
                 } else {
                     log("No Path Found");
                     failed = true;
-                    String failureReason = searchTelemetry != null ? searchTelemetry.getTerminationReason() : "no_path";
-                    int iterations = searchTelemetry != null ? searchTelemetry.getIterations() : 0;
-                    int expandedNodes = searchTelemetry != null ? searchTelemetry.getExpandedNodes() : 0;
-                    int openSetPeak = searchTelemetry != null ? searchTelemetry.getOpenSetPeak() : 0;
                     this.lastTelemetry = new PathfindingTelemetry(
                             startedAtMs,
                             System.currentTimeMillis(),
                             false,
-                            failureReason,
+                            "no_path",
                             searchMs,
                             0.0,
-                            expandedNodes,
-                            openSetPeak,
-                            iterations,
+                            0,
+                            0,
+                            0,
                             0,
                             0,
                             directWalk
@@ -395,12 +388,12 @@ public class Pathfinder extends AbstractFeature {
                         false
                 );
                 stopOnClientThread("Pathfinding task crashed: " + e.getClass().getSimpleName());
+            } finally {
+                this.pathfinding = false;
+                this.skipTick = true;
             }
-            this.pathfinding = false;
-            this.skipTick = true;
         });
     }
-
     @Override
     protected void onWorldRender(WorldRenderContextWrapper context) {
         renderInWorld(context);
@@ -408,27 +401,54 @@ public class Pathfinder extends AbstractFeature {
 
     public void renderInWorld(WorldRenderContextWrapper context) {
         // this.pathExecutor.onRender();
-        Deque<Path> paths = new LinkedList<>(this.pathExecutor.getPathQueue());
+        List<Path> paths = new java.util.ArrayList<>(this.pathExecutor.getPathQueue());
         if (pathExecutor.getCurrentPath() != null) {
             paths.add(pathExecutor.getCurrentPath());
         }
         paths.addAll(this.renderOnlyPathQueue);
 
         if (!paths.isEmpty()) {
-            RenderUtil.drawBlock(paths.getFirst().getStart(), new Color(0, 255, 0, 150));
+            int themeHex = Vertex.config().gui.getThemeColorInt();
+            int r = (themeHex >> 16) & 0xFF;
+            int g = (themeHex >> 8) & 0xFF;
+            int b = themeHex & 0xFF;
 
-            for (Path path : paths) {
-                List<BlockPos> bpath = path.getSmoothedPath();
+            Color blockFillColor = new Color(r, g, b, 55);
+            Color blockOutlineColor = new Color(r, g, b, 210);
+            Color destFillColor = new Color(r, g, b, 120);
+            Color destOutlineColor = new Color(255, 255, 255, 255);
 
-                for (int i = 1; i < bpath.size(); i++) {
-                    RenderUtil.drawBlock(bpath.get(i), new Color(0, 255, 0, 150));
-                    RenderUtil.drawThinLine(
-                            new Vec3(bpath.get(i).getX() + 0.5, bpath.get(i).getY() + 1, bpath.get(i).getZ() + 0.5),
-                            new Vec3(bpath.get(i - 1).getX() + 0.5, bpath.get(i - 1).getY() + 1, bpath.get(i - 1).getZ() + 0.5),
-                            new Color(0, 255, 0, 150),
-                            true
-                    );
+            java.util.Set<BlockPos> renderedBlocks = new java.util.HashSet<>();
+            BlockPos finalDestination = null;
+
+            for (int pIdx = 0; pIdx < paths.size(); pIdx++) {
+                Path path = paths.get(pIdx);
+                List<BlockPos> fullPath = path.getPath();
+                if (fullPath.isEmpty()) continue;
+
+                boolean isLastPath = (pIdx == paths.size() - 1);
+
+                for (int i = 0; i < fullPath.size(); i++) {
+                    BlockPos p = fullPath.get(i);
+                    // Determine the actual block the node is on
+                    BlockPos standBlock = p.below();
+                    if (mc.level != null && mc.level.getBlockState(standBlock).isAir() && !mc.level.getBlockState(p).isAir()) {
+                        standBlock = p;
+                    }
+
+                    if (isLastPath && i == fullPath.size() - 1) {
+                        finalDestination = standBlock;
+                    } else if (renderedBlocks.add(standBlock)) {
+                        RenderUtil.drawBlock(standBlock, blockFillColor);
+                        RenderUtil.outlineBlock(standBlock, blockOutlineColor);
+                    }
                 }
+            }
+
+            // Highlight final destination block with special accent
+            if (finalDestination != null) {
+                RenderUtil.drawBlock(finalDestination, destFillColor);
+                RenderUtil.outlineBlock(finalDestination, destOutlineColor);
             }
         }
     }

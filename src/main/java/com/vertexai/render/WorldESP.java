@@ -3,6 +3,7 @@ package com.vertexai.render;
 import lombok.Getter;
 import com.vertexai.feature.AbstractFeature;
 import com.vertexai.feature.impl.BlockMiner.BlockMiner;
+import com.vertexai.macro.impl.ForagingMacro.ForagingMacro;
 import com.vertexai.util.RenderUtil;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.core.BlockPos;
@@ -19,9 +20,10 @@ import java.util.stream.StreamSupport;
 
 /**
  * WorldESP — Renders 3D ESP boxes for:
- * 1. Target block currently being mined by the Mining Macro
- * 2. Secret & Dungeon Chests
- * 3. Garden Visitors & NPCs
+ * 1. Target block currently being mined by Mining Macros & BlockMiner
+ * 2. Target tree logs for Foraging Macro
+ * 3. Secret & Dungeon Chests
+ * 4. Garden Visitors & NPCs
  */
 public class WorldESP extends AbstractFeature {
 
@@ -39,6 +41,22 @@ public class WorldESP extends AbstractFeature {
     @Override
     public String getName() {
         return "WorldESP";
+    }
+
+    @Override
+    public boolean shouldStartAtLaunch() {
+        return true;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return true;
+    }
+
+    @Override
+    public void stop() {
+        // Persistent background render feature - do not kill on macro stop
+        this.enabled = true;
     }
 
     @Override
@@ -90,31 +108,44 @@ public class WorldESP extends AbstractFeature {
 
     @Override
     public void onWorldRender(WorldRenderContextWrapper context) {
-        if (!enabled || mc.player == null) return;
+        if (mc.player == null || mc.level == null) return;
 
-        // A. Render 3D ESP on the block currently being mined by Mining Macro (Bright Emerald Green)
+        // A. Render 3D ESP on the block currently being mined by Mining Macros / BlockMiner
         BlockMiner miner = BlockMiner.getInstance();
-        if (miner != null && miner.isRunning() && miner.getTargetBlockPos() != null) {
+        if (miner != null && miner.getTargetBlockPos() != null) {
             BlockPos targetMiningBlock = miner.getTargetBlockPos();
-            Color miningColor = new Color(34, 197, 94, 220); // Bright Emerald Green
-            RenderUtil.drawBlock(targetMiningBlock, miningColor);
-            RenderUtil.outlineBlock(targetMiningBlock, new Color(255, 255, 255, 240));
+            Color miningFill = new Color(34, 197, 94, 140); // Bright Emerald Green
+            Color miningOutline = new Color(74, 222, 128, 255); // Neon Green
+            RenderUtil.drawBlock(targetMiningBlock, miningFill);
+            RenderUtil.outlineBlock(targetMiningBlock, miningOutline);
+
+            if (miner.getTargetParticlePos() != null) {
+                RenderUtil.drawPoint(miner.getTargetParticlePos(), new Color(250, 204, 21, 240));
+            }
         }
 
-        // B. Render 3D ESP on Secret / Dungeon Chests (Amber Gold)
+        // B. Render 3D ESP on target tree log for Foraging Macro
+        ForagingMacro foraging = ForagingMacro.getInstance();
+        if (foraging != null && foraging.isEnabled() && foraging.getTargetBlockPos() != null) {
+            BlockPos targetLog = foraging.getTargetBlockPos();
+            RenderUtil.drawBlock(targetLog, new Color(56, 189, 248, 140)); // Sky Blue Fill
+            RenderUtil.outlineBlock(targetLog, new Color(14, 165, 233, 255)); // Bright Blue Outline
+        }
+
+        // C. Render 3D ESP on Secret / Dungeon Chests (Amber Gold)
         Color chestColor = new Color(245, 158, 11, 200); // Amber Gold
         for (BlockPos chestPos : chestBlocks) {
             RenderUtil.outlineBlock(chestPos, chestColor);
         }
 
-        // C. Render 3D ESP on Garden Visitors (Violet Purple Box)
+        // D. Render 3D ESP on Garden Visitors (Violet Purple Box)
         Color visitorColor = new Color(168, 85, 247, 200); // Violet Purple
         for (LivingEntity visitor : gardenVisitors) {
             AABB boundingBox = visitor.getBoundingBox();
             RenderUtil.drawAABB(boundingBox, visitorColor, false);
         }
 
-        // D. 5x5 NoRender Zone Box Indicator
+        // E. 5x5 NoRender Zone Box Indicator
         var config = com.vertexai.Vertex.config();
         if (config != null && config.misc.noRenderMode && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
             BlockPos p = mc.player.blockPosition();

@@ -56,6 +56,33 @@ public class EntityUtil {
         return health;
     }
 
+    public static boolean isSlayerBoss(LivingEntity entity) {
+        if (entity == null || mc.level == null) return false;
+        String name = entity.getName().getString().toLowerCase(Locale.ROOT);
+        String customName = entity.getCustomName() != null ? entity.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
+        if (name.contains("horror") || name.contains("broodfather") || name.contains("packmaster") ||
+            name.contains("seraph") || name.contains("atoned") || name.contains("demonlord") || name.contains("bloodfiend")) {
+            return true;
+        }
+        if (customName.contains("horror") || customName.contains("broodfather") || customName.contains("packmaster") ||
+            customName.contains("seraph") || customName.contains("atoned") || customName.contains("demonlord") || customName.contains("bloodfiend")) {
+            return true;
+        }
+        AABB box = entity.getBoundingBox().inflate(0.5D, 2.5D, 0.5D);
+        List<Entity> stands = mc.level.getEntities(entity, box, a -> a instanceof ArmorStand && a.isAlive());
+        for (Entity e : stands) {
+            ArmorStand stand = (ArmorStand) e;
+            if (stand.getCustomName() != null) {
+                String standName = stand.getCustomName().getString().toLowerCase(Locale.ROOT);
+                if (standName.contains("horror") || standName.contains("broodfather") || standName.contains("packmaster") ||
+                    standName.contains("seraph") || standName.contains("atoned") || standName.contains("demonlord") || standName.contains("bloodfiend")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public static Entity getEntityCuttingOtherEntity(Entity e, Class<?> entityType) {
         if (e == null || mc.level == null) return null;
         AABB box = e.getBoundingBox().inflate(0.5D, 2.5D, 0.5D);

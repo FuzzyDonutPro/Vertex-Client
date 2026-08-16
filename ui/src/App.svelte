@@ -44,6 +44,14 @@
 
         window.setConfigState = (state) => {
             isConfigOpen = state;
+            if (state) {
+                // When opening the config GUI, stop all running macros in state
+                macros.forEach(m => m.running = false);
+                activeMacroName = 'None';
+                farmingSpeed = '0.0 BPS';
+                estProfit = '0 / hr';
+                macros = [...macros];
+            }
         };
 
 
@@ -211,7 +219,7 @@
         'glacial': { catIds: ['miningMacro'], allowedFieldIds: ['glacialIce', 'shaftPathfinder'] },
         'nuker': { catIds: ['miningMacro'], allowedFieldIds: ['nukerRange', 'nukerFov'] },
 
-        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
+        'slayer': { catIds: ['combat'], allowedFieldIds: ['slayerTarget', 'slayerTier', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
         'mob_killer': { catIds: ['combat'], allowedFieldIds: ['mobKillerTarget', 'autoHealEnabled', 'autoRogueSword', 'healingItem', 'autoHealThreshold'] },
         'zealot': { catIds: ['combat'], allowedFieldIds: ['zealotTarget', 'eyeAlert'] },
         'dungeon': { catIds: ['dungeons'], allowedFieldIds: ['dungeonFloor', 'secretFinder'] },
@@ -292,7 +300,7 @@
         { id: 'nuker', category: 'mining', title: 'Custom Block & Ore Nuker', desc: 'High-speed block nuker with range & FOV filters.', running: false, target: 'Mithril Ores' },
 
         // Slayer & Combat
-        { id: 'slayer', category: 'slayer', title: 'Slayer Boss Macro', desc: 'Auto-spawns and slays Slayer bosses (Revenant, Tarantula, Sven, Voidgloom).', running: false, target: 'Revenant Horror', options: ['Revenant Horror', 'Tarantula Broodfather', 'Sven Packmaster', 'Voidgloom Seraph'] },
+        { id: 'slayer', category: 'slayer', title: 'Slayer Boss Macro', desc: 'Auto-spawns and slays Slayer bosses (Revenant, Tarantula, Sven, Voidgloom).', running: false, target: 'Revenant Horror', options: ['Revenant Horror', 'Tarantula Broodfather', 'Sven Packmaster', 'Voidgloom Seraph'], tier: 4 },
         { id: 'mob_killer', category: 'slayer', title: 'Combat Macro', desc: 'Auto-pathfinds and grinds area mobs for EXP, drops, and bestiary.', running: false, target: 'Graveyard Zombies', options: ['Zealots', 'Ghosts', 'Ice Walkers', 'Treasure Hoarders', 'Goblins', 'Glacite Walkers', 'Automotons', 'Sludge', 'Yog', 'Graveyard Zombies', "Spider's Den Spiders & Silverfish", 'Endermen'] },
         { id: 'zealot', category: 'slayer', title: 'End Zealot & Bruiser Farmer', desc: 'Auto-pathfinds and kills Zealots & Special Zealot Bruisers in The End.', running: false, target: 'Special Zealots' },
         { id: 'dungeon', category: 'slayer', title: 'Dungeons & Catacombs Solver', desc: 'Auto room clear, secret finder & boss room combat helper.', running: false, target: 'Catacombs Floor 7' },
@@ -317,7 +325,7 @@
         gui: { id: 'gui', name: 'Themes & Styling', settings: [{ id: 'handChams', name: 'Hand Chams', desc: 'Render the held item with a solid, opaque glowing effect', type: 'boolean', value: false }, { id: 'chamsGlowAmount', name: 'Glow Amount', desc: 'Intensity of the hand chams glow', type: 'slider', min: 0.0, max: 2.0, step: 0.1, value: 1.0 }, { id: 'chamsGlowColor', name: 'Glow Color', desc: 'Hex color for the hand chams (e.g. #00FFFF)', type: 'text', value: '#00FFFF' }] },
         farming: { id: 'farming', name: 'Farming Settings', settings: [{ id: 'farmingCrop', name: 'Target Crop', desc: 'Select target crop', type: 'dropdown', options: ['Wheat', 'Carrot', 'Potato', 'Nether Wart', 'Sugar Cane', 'Cactus', 'Melon', 'Pumpkin'], value: 0 }, { id: 'laneSpeed', name: 'Walk Speed (BPS)', desc: 'Movement speed during farming', type: 'slider', min: 1, max: 400, step: 1, value: 250 }, { id: 'autoTeleport', name: 'Auto Spawn Teleport', desc: 'Warp back to plot start when lane ends', type: 'boolean', value: true }] },
         miningMacro: { id: 'miningMacro', name: 'Mining Settings', settings: [{ id: 'oreType', name: 'Target Ore', desc: 'Select ore type to prioritize', type: 'dropdown', options: ['Mithril', 'Diamond', 'Emerald', 'Redstone', 'Lapis', 'Gold', 'Iron', 'Coal'], value: 0 }, { id: 'rotationSpeed', name: 'Head Rotation Speed', desc: 'Camera movement speed (ms)', type: 'slider', min: 50, max: 500, step: 10, value: 150 }, { id: 'autoPickaxeAbility', name: 'Auto Speed Boost', desc: 'Use pickaxe ability on cooldown', type: 'boolean', value: true }] },
-        combat: { id: 'combat', name: 'Combat & Slayer Settings', settings: [{ id: 'bossTarget', name: 'Slayer Target', desc: 'Select Slayer Boss tier', type: 'dropdown', options: ['Revenant T4', 'Revenant T5', 'Tarantula T4', 'Sven T4', 'Voidgloom T4'], value: 0 }, { id: 'autoWeaponSwap', name: 'Auto Weapon Swap', desc: 'Swap weapon when boss spawns', type: 'boolean', value: true }, { id: 'autoRogueSword', name: 'Auto Rogue Sword', desc: 'Automatically swap to Rogue Sword and right-click when mana is 50+ for speed boost', type: 'boolean', value: false }, { id: 'killAuraRange', name: 'Combat Range', desc: 'Maximum hit range in blocks', type: 'slider', min: 3, max: 6, step: 0.1, value: 4.5 }] },
+        combat: { id: 'combat', name: 'Combat & Slayer Settings', settings: [{ id: 'slayerTarget', name: 'Slayer Boss Target', desc: 'Select Slayer Boss quest', type: 'dropdown', options: ['Revenant Horror (Crypt Ghouls)', 'Tarantula Broodfather (Spiders)', 'Sven Packmaster (Wolves)', 'Voidgloom Seraph (Endermen)'], value: 0 }, { id: 'slayerTier', name: 'Slayer Boss Tier', desc: 'Select Slayer quest tier (1-5)', type: 'slider', min: 1, max: 5, step: 1, value: 4 }, { id: 'autoHealEnabled', name: 'Auto-Heal', desc: 'Auto heal item swap', type: 'boolean', value: true }, { id: 'autoRogueSword', name: 'Auto Rogue Sword', desc: 'Speed boost swap', type: 'boolean', value: false }, { id: 'healingItem', name: 'Healing Item', desc: 'Item name', type: 'text', value: 'Florid Zombie Sword' }, { id: 'autoHealThreshold', name: 'Auto-Heal Threshold (%)', desc: 'HP percent', type: 'slider', min: 10, max: 90, step: 5, value: 40 }] },
         fishing: { id: 'fishing', name: 'Fishing Settings', settings: [{ id: 'rodAutoCast', name: 'Auto Recast Rod', desc: 'Recast rod automatically after catch', type: 'boolean', value: true }, { id: 'seaCreatureKill', name: 'Auto Slay Creatures', desc: 'Slay sea creatures instantly', type: 'boolean', value: true }] },
         foraging: { id: 'foraging', name: 'Foraging Settings', settings: [{ id: 'foragingTreeType', name: 'Target Tree Type', desc: 'Select target wood type', type: 'dropdown', options: ['Dark Oak', 'Acacia', 'Jungle', 'Spruce', 'Oak', 'Birch'], value: 0 }] },
         general: { id: 'general', name: 'General Settings', settings: [{ id: 'autoFailSafe', name: 'Failsafe Protection', desc: 'Pause macro when admin check detected', type: 'boolean', value: true }] }
@@ -350,6 +358,14 @@
                             card.target = sl.options[idx];
                         }
                     }
+                    let st = data.combat.settings.find(s => s.id === 'slayerTier');
+                    if (st) {
+                        let card = macros.find(m => m.id === 'slayer');
+                        let tierVal = parseInt(st.value);
+                        if (card && !isNaN(tierVal)) {
+                            card.tier = tierVal;
+                        }
+                    }
                 }
                 if (data.foraging && data.foraging.settings) {
                     let fg = data.foraging.settings.find(s => s.id === 'foragingTreeType');
@@ -366,11 +382,34 @@
         } catch(e) { console.error(e); }
     }
 
+    function closeGui() {
+        isConfigOpen = false;
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: 'close_config_gui',
+                onSuccess: function() {},
+                onFailure: function() {}
+            });
+        } else {
+            fetch('/api/action?action=close_config_gui');
+        }
+    }
+
+    function handleGlobalKeyDown(e) {
+        if (e.key === 'Escape' && isConfigOpen) {
+            closeGui();
+        }
+    }
+
     onMount(() => {
         fetchStatus();
-        const interval = setInterval(fetchStatus, 2000);
+        const interval = setInterval(fetchStatus, 300);
         loadDynamicSchema();
-        return () => clearInterval(interval);
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('keydown', handleGlobalKeyDown);
+        };
     });
 
     function updateConfigValue(categoryId, fieldId, value) {
@@ -434,6 +473,13 @@
         }
     }
 
+    let isFailsafeActive = false;
+    let totalProfitAmount = '0';
+    let profitRateAmount = '0/hr';
+    let currentObjective = '';
+    let customStatLabel = 'SESSION TIME';
+    let customStatVal = '00:00:00';
+
     async function fetchStatus() {
         try {
             const res = await fetch('/api/status');
@@ -445,11 +491,33 @@
                 if (data.activeMacro) {
                     activeMacroName = data.activeMacro;
                 }
-                if (data.bps) {
-                    farmingSpeed = data.bps;
+                if (data.isRunning !== undefined) {
+                    isRunning = data.isRunning;
+                }
+                if (data.runtime) {
+                    runtime = data.runtime;
+                }
+                if (data.profit) {
+                    totalProfitAmount = data.profit;
                 }
                 if (data.estProfit) {
                     estProfit = data.estProfit;
+                    profitRateAmount = data.estProfit;
+                }
+                if (data.failsafe !== undefined) {
+                    isFailsafeActive = data.failsafe;
+                }
+                if (data.objective) {
+                    currentObjective = data.objective;
+                }
+                if (data.statLabel) {
+                    customStatLabel = data.statLabel;
+                }
+                if (data.statVal) {
+                    customStatVal = data.statVal;
+                }
+                if (data.bps) {
+                    farmingSpeed = data.bps;
                 }
                 if (data.fps) {
                     liveFps = data.fps;
@@ -463,12 +531,13 @@
         if (macro) {
             macro.running = !macro.running;
             
-            // If turning on, turn off others
+            // If turning on, turn off others and auto-close GUI
             if (macro.running) {
                 macros.forEach(m => { if (m.id !== id) m.running = false; });
                 activeMacroName = macro.title;
                 farmingSpeed = '20.0 BPS';
                 estProfit = 'Calculating...';
+                isConfigOpen = false;
             } else {
                 activeMacroName = 'None';
                 farmingSpeed = '0.0 BPS';
@@ -533,6 +602,22 @@
             window.cefQuery({ request: `set_target:${id}:${target}` });
         }
         fetch(`/api/macro/target?id=${encodeURIComponent(id)}&target=${encodeURIComponent(target)}`).catch(() => {});
+    }
+
+    function onTierChange(id, tierVal) {
+        let val = parseInt(tierVal);
+        let macro = macros.find(m => m.id === id);
+        if (macro) {
+            macro.tier = val;
+            macros = [...macros];
+        }
+        if (id === 'slayer' && dynamicConfigSchema.combat) {
+            let setting = dynamicConfigSchema.combat.settings.find(s => s.id === 'slayerTier');
+            if (setting) {
+                setting.value = val;
+                updateConfigValue('combat', 'slayerTier', val);
+            }
+        }
     }
 
     function openMacroSettings(macro) {
@@ -610,6 +695,8 @@
 <div style="font-family: {selectedFont}, Inter, Roboto, sans-serif;" class="w-screen h-screen flex items-center justify-center {isConfigOpen ? 'bg-black/60' : 'bg-transparent pointer-events-none'} select-none overflow-hidden relative">
 {#if isConfigOpen}
     <div style="transform: scale({uiScale}); transform-origin: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);" class="w-[820px] h-[520px] bg-slate-900/98 border border-white/10 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.25)] flex overflow-hidden relative">
+        <!-- Top Right Close Button -->
+        <button on:click={closeGui} class="absolute top-3.5 right-3.5 z-30 w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-lg active:scale-95">✕</button>
     
     <!-- Sidebar Navigation -->
     <aside class="w-[210px] bg-slate-900/95 border-r border-white/10 p-4 flex flex-col justify-between shrink-0 select-none overflow-y-auto max-h-full custom-scrollbar">
@@ -736,15 +823,26 @@
                     </div>
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <div class="flex items-center justify-between gap-2 pt-1 border-t border-white/5 min-w-0" on:click|stopPropagation>
-                        <select bind:value={macro.target} on:change={(e) => onTargetChange(macro.id, e.target.value)} class="bg-slate-900/90 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none cursor-pointer max-w-[140px] truncate shrink min-w-0">
-                            {#if macro.options}
-                                {#each macro.options as opt}
-                                    <option value={opt}>{opt}</option>
-                                {/each}
-                            {:else}
-                                <option>{macro.target}</option>
+                        <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                            <select bind:value={macro.target} on:change={(e) => onTargetChange(macro.id, e.target.value)} class="bg-slate-900/90 border border-white/10 text-white px-2 py-1 rounded-lg text-[10px] outline-none cursor-pointer max-w-[130px] truncate shrink min-w-0">
+                                {#if macro.options}
+                                    {#each macro.options as opt}
+                                        <option value={opt}>{opt}</option>
+                                    {/each}
+                                {:else}
+                                    <option>{macro.target}</option>
+                                {/if}
+                            </select>
+                            {#if macro.id === 'slayer'}
+                                <select value={macro.tier || 4} on:change={(e) => onTierChange(macro.id, e.target.value)} class="bg-slate-900/90 border border-sky-400/30 text-sky-400 font-semibold px-1.5 py-1 rounded-lg text-[10px] outline-none cursor-pointer shrink-0">
+                                    <option value="1">Tier I</option>
+                                    <option value="2">Tier II</option>
+                                    <option value="3">Tier III</option>
+                                    <option value="4">Tier IV</option>
+                                    <option value="5">Tier V</option>
+                                </select>
                             {/if}
-                        </select>
+                        </div>
                         {#if macro.running}
                             <button class="px-3 py-1 rounded-lg text-[10px] font-semibold bg-gradient-to-br from-red-500 to-red-600 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] transition-all cursor-pointer whitespace-nowrap shrink-0" on:click|stopPropagation={() => { playUiSound(); toggleMacro(macro.id); }}>Stop Macro</button>
                         {:else}
@@ -1369,8 +1467,8 @@
     </div>
 {/if}
 
-{#if !isConfigOpen && statusHudEnabled}
-    <StatusHUD isRunning={activeMacroName !== 'None' && isRunning} activeMacro={activeMacroName} runtime={runtime} profit={estProfit} profitRate={estProfit} failsafe={false} themeGradientClass={currentThemeObj?.bgGradient || 'from-sky-400 to-sky-600'} />
+{#if !isConfigOpen && statusHudEnabled && isRunning && activeMacroName !== 'None' && activeMacroName !== 'Idle'}
+    <StatusHUD isRunning={true} activeMacro={activeMacroName} runtime={runtime} profit={totalProfitAmount} profitRate={profitRateAmount} failsafe={isFailsafeActive} objective={currentObjective} statLabel={customStatLabel} statVal={customStatVal} themeGradientClass={currentThemeObj?.bgGradient || 'from-sky-400 to-sky-600'} />
 {/if}
 
 {#if !isConfigOpen && miningHudEnabled}

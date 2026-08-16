@@ -62,17 +62,22 @@ public class PathRenderer {
         );
         drawAABB(buffer, matrix, smallAABB, 0.0f, 0.0f, 1.0f, 1.0f);
 
-        // 3. Draw path line (Green)
+        // 3. Draw path line (Theme Color)
         if (!currentPath.isEmpty()) {
+            int theme = com.vertexai.Vertex.config().gui.getThemeColorInt();
+            int r = (theme >> 16) & 0xFF;
+            int g = (theme >> 8) & 0xFF;
+            int b = theme & 0xFF;
+            
             Vec3 start = Minecraft.getInstance().player.position();
-            buffer.addVertex(matrix, (float)start.x, (float)start.y + 1.0f, (float)start.z).setColor(0, 255, 0, 255);
+            buffer.addVertex(matrix, (float)start.x, (float)start.y + 1.0f, (float)start.z).setColor(r, g, b, 255);
             
             for (BlockPos pos : currentPath) {
-                buffer.addVertex(matrix, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f).setColor(0, 255, 0, 255);
-                buffer.addVertex(matrix, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f).setColor(0, 255, 0, 255);
+                buffer.addVertex(matrix, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f).setColor(r, g, b, 255);
+                buffer.addVertex(matrix, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f).setColor(r, g, b, 255);
             }
             
-            buffer.addVertex(matrix, (float)exactTarget.x(), (float)exactTarget.y(), (float)exactTarget.z()).setColor(0, 255, 0, 255);
+            buffer.addVertex(matrix, (float)exactTarget.x(), (float)exactTarget.y(), (float)exactTarget.z()).setColor(r, g, b, 255);
         }
 
         // BufferUploader is removed in 1.21.11, need to use RenderType or VertexConsumer natively

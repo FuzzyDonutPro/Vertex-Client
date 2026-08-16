@@ -14,7 +14,6 @@
     "MixinItemInHandRenderer",
     "MixinLivingEntity",
     "MixinChatComponent",
-    "MixinEntityRenderer",
     "MixinFont",
     "MixinPlayerTabOverlay",
     "MixinPlayerTeam"
@@ -23,3 +22,4 @@
     "defaultRequire": 1
   }
 }
+
