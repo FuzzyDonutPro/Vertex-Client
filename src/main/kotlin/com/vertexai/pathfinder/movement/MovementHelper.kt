@@ -159,36 +159,70 @@ object MovementHelper {
         return state.block is SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.BOTTOM
     }
 
-    fun isValidStair(state: BlockState, dx: Int, dz: Int): Boolean {
-        if (dx == dz) return false
+    fun hasPlayerHeightClearance(bsa: BlockStateAccessor, x: Int, y: Int, z: Int): Boolean {
+        // Player is 1.8 blocks tall (must clear y+1 legs and y+2 head)
+        return canWalkThrough(bsa, x, y + 1, z) && canWalkThrough(bsa, x, y + 2, z)
+    }
+
+    fun hasJumpCeilingClearance(bsa: BlockStateAccessor, x: Int, y: Int, z: Int): Boolean {
+        // When jumping from y, player head reaches y + 3
+        return canWalkThrough(bsa, x, y + 3, z)
+    }
+
+    fun isStepUpStair(state: BlockState, dx: Int, dz: Int): Boolean {
         if (state.block !is StairBlock) return false
+        // Upside-down stairs have full top surface at 1.0 (cannot step up smoothly as half block)
         if (state.getValue(StairBlock.HALF) != Half.BOTTOM) return false
 
-        val stairFacing = state.getValue(StairBlock.FACING)
+        val facing = state.getValue(StairBlock.FACING)
+        val shape = try {
+            state.getValue(StairBlock.SHAPE)
+        } catch (_: Exception) {
+            net.minecraft.world.level.block.state.properties.StairsShape.STRAIGHT
+        }
 
-        return when {
-            dz == -1 -> stairFacing == Direction.NORTH
-            dz == 1 -> stairFacing == Direction.SOUTH
-            dx == -1 -> stairFacing == Direction.WEST
-            dx == 1 -> stairFacing == Direction.EAST
-            else -> false
+        // Ascending means walking into the low step side toward the high back
+        return when (shape) {
+            net.minecraft.world.level.block.state.properties.StairsShape.STRAIGHT -> {
+                when {
+                    dz > 0 -> facing == Direction.NORTH
+                    dz < 0 -> facing == Direction.SOUTH
+                    dx > 0 -> facing == Direction.WEST
+                    dx < 0 -> facing == Direction.EAST
+                    else -> false
+                }
+            }
+            net.minecraft.world.level.block.state.properties.StairsShape.INNER_LEFT,
+            net.minecraft.world.level.block.state.properties.StairsShape.INNER_RIGHT -> {
+                // Inner corner stairs have low steps leading in from two adjacent directions
+                when {
+                    dz > 0 && (facing == Direction.NORTH || facing == Direction.WEST || facing == Direction.EAST) -> true
+                    dz < 0 && (facing == Direction.SOUTH || facing == Direction.WEST || facing == Direction.EAST) -> true
+                    dx > 0 && (facing == Direction.WEST || facing == Direction.NORTH || facing == Direction.SOUTH) -> true
+                    dx < 0 && (facing == Direction.EAST || facing == Direction.NORTH || facing == Direction.SOUTH) -> true
+                    else -> false
+                }
+            }
+            net.minecraft.world.level.block.state.properties.StairsShape.OUTER_LEFT,
+            net.minecraft.world.level.block.state.properties.StairsShape.OUTER_RIGHT -> {
+                // Outer corner stairs have 3 low quadrants
+                when {
+                    dz > 0 && facing != Direction.SOUTH -> true
+                    dz < 0 && facing != Direction.NORTH -> true
+                    dx > 0 && facing != Direction.EAST -> true
+                    dx < 0 && facing != Direction.WEST -> true
+                    else -> false
+                }
+            }
         }
     }
 
+    fun isValidStair(state: BlockState, dx: Int, dz: Int): Boolean {
+        return isStepUpStair(state, dx, dz)
+    }
+
     fun isValidReversedStair(state: BlockState, dx: Int, dz: Int): Boolean {
-        if (dx == dz) return false
-        if (state.block !is StairBlock) return false
-        if (state.getValue(StairBlock.HALF) != Half.BOTTOM) return false
-
-        val stairFacing = state.getValue(StairBlock.FACING)
-
-        return when {
-            dz == 1 -> stairFacing == Direction.NORTH
-            dz == -1 -> stairFacing == Direction.SOUTH
-            dx == 1 -> stairFacing == Direction.WEST
-            dx == -1 -> stairFacing == Direction.EAST
-            else -> false
-        }
+        return isStepUpStair(state, -dx, -dz)
     }
 
     fun hasTop(state: BlockState, dX: Int, dZ: Int): Boolean {

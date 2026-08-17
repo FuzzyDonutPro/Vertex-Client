@@ -42,6 +42,7 @@ class MovementAscend(mm: VertexMain, from: BlockPos, to: BlockPos) : Movement(mm
             if (!MovementHelper.canStandOn(ctx.bsa, destX, y + 1, destZ, destState)) return
             if (!MovementHelper.canWalkThrough(ctx.bsa, destX, y + 3, destZ)) return
             if (!MovementHelper.canWalkThrough(ctx.bsa, destX, y + 2, destZ)) return
+            if (!MovementHelper.canWalkThrough(ctx.bsa, x, y + 2, z)) return
             if (!MovementHelper.canWalkThrough(ctx.bsa, x, y + 3, z)) return
 
             val sourceState = ctx.get(x, y, z)
@@ -60,7 +61,7 @@ class MovementAscend(mm: VertexMain, from: BlockPos, to: BlockPos) : Movement(mm
             val destWorldY = (y + 1) + destCollision
             val diff = destWorldY - sourceWorldY
 
-            val isAscendingStairs = destState.block is StairBlock && destState.getValue(StairBlock.HALF) == Half.BOTTOM
+            val isAscendingStairs = MovementHelper.isStepUpStair(destState, destX - x, destZ - z)
 
             res.cost = when {
                 diff <= 0.6 || isAscendingStairs -> ctx.cost.ONE_BLOCK_SPRINT_COST

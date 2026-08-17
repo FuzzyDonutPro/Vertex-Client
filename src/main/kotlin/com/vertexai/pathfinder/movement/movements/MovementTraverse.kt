@@ -49,6 +49,10 @@ class MovementTraverse(mm: VertexMain, from: BlockPos, to: BlockPos) : Movement(
                 ) || !MovementHelper.canWalkThrough(ctx.bsa, destX, y + 2, destZ)
             ) return
 
+            if (!MovementHelper.canWalkThrough(ctx.bsa, x, y + 1, z) ||
+                !MovementHelper.canWalkThrough(ctx.bsa, x, y + 2, z)
+            ) return
+
             val srcUpState = ctx.get(x, y + 1, z)
 
             val isSourceTopWalkableLadder = MovementHelper.canWalkIntoLadder(srcUpState, x - destX, z - destZ)
