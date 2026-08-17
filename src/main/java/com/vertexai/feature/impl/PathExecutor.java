@@ -9,6 +9,7 @@ import com.vertexai.pathfinder.calculate.Path;
 import com.vertexai.pathfinder.helper.BlockStateAccessor;
 import com.vertexai.pathfinder.movement.CalculationContext;
 import com.vertexai.pathfinder.movement.MovementHelper;
+import com.vertexai.pathfinder.util.RaycastPathPlanner;
 import com.vertexai.util.*;
 import com.vertexai.util.helper.Angle;
 import com.vertexai.util.helper.Clock;
@@ -432,18 +433,18 @@ public class PathExecutor {
             target = this.blockPath.get(this.target);
         }
 
-        // --- LOOK AT TARGET (Look ahead 4-6 nodes along path, smooth through zigzags) ---
-        int lookIndex = Math.min(this.target + 4, this.blockPath.size() - 1);
+        // --- LOOK AT TARGET (Raycast line-of-sight planning & continuous rotation coordination) ---
+        int raycastLookIndex = RaycastPathPlanner.findFurthestVisibleNodeIndex(playerPosVec, this.blockPath, this.target, 8);
         
         // Find if there is an elevation change (stairs/hill) ahead within 6 blocks
         for (int i = this.target; i <= Math.min(this.target + 6, this.blockPath.size() - 1); i++) {
             BlockPos node = this.blockPath.get(i);
             if (node.getY() != playerPos.getY()) {
-                lookIndex = i;
+                raycastLookIndex = i;
                 break;
             }
         }
-        BlockPos lookTargetNode = this.blockPath.get(Math.min(lookIndex, this.blockPath.size() - 1));
+        BlockPos lookTargetNode = this.blockPath.get(Math.min(raycastLookIndex, this.blockPath.size() - 1));
 
         boolean onGround = mc.player.onGround();
 
@@ -501,13 +502,16 @@ public class PathExecutor {
             );
         }
 
-        // Calculate which WASD keys to press based on current player rotation (independent of pitch)
-        Vec3 targetVec = new Vec3(targetX + 0.5, mc.player.getY(), targetZ + 0.5);
-        
+        // Coordinate target movement vector:
+        // Use immediate node for tight navigation if turning or stairs, or raycast vector if clear
+        Vec3 immediateTargetVec = new Vec3(target.getX() + 0.5, mc.player.getY(), target.getZ() + 0.5);
+        Vec3 raycastTargetVec = new Vec3(lookTargetNode.getX() + 0.5, mc.player.getY(), lookTargetNode.getZ() + 0.5);
+        boolean isElevationChange = target.getY() != playerPos.getY();
+        Vec3 targetVec = (yawDiff < 25.0f && !isElevationChange) ? raycastTargetVec : immediateTargetVec;
+
         List<KeyMapping> neededKeys = new ArrayList<>();
         // If turning sharply on stairs/corners, wait briefly for rotation to align
-        boolean isElevationChange = target.getY() != playerPos.getY();
-        if (!(yawDiff > 55.0f && isElevationChange)) {
+        if (!(yawDiff > 50.0f && isElevationChange)) {
             neededKeys.addAll(KeyBindUtil.getNeededKeyPresses(mc.player.position(), targetVec));
         }
         
@@ -562,7 +566,34 @@ public class PathExecutor {
         this.map.clear();
 
         this.curr = path;
-        this.blockPath.addAll(this.curr.getSmoothedPath());
+        List<BlockPos> smoothed = this.curr.getSmoothedPath();
+
+        // Raycast-guided path node optimization
+        if (mc.level != null && smoothed.size() > 2) {
+            List<BlockPos> raycastOptimized = new ArrayList<>();
+            raycastOptimized.add(smoothed.get(0));
+            int currIdx = 0;
+            while (currIdx < smoothed.size() - 1) {
+                int furthestReachable = currIdx + 1;
+                for (int nextIdx = Math.min(currIdx + 8, smoothed.size() - 1); nextIdx > currIdx + 1; nextIdx--) {
+                    BlockPos p1 = smoothed.get(currIdx);
+                    BlockPos p2 = smoothed.get(nextIdx);
+                    if (RaycastPathPlanner.hasLineOfSight(
+                            new Vec3(p1.getX() + 0.5, p1.getY(), p1.getZ() + 0.5),
+                            new Vec3(p2.getX() + 0.5, p2.getY(), p2.getZ() + 0.5),
+                            mc.level)) {
+                        furthestReachable = nextIdx;
+                        break;
+                    }
+                }
+                raycastOptimized.add(smoothed.get(furthestReachable));
+                currIdx = furthestReachable;
+            }
+            this.blockPath.addAll(raycastOptimized);
+        } else {
+            this.blockPath.addAll(smoothed);
+        }
+
         for (int i = 0; i < this.blockPath.size(); i++) {
             BlockPos pos = this.blockPath.get(i);
             this.map.computeIfAbsent(this.pack(pos.getX(), pos.getZ()), k -> new ArrayList<>()).add(this.pack(pos.getY(), i));
