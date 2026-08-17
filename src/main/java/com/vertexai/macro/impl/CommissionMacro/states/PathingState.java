@@ -6,6 +6,7 @@ import com.vertexai.handler.GameStateHandler;
 import com.vertexai.handler.GraphHandler;
 import com.vertexai.macro.impl.CommissionMacro.Commission;
 import com.vertexai.macro.impl.CommissionMacro.CommissionMacro;
+import com.vertexai.util.CommissionUtil;
 import com.vertexai.util.PlayerUtil;
 import com.vertexai.util.helper.location.SubLocation;
 import com.vertexai.util.helper.route.Route;
@@ -101,13 +102,25 @@ public class PathingState implements CommissionMacroState {
         }
 
         if (macro.getCurrentCommission() == null) {
+            List<Commission> comms = CommissionUtil.getCurrentCommissionsFromTablist();
+            if (!comms.isEmpty()) {
+                macro.setCurrentCommission(comms.get(0));
+                log("Discovered commission from tablist in PathingState: " + comms.get(0).getName());
+                return this;
+            }
+
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastCommissionEmptyMessageTime > COMMISSION_EMPTY_MESSAGE_COOLDOWN_MS) {
-                send("Commission is empty! Waiting for tab-list updates. " +
-                        "Note that this is usually temporary and caused by lags in the server.");
+                send("Waiting for commission tab-list to populate...");
                 lastCommissionEmptyMessageTime = currentTime;
             }
-            return new WarpingState();
+
+            // Only attempt warp if player is genuinely NOT in Dwarven Mines
+            if (!GameStateHandler.getInstance().inDwarvenMines() && GameStateHandler.getInstance().getCurrentLocation() != com.vertexai.util.helper.location.Location.DWARVEN_MINES) {
+                return new WarpingState();
+            }
+
+            return this;
         }
 
         if (macro.getCurrentCommission() == Commission.COMMISSION_CLAIM && Vertex.config().commission.dwarvenCommission.commClaimMethod == 1) {

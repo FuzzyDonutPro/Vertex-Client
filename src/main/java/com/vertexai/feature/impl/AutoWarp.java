@@ -5,6 +5,7 @@ import lombok.Getter;
 import com.vertexai.failsafe.AbstractFailsafe.Failsafe;
 import com.vertexai.feature.AbstractFeature;
 import com.vertexai.handler.GameStateHandler;
+import com.vertexai.util.ScoreboardUtil;
 import com.vertexai.util.helper.location.Location;
 import com.vertexai.util.helper.location.SubLocation;
 
@@ -264,10 +265,12 @@ public class AutoWarp extends AbstractFeature {
 
     private boolean isOnHypixelNetwork() {
         String ip = GameStateHandler.getInstance().getServerIp();
-        if (ip == null || ip.trim().isEmpty()) {
-            return false;
+        if (ip != null && !ip.trim().isEmpty() && ip.toLowerCase(Locale.ROOT).contains("hypixel.net")) {
+            return true;
         }
-        return ip.toLowerCase(Locale.ROOT).contains("hypixel.net");
+        return ScoreboardUtil.getScoreboardTitle().contains("SKYBLOCK") ||
+                GameStateHandler.getInstance().isPlayerInSkyBlock() ||
+                (mc.player != null && mc.player.connection != null);
     }
 
     public enum Error {
