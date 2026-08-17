@@ -14,8 +14,10 @@ import java.util.List;
  */
 public class CombatMacro extends AbstractMacro {
 
-    @Getter
     private static final CombatMacro instance = new CombatMacro();
+    public static CombatMacro getInstance() {
+        return instance;
+    }
 
     @Override
     public String getName() {

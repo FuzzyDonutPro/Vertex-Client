@@ -87,24 +87,34 @@ public class BlockUtil {
         final MinHeap<BlockPos> blocks = new MinHeap<>(500);
         final Set<Long> visitedPositions = new HashSet<>(1000);
 
-        final BlockPos playerBlock = PlayerUtil.getBlockStandingOn();
-        final List<BlockPos> walkableBlocks = getWalkableBlocksAround(playerBlock, 3);
+        if (mc.player == null) return blocks.getBlocks();
+        final Vec3 playerEye = mc.player.getEyePosition();
 
         if (blockToIgnore != null) {
             visitedPositions.add(longHash(blockToIgnore.getX(), blockToIgnore.getY(), blockToIgnore.getZ()));
         }
 
+        // 1. FIRST: Scan directly from the player's CURRENT eye position (shortest aim, no walking needed)
+        MinHeap<BlockPos> immediateBatch = findMineableBlocksAroundPoint(playerEye, blockPriorities, visitedPositions, miningSpeed, debugContext);
+        if (!immediateBatch.getBlocks().isEmpty()) {
+            return immediateBatch.getBlocks();
+        }
+
+        // 2. If nothing is reachable without moving, scan surrounding walkable blocks with distance penalty
+        final BlockPos playerBlock = PlayerUtil.getBlockStandingOn();
+        final List<BlockPos> walkableBlocks = getWalkableBlocksAround(playerBlock, 3);
+
         for (final BlockPos blockPos : walkableBlocks) {
-            if (mc.player == null) continue;
             final Vec3 eye = new Vec3(
                     blockPos.getX() + 0.5d,
                     blockPos.getY() + mc.player.getEyeHeight(mc.player.getPose()),
                     blockPos.getZ() + 0.5d
             );
 
+            double walkDistSq = blockPos.distToCenterSqr(mc.player.position());
             MinHeap<BlockPos> batch = findMineableBlocksAroundPoint(eye, blockPriorities, visitedPositions, miningSpeed, debugContext);
             for (BlockPos pos : batch.getBlocks()) {
-                double cost = batch.getCost(pos);
+                double cost = batch.getCost(pos) + walkDistSq * 100.0;
                 blocks.add(pos, cost);
             }
         }
@@ -208,14 +218,14 @@ public class BlockUtil {
                         }
                     }
 
-                    // Calculate mining cost components
+                    // Calculate mining cost components with heavy weight on shortest aim angle
                     final double hardness = getBlockStrength(state);
-                    final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(pos)).lengthSqrt();
+                    final float angleChange = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(point, pos)).lengthSqrt();
 
-                    // Calculate final cost and add to heap
-                    double miningCost = hardness / (miningSpeed * 1.0d) * Vertex.config().debug.miningCoefficient
-                            + angleChange * Vertex.config().debug.angleCoefficient
-                            + distSq * Vertex.config().debug.distanceCoefficient;
+                    // Heavily penalize large angle turns so the client always takes the shortest, most natural aim path
+                    double miningCost = (hardness / (miningSpeed * 1.0d) * 5.0)
+                            + (angleChange * 12.0)
+                            + (distSq * 6.0);
                     miningCost /= (blockPriority * 1.0d);
 
                     if (debugContext != null) debugContext.onBlockCandidate(pos, miningCost);
@@ -550,16 +560,17 @@ public class BlockUtil {
     }
 
     public static List<Vec3> bestPointsOnBestSide(final BlockPos block) {
-        return pointsOnBlockSide(block, getClosestVisibleSide(block)).stream()
+        if (mc.player == null) return new ArrayList<>();
+        return pointsOnVisibleSides(block).stream()
                 .filter(RaytracingUtil::canSeePointWithEntities)
-                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(i)).getValue()))
+                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(i)).lengthSqrt()))
                 .collect(Collectors.toList());
     }
 
     public static List<Vec3> bestPointsOnBestSide(Vec3 from, final BlockPos block) {
-        return pointsOnBlockSide(block, getClosestVisibleSide(from, block)).stream()
+        return pointsOnVisibleSides(from, block).stream()
                 .filter(it -> RaytracingUtil.canSeePointWithEntities(from, it))
-                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(from, i)).getValue()))
+                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(from, i)).lengthSqrt()))
                 .collect(Collectors.toList());
     }
 

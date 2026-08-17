@@ -64,6 +64,7 @@ public class EventManager {
             // Update utilities
             ScoreboardUtil.update();
             TablistUtil.update();
+            com.vertexai.dungeons.puzzles.DungeonTerminalSolver.getInstance().onTick();
         });
     }
 

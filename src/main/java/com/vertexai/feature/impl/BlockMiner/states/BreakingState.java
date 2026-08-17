@@ -88,11 +88,16 @@ public class BreakingState implements BlockMinerState {
      */
     private boolean isWalking;
 
+    /**
+     * Number of ticks spent breaking the current block.
+     */
+    private int miningTicksOnBlock = 0;
 
     @Override
     public void onStart(BlockMiner miner) {
         log("Entering Breaking State");
         breakAttemptTime = 0;
+        miningTicksOnBlock = 0;
         isWalking = false;
 
         lookAwayTimer = new Clock();
@@ -118,10 +123,19 @@ public class BreakingState implements BlockMinerState {
             handleWalking();
         }
 
-        // Handle precision mining
+        // Handle precision mining with a 1-tick delay (mines block -> 1 tick delay -> move to crit particle)
+        miningTicksOnBlock++;
         if (Vertex.config().miningMacro.precisionMiner && miner.getTargetParticlePos() != null) {
-            RotationHandler.getInstance().easeTo(new RotationConfiguration(new Target(miner.getTargetParticlePos()), Vertex.config().getRandomRotationTime(), null).followTarget(true));
-            miner.setTargetParticlePos(null);
+            if (this.miningTicksOnBlock >= 1) {
+                RotationHandler.getInstance().easeTo(
+                        new RotationConfiguration(
+                                new Target(miner.getTargetParticlePos()),
+                                Vertex.config().getRandomRotationTime(),
+                                null
+                        ).followTarget(true)
+                );
+                miner.setTargetParticlePos(null);
+            }
         }
 
         // Safety mechanism: if we've been trying to break for too long, reset
@@ -247,31 +261,15 @@ public class BreakingState implements BlockMinerState {
             this.targetPoint = points.get(0);
         }
 
-        // Configure rotation to look at target
+        // Configure direct smooth rotation to the shortest aim point
         RotationHandler.getInstance().stop();
-        RotationHandler.getInstance().queueRotation(
+        RotationHandler.getInstance().easeTo(
                 new RotationConfiguration(
                         new Target(targetPoint),
                         Vertex.config().getRandomRotationTime(),
                         null
                 )
         );
-
-        // Sometimes randomly choose a different point on the block (for variety)
-        if (Vertex.config().miningMacro.precisionMiner && random.nextBoolean() && Vertex.config().general.randomizedRotations) {
-            int halfwayMark = points.size() / 2;
-            this.targetPoint = points.get(random.nextInt(halfwayMark) + halfwayMark - 1);
-
-            RotationHandler.getInstance().queueRotation(
-                    new RotationConfiguration(
-                            new Target(targetPoint),
-                            Vertex.config().getRandomRotationTime() * 2L,
-                            null
-                    )
-            );
-        }
-
-        RotationHandler.getInstance().start();
 
         // Determine if the player needs to walk toward block (too far away)
         if (Vertex.config().miningMacro.pathfinderMode != 2 && this.targetPoint != null && PlayerUtil.getPlayerEyePos().distanceTo(this.targetPoint) > MAX_MINE_DISTANCE) {
