@@ -35,7 +35,8 @@ public class BreakingState implements ForagingMacroState {
         logBroken = false;
         KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
 
-        currentTargetPos = macro.getTargetBlockPos();
+        currentTargetPos = findBestVisibleLog(macro.getTargetBlockPos(), macro.getCurrentForagingMode());
+        macro.setTargetBlockPos(currentTargetPos);
         if (currentTargetPos != null && mc.player != null) {
             aimAtBlock(currentTargetPos);
         }
@@ -50,6 +51,41 @@ public class BreakingState implements ForagingMacroState {
                 com.vertexai.Vertex.config().getRandomRotationTime(),
                 null
         ));
+    }
+
+    private BlockPos findBestVisibleLog(BlockPos targetPos, String mode) {
+        if (mc.level == null || mc.player == null) return targetPos;
+        Vec3 eyePos = mc.player.getEyePosition();
+
+        // 1. If targetPos is directly visible and not empty, prioritize it
+        if (targetPos != null && !mc.level.isEmptyBlock(targetPos) && BlockUtil.hasVisibleSide(eyePos, targetPos)) {
+            return targetPos;
+        }
+
+        // 2. Scan all logs in tree cluster within 4.5 blocks reach
+        BlockPos playerPos = mc.player.blockPosition();
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dy = -2; dy <= 4; dy++) {
+                for (int dz = -4; dz <= 4; dz++) {
+                    BlockPos pos = playerPos.offset(dx, dy, dz);
+                    if (pos.distSqr(playerPos) > 20.25) continue;
+                    if (ForagingMacro.getInstance().isBlockBlacklisted(pos)) continue;
+
+                    Block b = mc.level.getBlockState(pos).getBlock();
+                    if (ForagingMacro.isLogBlock(b, mode) && BlockUtil.hasVisibleSide(eyePos, pos)) {
+                        double d = Vec3.atCenterOf(pos).distanceToSqr(eyePos);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            best = pos;
+                        }
+                    }
+                }
+            }
+        }
+        return best != null ? best : targetPos;
     }
 
     @Override
@@ -94,7 +130,7 @@ public class BreakingState implements ForagingMacroState {
             mc.player.getInventory().setSelectedSlot(axeSlot);
         }
 
-        // Check if crosshair is pointing at target log or obstructing leaf block
+        // Check if crosshair is pointing at target log or another valid log in tree
         HitResult hit = mc.hitResult;
         boolean canBreak = false;
 
@@ -104,18 +140,26 @@ public class BreakingState implements ForagingMacroState {
 
             if (hitPos.equals(currentTargetPos)) {
                 canBreak = true;
-            } else if (ForagingMacro.isLogBlock(hitBlock, macro.getCurrentForagingMode()) && !macro.isBlockBlacklisted(hitPos) && hitPos.distSqr(currentTargetPos) <= 12) {
-                // Pointing at valid log in same tree cluster, lock on to it!
+            } else if (ForagingMacro.isLogBlock(hitBlock, macro.getCurrentForagingMode()) && !macro.isBlockBlacklisted(hitPos) && hitPos.distSqr(currentTargetPos) <= 16) {
+                // Pointing at another valid log in same tree cluster, lock on to it!
                 macro.setTargetBlockPos(hitPos);
                 this.currentTargetPos = hitPos;
-                canBreak = true;
-            } else if (ForagingMacro.isLeafBlock(hitBlock) && hitPos.distSqr(currentTargetPos) <= 9) {
-                // Pointing at a leaf block blocking our line of sight to the tree, break the leaf!
                 canBreak = true;
             }
         }
 
         if (!canBreak) {
+            // Check if current target is not visible from this angle, find alternative visible log on tree
+            Vec3 eye = mc.player.getEyePosition();
+            if (!BlockUtil.hasVisibleSide(eye, currentTargetPos)) {
+                BlockPos alternate = findBestVisibleLog(currentTargetPos, macro.getCurrentForagingMode());
+                if (alternate != null && !alternate.equals(currentTargetPos) && BlockUtil.hasVisibleSide(eye, alternate)) {
+                    this.currentTargetPos = alternate;
+                    macro.setTargetBlockPos(alternate);
+                    aimAtBlock(alternate);
+                }
+            }
+
             // Smoothly ease crosshair to the visible face
             if (!RotationHandler.getInstance().isEnabled()) {
                 aimAtBlock(currentTargetPos);
@@ -127,14 +171,14 @@ public class BreakingState implements ForagingMacroState {
             if (System.currentTimeMillis() - macro.lastLogBreakTime < currentDelay) {
                 KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
             } else {
-                // Hold left click to mine
+                // Hold left click to mine log
                 KeyBindUtil.setKeyBindState(mc.options.keyAttack, true);
             }
         }
 
         // Fail-safe timeout if block doesn't break in 3.5s
         if (breakDelay.passed()) {
-            log("Log taking too long to break, blacklisting tree and switching target...");
+            log("Log taking too long to break from this angle, blacklisting tree and switching target...");
             macro.blacklistTreeCluster(currentTargetPos);
             KeyBindUtil.setKeyBindState(mc.options.keyAttack, false);
             return new PathfindingState();

@@ -105,7 +105,7 @@ public class PathfindingState implements ForagingMacroState {
                             0,
                             (int)(Math.random() * 14 - 7)
                     );
-                    BlockPos standable = findStandablePosNear(randomWander);
+                    BlockPos standable = findStandablePosNear(macro, randomWander, macro.getCurrentForagingMode());
                     Pathfinder.getInstance().stopAndRequeue(standable);
                     Pathfinder.getInstance().start();
                 }
@@ -136,8 +136,8 @@ public class PathfindingState implements ForagingMacroState {
                 return;
             }
 
-            // Pathfind to adjacent standable ground position
-            BlockPos standablePos = findStandablePosNear(this.targetBlock);
+            // Pathfind to adjacent standable ground position with direct, unobstructed sightline
+            BlockPos standablePos = findStandablePosNear(macro, this.targetBlock, macro.getCurrentForagingMode());
             Pathfinder.getInstance().stopAndRequeue(standablePos);
             Pathfinder.getInstance().start();
             pathTimeout.schedule(8000L); // 8 second max pathfinding timeout
@@ -164,11 +164,13 @@ public class PathfindingState implements ForagingMacroState {
                     if (ForagingMacro.isLogBlock(block, mode) && ForagingMacro.isFullTree(mc.level, pos, mode)) {
                         double d = Vec3.atCenterOf(pos).distanceToSqr(eyePos);
                         if (d <= 18.0) { // <= 4.2 blocks reach
-                            double heightPenalty = Math.abs((pos.getY() + 0.5) - eyePos.y) * 2.0;
-                            double score = d + heightPenalty;
-                            if (score < bestDist) {
-                                bestDist = score;
-                                best = pos;
+                            if (BlockUtil.hasVisibleSide(eyePos, pos)) {
+                                double heightPenalty = Math.abs((pos.getY() + 0.5) - eyePos.y) * 1.5;
+                                double score = d + heightPenalty;
+                                if (score < bestDist) {
+                                    bestDist = score;
+                                    best = pos;
+                                }
                             }
                         }
                     }
@@ -178,13 +180,16 @@ public class PathfindingState implements ForagingMacroState {
         return best;
     }
 
-    private BlockPos findStandablePosNear(BlockPos logPos) {
+    private BlockPos findStandablePosNear(ForagingMacro macro, BlockPos logPos, String mode) {
         if (mc.level == null || mc.player == null) return logPos;
         BlockPos playerPos = mc.player.blockPosition();
         BlockStateAccessor bsa = new BlockStateAccessor(mc.level);
 
-        BlockPos bestPos = null;
-        double bestDist = Double.MAX_VALUE;
+        BlockPos bestVisiblePos = null;
+        double bestVisibleScore = Double.MAX_VALUE;
+
+        BlockPos fallbackPos = null;
+        double fallbackDist = Double.MAX_VALUE;
 
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
@@ -201,15 +206,46 @@ public class PathfindingState implements ForagingMacroState {
                         double distFromPlayer = standPos.distSqr(playerPos);
                         double distToLog = standPos.distSqr(logPos);
 
-                        if (distToLog <= 16 && distFromPlayer < bestDist) {
-                            bestDist = distFromPlayer;
-                            bestPos = standPos;
+                        if (distToLog <= 18) {
+                            Vec3 simulatedEye = new Vec3(standPos.getX() + 0.5, standPos.getY() + 1.62, standPos.getZ() + 0.5);
+
+                            // Check if ANY log in this tree cluster has direct, unobstructed line-of-sight from this angle
+                            boolean hasLineOfSight = false;
+                            for (int lx = -2; lx <= 2; lx++) {
+                                for (int ly = -1; ly <= 4; ly++) {
+                                    for (int lz = -2; lz <= 2; lz++) {
+                                        BlockPos candidate = logPos.offset(lx, ly, lz);
+                                        if (macro.isBlockBlacklisted(candidate)) continue;
+
+                                        Block b = mc.level.getBlockState(candidate).getBlock();
+                                        if (ForagingMacro.isLogBlock(b, mode) && BlockUtil.hasVisibleSide(simulatedEye, candidate)) {
+                                            hasLineOfSight = true;
+                                            break;
+                                        }
+                                    }
+                                    if (hasLineOfSight) break;
+                                }
+                                if (hasLineOfSight) break;
+                            }
+
+                            if (hasLineOfSight) {
+                                double score = distFromPlayer + (distToLog * 0.5);
+                                if (score < bestVisibleScore) {
+                                    bestVisibleScore = score;
+                                    bestVisiblePos = standPos;
+                                }
+                            } else {
+                                if (distFromPlayer < fallbackDist) {
+                                    fallbackDist = distFromPlayer;
+                                    fallbackPos = standPos;
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        return bestPos != null ? bestPos : logPos;
+        return bestVisiblePos != null ? bestVisiblePos : (fallbackPos != null ? fallbackPos : logPos);
     }
 
     private BlockPos findClosestLogBlock(ForagingMacro macro, String mode) {
