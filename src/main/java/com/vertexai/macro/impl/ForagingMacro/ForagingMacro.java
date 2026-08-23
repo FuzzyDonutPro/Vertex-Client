@@ -180,7 +180,7 @@ public class ForagingMacro extends AbstractMacro {
         return id.contains("leaves") || id.contains("leaf");
     }
 
-    public static final int MIN_TREE_LOGS = 5;
+    public static final int MIN_TREE_LOGS = 10;
     public static final int MAX_TREE_LOGS = 50;
 
     /**

@@ -36,16 +36,58 @@ public class PathfindingState implements ForagingMacroState {
     public ForagingMacroState onTick(ForagingMacro macro) {
         if (mc.player == null || mc.level == null) return this;
 
-        // Check if ANY valid unmined tree log of target mode is already within reach (<= 4.2 blocks)
+        // If pathfinder is actively executing a path, let it finish pathfinding completely before rotating to mine
+        if (Pathfinder.getInstance().isRunning()) {
+            // If target log was broken or blacklisted while moving, abort and replan
+            if (this.targetBlock != null && (mc.level.isEmptyBlock(this.targetBlock) || macro.isBlockBlacklisted(this.targetBlock))) {
+                Pathfinder.getInstance().stop();
+                this.targetBlock = null;
+                return this;
+            }
+
+            // Timeout check while running
+            if (pathTimeout.isScheduled() && pathTimeout.passed()) {
+                if (this.targetBlock != null) {
+                    log("Pathfinding to log " + this.targetBlock.toShortString() + " timed out, blacklisting tree...");
+                    macro.blacklistTreeCluster(this.targetBlock);
+                    this.targetBlock = null;
+                }
+                Pathfinder.getInstance().stop();
+                return this;
+            }
+
+            // Do not interrupt pathfinding prematurely; complete the route first
+            return this;
+        }
+
+        // Pathfinder has finished / is not running.
+        // Check if our target log is now within mining reach
+        Vec3 eyePos = mc.player.getEyePosition();
+        if (this.targetBlock != null && !mc.level.isEmptyBlock(this.targetBlock) && !macro.isBlockBlacklisted(this.targetBlock)) {
+            Vec3 targetCenter = Vec3.atCenterOf(this.targetBlock);
+            double distanceSq = eyePos.distanceToSqr(targetCenter);
+
+            if (distanceSq <= 20.25) {
+                // Pathfinding complete and target is in reach (<= 4.5 blocks)! Transition to BreakingState to rotate and mine.
+                macro.setTargetBlockPos(this.targetBlock);
+                return new BreakingState();
+            } else {
+                // Path ended but player is out of reach or path failed
+                log("Pathfinding to log " + this.targetBlock.toShortString() + " finished but out of reach (" + String.format("%.1f", Math.sqrt(distanceSq)) + " blocks), blacklisting tree...");
+                macro.blacklistTreeCluster(this.targetBlock);
+                this.targetBlock = null;
+            }
+        }
+
+        // Check if ANY valid unmined tree log of target mode is already within reach (<= 4.2 blocks) before launching a new path
         BlockPos immediateLog = findImmediateReachableLog(macro, macro.getCurrentForagingMode());
         if (immediateLog != null) {
             macro.setTargetBlockPos(immediateLog);
             this.targetBlock = immediateLog;
-            Pathfinder.getInstance().stop();
             return new BreakingState();
         }
 
-        // If no target or target already broken/blacklisted, find a new one
+        // If no target or target broken/blacklisted, search for a new tree and start pathfinding
         if (this.targetBlock == null || mc.level.isEmptyBlock(this.targetBlock) || macro.isBlockBlacklisted(this.targetBlock)) {
             startPathfindingToNewTarget(macro);
             if (this.targetBlock == null) {
@@ -69,37 +111,6 @@ public class PathfindingState implements ForagingMacroState {
                 }
                 return this;
             }
-        }
-
-        // Measure distance from eye position to target log center
-        Vec3 eyePos = mc.player.getEyePosition();
-        Vec3 targetCenter = Vec3.atCenterOf(this.targetBlock);
-        double distanceSq = eyePos.distanceToSqr(targetCenter);
-
-        // Within reach limit (4.5 blocks = 20.25 sq blocks)
-        if (distanceSq <= 20.25) {
-            Pathfinder.getInstance().stop();
-            return new BreakingState();
-        }
-
-        // Check if pathfinder stopped or failed
-        if (!Pathfinder.getInstance().isRunning()) {
-            if (Pathfinder.getInstance().failed() || (pathTimeout.isScheduled() && pathTimeout.passed()) || distanceSq > 20.25) {
-                log("Pathfinding to log " + this.targetBlock.toShortString() + " finished but out of reach / failed, blacklisting tree...");
-                macro.blacklistTreeCluster(this.targetBlock);
-                this.targetBlock = null;
-                Pathfinder.getInstance().stop();
-                return this;
-            }
-        }
-
-        // Timeout check while running
-        if (pathTimeout.isScheduled() && pathTimeout.passed()) {
-            log("Pathfinding to log " + this.targetBlock.toShortString() + " timed out, blacklisting tree...");
-            macro.blacklistTreeCluster(this.targetBlock);
-            this.targetBlock = null;
-            Pathfinder.getInstance().stop();
-            return this;
         }
 
         return this;
