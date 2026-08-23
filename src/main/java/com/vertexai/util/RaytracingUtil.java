@@ -67,6 +67,26 @@ public class RaytracingUtil {
     }
 
     /**
+     * Checks if raytracing from a point to a target position directly hits the target block.
+     * Guarantees 100% that no adjacent/obstructing block is hit.
+     */
+    public static boolean canSeePointOnBlock(Vec3 from, Vec3 point, BlockPos targetBlock) {
+        if (mc.level == null || mc.player == null) return false;
+        final HitResult result = raytraceWithEntities(from, point, e -> true);
+        if (result == null || result.getType() != HitResult.Type.BLOCK) {
+            return false;
+        }
+        if (result instanceof BlockHitResult blockHit) {
+            return blockHit.getBlockPos().equals(targetBlock);
+        }
+        return false;
+    }
+
+    public static boolean canSeePointOnBlock(Vec3 point, BlockPos targetBlock) {
+        return canSeePointOnBlock(PlayerUtil.getPlayerEyePos(), point, targetBlock);
+    }
+
+    /**
      * Raytrace towards a direction from a position for a set distance (block-only).
      */
     public static HitResult raytraceTowards(Vec3 v1, Vec3 v2, double distance) {

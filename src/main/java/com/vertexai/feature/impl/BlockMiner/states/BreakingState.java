@@ -7,6 +7,7 @@ import com.vertexai.util.AngleUtil;
 import com.vertexai.util.BlockUtil;
 import com.vertexai.util.KeyBindUtil;
 import com.vertexai.util.PlayerUtil;
+import com.vertexai.util.RaytracingUtil;
 import com.vertexai.util.helper.Clock;
 import com.vertexai.util.helper.RotationConfiguration;
 import com.vertexai.util.helper.Target;
@@ -127,13 +128,16 @@ public class BreakingState implements BlockMinerState {
         miningTicksOnBlock++;
         if (Vertex.config().miningMacro.precisionMiner && miner.getTargetParticlePos() != null) {
             if (this.miningTicksOnBlock >= 1) {
-                RotationHandler.getInstance().easeTo(
-                        new RotationConfiguration(
-                                new Target(miner.getTargetParticlePos()),
-                                Vertex.config().getRandomRotationTime(),
-                                null
-                        ).followTarget(true)
-                );
+                Vec3 particle = miner.getTargetParticlePos();
+                if (RaytracingUtil.canSeePointOnBlock(particle, miner.getTargetBlockPos()) || (this.targetPoint != null && particle.distanceToSqr(this.targetPoint) < 0.6)) {
+                    RotationHandler.getInstance().easeTo(
+                            new RotationConfiguration(
+                                    new Target(particle),
+                                    Vertex.config().getRandomRotationTime(),
+                                    null
+                            ).followTarget(true)
+                    );
+                }
                 miner.setTargetParticlePos(null);
             }
         }
@@ -254,12 +258,8 @@ public class BreakingState implements BlockMinerState {
             return;
         }
 
-        // Select target point based on precision setting
-        if (!Vertex.config().miningMacro.precisionMiner) {
-            this.targetPoint = new Vec3(miner.getTargetBlockPos().getX() + 0.5, miner.getTargetBlockPos().getY() + 0.5, miner.getTargetBlockPos().getZ() + 0.5);
-        } else {
-            this.targetPoint = points.get(0);
-        }
+        // Always use the raycast-verified surface aim point
+        this.targetPoint = points.get(0);
 
         // Configure direct smooth rotation to the shortest aim point
         RotationHandler.getInstance().stop();

@@ -151,22 +151,21 @@ public class BlockUtil {
         final int VERTICAL_UPPER = 4;
         final double MAX_DISTANCE = Vertex.config().miningMacro.pathfinderMode == 2 ? 3.0 : 4.0;
 
-        // Calculate bounds for the block
-        final double baseX = point.x;
-        final double baseY = point.y;
-        final double baseZ = point.z;
+        final int originX = Mth.floor(point.x);
+        final int originY = Mth.floor(point.y);
+        final int originZ = Mth.floor(point.z);
 
         // Process the blocks in an optimized order (Y first for better cache locality)
         for (int y = VERTICAL_LOWER; y <= VERTICAL_UPPER; y++) {
-            final double actualY = baseY + y;
+            final int actualY = originY + y;
 
             for (int x = -HORIZONTAL_RADIUS; x <= HORIZONTAL_RADIUS; x++) {
-                final double actualX = baseX + x;
+                final int actualX = originX + x;
 
                 for (int z = -HORIZONTAL_RADIUS; z <= HORIZONTAL_RADIUS; z++) {
-                    final double actualZ = baseZ + z;
+                    final int actualZ = originZ + z;
 
-                    final BlockPos pos = new BlockPos((int) actualX, (int) actualY, (int) actualZ);
+                    final BlockPos pos = new BlockPos(actualX, actualY, actualZ);
 
                     // Skip if in ignore
                     final long hash = longHash(pos.getX(), pos.getY(), pos.getZ());
@@ -177,11 +176,8 @@ public class BlockUtil {
                     // Mark as visited immediately
                     blocksToIgnore.add(hash);
 
-                    // The maximum reach for player is 4 blocks
-                    final double dx = baseX - actualX;
-                    final double dy = baseY - actualY;
-                    final double dz = baseZ - actualZ;
-                    final double distSq = dx * dx + dy * dy + dz * dz;
+                    // Reach distance calculation to block center
+                    final double distSq = point.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
 
                     if (distSq > MAX_DISTANCE * MAX_DISTANCE) {
                         continue;
@@ -404,11 +400,11 @@ public class BlockUtil {
     }
 
     public static boolean canSeeSide(BlockPos block, Direction side) {
-        return RaytracingUtil.canSeePointWithEntities(getSidePos(block, side));
+        return RaytracingUtil.canSeePointOnBlock(getSidePos(block, side), block);
     }
 
     public static boolean canSeeSide(Vec3 from, BlockPos block, Direction side) {
-        return RaytracingUtil.canSeePointWithEntities(from, getSidePos(block, side));
+        return RaytracingUtil.canSeePointOnBlock(from, getSidePos(block, side), block);
     }
 
     public static List<Direction> getAllVisibleSides(BlockPos block) {
@@ -530,26 +526,16 @@ public class BlockUtil {
     }
 
     public static boolean hasVisibleSide(BlockPos block) {
-        if (!isFullCube(block)) {
-            return false;
-        }
-        for (Direction side : Direction.values()) {
-            if (side != null && !shouldRenderSide(block, side)) {
-                continue;
-            }
-            if (canSeeSide(block, side)) {
-                return true;
-            }
-        }
-        return false;
+        if (mc.player == null) return false;
+        return hasVisibleSide(PlayerUtil.getPlayerEyePos(), block);
     }
 
     public static boolean hasVisibleSide(Vec3 from, BlockPos block) {
-        if (!isFullCube(block)) {
-            return false;
-        }
+        if (mc.level == null) return false;
         for (Direction side : Direction.values()) {
-            if (!shouldRenderSide(block, side)) {
+            BlockPos adjacent = block.relative(side);
+            BlockState adjState = mc.level.getBlockState(adjacent);
+            if (adjState.isSolidRender()) {
                 continue;
             }
             if (canSeeSide(from, block, side)) {
@@ -561,40 +547,62 @@ public class BlockUtil {
 
     public static List<Vec3> bestPointsOnBestSide(final BlockPos block) {
         if (mc.player == null) return new ArrayList<>();
-        return pointsOnVisibleSides(block).stream()
-                .filter(RaytracingUtil::canSeePointWithEntities)
-                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(i)).lengthSqrt()))
-                .collect(Collectors.toList());
+        return bestPointsOnBestSide(PlayerUtil.getPlayerEyePos(), block);
     }
 
     public static List<Vec3> bestPointsOnBestSide(Vec3 from, final BlockPos block) {
-        return pointsOnVisibleSides(from, block).stream()
-                .filter(it -> RaytracingUtil.canSeePointWithEntities(from, it))
-                .sorted(Comparator.comparingDouble(i -> AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(from, i)).lengthSqrt()))
+        if (mc.player == null || mc.level == null) return new ArrayList<>();
+        List<Vec3> validPoints = pointsOnVisibleSides(from, block).stream()
+                .filter(pt -> RaytracingUtil.canSeePointOnBlock(from, pt, block))
+                .sorted(Comparator.comparingDouble(i -> {
+                    double angleDelta = AngleUtil.getNeededChange(AngleUtil.getPlayerAngle(), AngleUtil.getRotation(from, i)).lengthSqrt();
+                    double faceCenterX = block.getX() + 0.5;
+                    double faceCenterY = block.getY() + 0.5;
+                    double faceCenterZ = block.getZ() + 0.5;
+                    double centerDist = i.distanceTo(new Vec3(faceCenterX, faceCenterY, faceCenterZ));
+                    return angleDelta * 1.5 + centerDist * 0.5;
+                }))
                 .collect(Collectors.toList());
+
+        if (validPoints.isEmpty()) {
+            // Fallback: test all 6 face surface centers with normal offsets
+            for (Direction dir : Direction.values()) {
+                Vec3 centerPoint = new Vec3(
+                        block.getX() + 0.5 + dir.getStepX() * 0.48,
+                        block.getY() + 0.5 + dir.getStepY() * 0.48,
+                        block.getZ() + 0.5 + dir.getStepZ() * 0.48
+                );
+                if (RaytracingUtil.canSeePointOnBlock(from, centerPoint, block)) {
+                    validPoints.add(centerPoint);
+                }
+            }
+            if (validPoints.isEmpty()) {
+                Direction closest = getClosestVisibleSide(from, block);
+                if (closest != null) {
+                    validPoints.add(new Vec3(
+                            block.getX() + 0.5 + closest.getStepX() * 0.48,
+                            block.getY() + 0.5 + closest.getStepY() * 0.48,
+                            block.getZ() + 0.5 + closest.getStepZ() * 0.48
+                    ));
+                } else {
+                    validPoints.add(new Vec3(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5));
+                }
+            }
+        }
+        return validPoints;
     }
 
     public static List<Vec3> bestPointsOnVisibleSides(final BlockPos block) {
         if (mc.player == null) return new ArrayList<>();
-        return pointsOnVisibleSides(block).stream()
-                .filter(RaytracingUtil::canSeePointWithEntities)
-                .sorted(Comparator.comparingDouble(mc.player.getEyePosition()::distanceTo))
-                .collect(Collectors.toList());
+        return bestPointsOnBestSide(block);
     }
 
     public static List<Vec3> bestPointsOnVisibleSides(Vec3 from, final BlockPos block) {
-        return pointsOnVisibleSides(block).stream()
-                .filter(it -> RaytracingUtil.canSeePointWithEntities(from, it))
-                .sorted(Comparator.comparingDouble(from::distanceTo))
-                .collect(Collectors.toList());
+        return bestPointsOnBestSide(from, block);
     }
 
     private static List<Vec3> pointsOnVisibleSides(final BlockPos block) {
-        final List<Vec3> points = new ArrayList<>();
-        for (Direction side : getAllVisibleSides(block)) {
-            points.addAll(pointsOnBlockSide(block, side));
-        }
-        return points;
+        return pointsOnVisibleSides(PlayerUtil.getPlayerEyePos(), block);
     }
 
     private static List<Vec3> pointsOnVisibleSides(Vec3 from, final BlockPos block) {
@@ -606,51 +614,60 @@ public class BlockUtil {
     }
 
     private static List<Vec3> pointsOnBlockSide(final BlockPos block, final Direction side) {
-        final Set<Vec3> points = new HashSet<>();
+        final List<Vec3> points = new ArrayList<>();
+        if (side == null) {
+            points.add(new Vec3(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5));
+            return points;
+        }
 
-        if (side != null) {
-            float[] it = BLOCK_SIDES.get(side);
-            for (int i = 0; i < 20; i++) {
-                float x = it[0];
-                float y = it[1];
-                float z = it[2];
-                if (x == 0.5f) {
-                    x = randomVal();
+        // Sampling offsets across face with safe inner margins away from corner edges
+        float[] gridOffsets = new float[]{0.5f, 0.35f, 0.65f, 0.25f, 0.75f};
+
+        switch (side) {
+            case UP -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + u, block.getY() + 0.99, block.getZ() + v));
+                    }
                 }
-                if (y == 0.5f) {
-                    y = randomVal();
-                }
-                if (z == 0.5f) {
-                    z = randomVal();
-                }
-                Vec3 point = new Vec3(block.getX() + x, block.getY() + y, block.getZ() + z);
-                points.add(point);
             }
-        } else {
-            for (float[] bside : BLOCK_SIDES.values()) {
-                for (int i = 0; i < 20; i++) {
-                    float x = bside[0];
-                    float y = bside[1];
-                    float z = bside[2];
-                    if (x == 0.5f) {
-                        x = randomVal();
+            case DOWN -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + u, block.getY() + 0.01, block.getZ() + v));
                     }
-                    if (y == 0.5f) {
-                        y = randomVal();
+                }
+            }
+            case NORTH -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + u, block.getY() + v, block.getZ() + 0.01));
                     }
-                    if (z == 0.5f) {
-                        z = randomVal();
+                }
+            }
+            case SOUTH -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + u, block.getY() + v, block.getZ() + 0.99));
                     }
-                    Vec3 point = new Vec3(block.getX() + x, block.getY() + y, block.getZ() + z);
-                    points.add(point);
+                }
+            }
+            case WEST -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + 0.01, block.getY() + u, block.getZ() + v));
+                    }
+                }
+            }
+            case EAST -> {
+                for (float u : gridOffsets) {
+                    for (float v : gridOffsets) {
+                        points.add(new Vec3(block.getX() + 0.99, block.getY() + u, block.getZ() + v));
+                    }
                 }
             }
         }
-        return new ArrayList<>(points);
-    }
-
-    private static float randomVal() {
-        return (new Random().nextInt(6) + 2) / 10.0f;
+        return points;
     }
 
     public static boolean canWalkBetween(CalculationContext ctx, BlockPos start, BlockPos end) {
