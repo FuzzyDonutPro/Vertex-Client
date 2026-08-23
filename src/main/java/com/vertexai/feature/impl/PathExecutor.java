@@ -138,6 +138,14 @@ public class PathExecutor {
         this.stopReason = "Running";
     }
 
+    public boolean isRunning() {
+        return this.enabled;
+    }
+
+    public boolean succeeded() {
+        return this.succeeded;
+    }
+
     public void stop() {
         stop(this.stopReason);
     }
@@ -422,6 +430,22 @@ public class PathExecutor {
                     nodeSwitchDelay.schedule(50 + random.nextInt(70));
                     log("advanced to next target (" + (overshot && !closeToCurrentNode ? "overshot" : "close") + ")");
                     advanced = true;
+                }
+            } else if (this.target == this.blockPath.size() - 1) {
+                if (closeToCurrentNode || overshot) {
+                    log("Reached final destination node");
+                    this.succeeded = true;
+                    this.failed = false;
+                    if (this.pathQueue.isEmpty()) {
+                        this.stop("Reached destination");
+                        return false;
+                    } else {
+                        this.prev = this.curr;
+                        this.target = 1;
+                        this.previous = 0;
+                        loadPath(this.pathQueue.poll());
+                        return true;
+                    }
                 }
             }
         }

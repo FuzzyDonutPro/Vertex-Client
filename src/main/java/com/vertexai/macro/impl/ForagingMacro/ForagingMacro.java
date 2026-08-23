@@ -25,13 +25,24 @@ public class ForagingMacro extends AbstractMacro {
     public static ForagingMacro instance = new ForagingMacro();
     public static ForagingMacro getInstance() { return instance; }
 
-    @Getter
-    @Setter
     private BlockPos targetBlockPos;
-
-    @Getter
-    @Setter
     private String currentForagingMode = "OAK";
+
+    public BlockPos getTargetBlockPos() {
+        return this.targetBlockPos;
+    }
+
+    public void setTargetBlockPos(BlockPos targetBlockPos) {
+        this.targetBlockPos = targetBlockPos;
+    }
+
+    public String getCurrentForagingMode() {
+        return this.currentForagingMode;
+    }
+
+    public void setCurrentForagingMode(String currentForagingMode) {
+        this.currentForagingMode = currentForagingMode;
+    }
 
     private ForagingMacroState currentState;
 

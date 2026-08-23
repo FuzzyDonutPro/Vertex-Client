@@ -95,7 +95,7 @@ public class Pathfinder extends AbstractFeature {
 
     @Override
     public boolean isRunning() {
-        return this.enabled && !this.renderOnlyMode;
+        return this.enabled && !this.renderOnlyMode && (this.pathfinding || !this.pathQueue.isEmpty() || pathExecutor.isRunning());
     }
 
     public boolean isRenderOnlyMode() {
@@ -212,7 +212,26 @@ public class Pathfinder extends AbstractFeature {
             return;
         }
 
-        boolean okToPath = this.renderOnlyMode || pathExecutor.onTick();
+        boolean executorRunning = this.renderOnlyMode || pathExecutor.onTick();
+
+        if (!this.renderOnlyMode) {
+            if (pathExecutor.failed()) {
+                String executorReason = pathExecutor.getStopReason();
+                log("pathexecutor failed. reason: " + executorReason);
+                this.failed = true;
+                this.stop("PathExecutor failed: " + executorReason);
+                return;
+            }
+
+            if (pathExecutor.succeeded() || !pathExecutor.isRunning()) {
+                if (this.pathQueue.isEmpty() && !this.pathfinding) {
+                    this.succeeded = true;
+                    this.stop("Completed path queue");
+                    log("pathqueue empty stopping");
+                    return;
+                }
+            }
+        }
 
         // just to let pathexecutor update after path has been found
         if (this.skipTick) {
@@ -220,24 +239,11 @@ public class Pathfinder extends AbstractFeature {
             return;
         }
 
-        if (!this.renderOnlyMode && pathExecutor.failed()) {
-            String executorReason = pathExecutor.getStopReason();
-            log("pathexecutor failed. reason: " + executorReason);
-            this.failed = true;
-            this.stop("PathExecutor failed: " + executorReason);
-            return;
-        }
-
-        if (!okToPath) {
+        if (!executorRunning) {
             return;
         }
 
         if (this.pathQueue.isEmpty()) {
-            if (!this.renderOnlyMode && this.pathExecutor.getState() == State.WAITING && !this.pathfinding) {
-                this.succeeded = true;
-                this.stop("Completed path queue");
-                log("pathqueue empty stopping");
-            }
             return;
         }
 

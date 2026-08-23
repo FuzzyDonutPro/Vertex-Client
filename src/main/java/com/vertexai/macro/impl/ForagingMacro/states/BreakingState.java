@@ -44,9 +44,10 @@ public class BreakingState implements ForagingMacroState {
     private void aimAtBlock(BlockPos pos) {
         List<Vec3> points = BlockUtil.bestPointsOnBestSide(pos);
         Vec3 aimPoint = (points != null && !points.isEmpty()) ? points.get(0) : Vec3.atCenterOf(pos);
+        RotationHandler.getInstance().stop();
         RotationHandler.getInstance().easeTo(new RotationConfiguration(
                 new Target(aimPoint),
-                65L,
+                com.vertexai.Vertex.config().getRandomRotationTime(),
                 null
         ));
     }
