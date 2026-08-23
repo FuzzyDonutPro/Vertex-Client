@@ -124,8 +124,6 @@ public class Pathfinder extends AbstractFeature {
         this.renderOnlyPathQueue.clear();
         this.pathQueue.clear();
         this.resetStatesAfterStop();
-
-        send("stopped (" + stopReason + ")");
         log("stopped. reason: " + stopReason + ", executor: " + pathExecutor.getStopReason());
     }
 
@@ -223,7 +221,7 @@ public class Pathfinder extends AbstractFeature {
                 return;
             }
 
-            if (pathExecutor.succeeded() || !pathExecutor.isRunning()) {
+            if (!pathExecutor.isRunning() && pathExecutor.succeeded()) {
                 if (this.pathQueue.isEmpty() && !this.pathfinding) {
                     this.succeeded = true;
                     this.stop("Completed path queue");

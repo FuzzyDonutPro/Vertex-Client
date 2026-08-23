@@ -135,6 +135,8 @@ public class PathExecutor {
     public void start() {
         this.state = State.STARTING_PATH;
         this.enabled = true;
+        this.succeeded = false;
+        this.failed = false;
         this.stopReason = "Running";
     }
 
@@ -305,15 +307,18 @@ public class PathExecutor {
         }
 
         if (this.curr == null || this.target == this.blockPath.size()) {
-            log("Path traversed");
             if (this.pathQueue.isEmpty()) {
-                log("Reached final destination");
-                this.succeeded = true;
-                this.failed = false;
-                this.stop("Reached destination");
-                return false;
+                if (this.curr != null) {
+                    log("Reached final destination");
+                    this.succeeded = true;
+                    this.failed = false;
+                    this.stop("Reached destination");
+                    return false;
+                }
+                return true; // Awaiting path calculation from A* worker
             }
-            this.succeeded = true;
+            log("Path traversed, loading next segment from queue");
+            this.succeeded = false;
             this.failed = false;
             this.prev = this.curr;
             this.target = 1;
