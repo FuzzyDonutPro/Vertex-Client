@@ -469,4 +469,12 @@ public class Pathfinder extends AbstractFeature {
     public boolean succeeded() {
         return !this.enabled && this.succeeded;
     }
+
+    public void setAllowNodeLook(boolean allow) {
+        pathExecutor.setAllowNodeLook(allow);
+    }
+
+    public boolean isAllowNodeLook() {
+        return pathExecutor.isAllowNodeLook();
+    }
 }

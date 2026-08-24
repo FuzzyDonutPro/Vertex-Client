@@ -86,6 +86,7 @@ public class PathExecutor {
 
     private boolean allowSprint = true;
     private boolean allowInterpolation = false;
+    private boolean allowNodeLook = true;
 
     public Deque<Path> getPathQueue() { return pathQueue; }
     public boolean isEnabled() { return enabled; }
@@ -95,6 +96,18 @@ public class PathExecutor {
     public void setAllowSprint(boolean allowSprint) { this.allowSprint = allowSprint; }
     public boolean isAllowInterpolation() { return allowInterpolation; }
     public void setAllowInterpolation(boolean allowInterpolation) { this.allowInterpolation = allowInterpolation; }
+    public boolean isAllowNodeLook() { return allowNodeLook; }
+    public void setAllowNodeLook(boolean allowNodeLook) { this.allowNodeLook = allowNodeLook; }
+
+    public boolean isCombatTargetNear() {
+        if (com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller.getInstance().isRunning()) {
+            net.minecraft.world.entity.LivingEntity target = com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller.getInstance().getTargetMob();
+            if (target != null && target.isAlive() && mc.player != null && mc.player.distanceToSqr(target) <= 256.0) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static PathExecutor getInstance() {
         if (instance == null) {
@@ -515,20 +528,22 @@ public class PathExecutor {
         boolean sharpTurn = yawDiff > 25.0f;
         boolean needPitchAdjustment = Math.abs(mc.player.getXRot() - targetPitch) > 7.0f;
 
-        if (cooldownPassed && (yawDiff > 2.5f || needPitchAdjustment || sharpTurn || ascendingInWater)) {
-            this.rotationCooldown.schedule(300);
-            float time = Vertex.config().debug.useFixedRotation 
-                    ? Vertex.config().debug.fixedRotationTime 
-                    : Math.max(100, Math.min(240, (long) (yawDiff * 2.0f)));
+        if (this.allowNodeLook && !isCombatTargetNear()) {
+            if (cooldownPassed && (yawDiff > 2.5f || needPitchAdjustment || sharpTurn || ascendingInWater)) {
+                this.rotationCooldown.schedule(300);
+                float time = Vertex.config().debug.useFixedRotation 
+                        ? Vertex.config().debug.fixedRotationTime 
+                        : Math.max(100, Math.min(240, (long) (yawDiff * 2.0f)));
 
-            RotationHandler.getInstance().easeTo(
-                    new RotationConfiguration(
-                            new Target(new Angle(yaw, targetPitch)),
-                            (long) time,
-                            RotationConfiguration.RotationType.CLIENT,
-                            null
-                    )
-            );
+                RotationHandler.getInstance().easeTo(
+                        new RotationConfiguration(
+                                new Target(new Angle(yaw, targetPitch)),
+                                (long) time,
+                                RotationConfiguration.RotationType.CLIENT,
+                                null
+                        )
+                );
+            }
         }
 
         // Coordinate target movement vector:
@@ -701,8 +716,14 @@ public class PathExecutor {
             return false;
         }
 
-        // Check if destination is too high for vanilla jump (max ~1.25 blocks)
-        if (desiredTarget.getY() - playerPos.getY() > 1) {
+        // Calculate exact vertical rise in world coordinates
+        double playerSurfaceY = mc.player.getY();
+        double targetSurfaceY = desiredTarget.getY() + com.vertexai.pathing.PartialBlockHelper.getStandingHeightOffset(mc.level, desiredTarget);
+        double deltaY = targetSurfaceY - playerSurfaceY;
+
+        // Check if destination is too high for vanilla jump (max 1.25 blocks rise)
+        // If jumping from a slab (0.5) to a full block (2.0), deltaY is 1.5 blocks -> impossible in vanilla!
+        if (deltaY > 1.25 || deltaY < -0.2) {
             return false;
         }
 
@@ -723,15 +744,17 @@ public class PathExecutor {
         var landingFeetState = bsa.get(landingX, py, landingZ);
         var landingStepUpState = bsa.get(landingX, py + 1, landingZ);
 
-        // If stepping onto normal stairs or bottom slabs, vanilla Minecraft handles <=0.6 step height automatically without jumping
-        if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.StairBlock) {
-            if (landingFeetState.getValue(net.minecraft.world.level.block.StairBlock.HALF) == net.minecraft.world.level.block.state.properties.Half.BOTTOM) {
-                return false; // Auto-step smoothly
+        // If stepping onto normal stairs or bottom slabs with <= 0.6 height rise, vanilla Minecraft handles it smoothly without jumping
+        if (deltaY <= 0.6) {
+            if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.StairBlock) {
+                if (landingFeetState.getValue(net.minecraft.world.level.block.StairBlock.HALF) == net.minecraft.world.level.block.state.properties.Half.BOTTOM) {
+                    return false; // Auto-step smoothly
+                }
             }
-        }
-        if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.SlabBlock) {
-            if (landingFeetState.getValue(net.minecraft.world.level.block.SlabBlock.TYPE) == net.minecraft.world.level.block.state.properties.SlabType.BOTTOM) {
-                return false; // Auto-step smoothly
+            if (landingFeetState.getBlock() instanceof net.minecraft.world.level.block.SlabBlock) {
+                if (landingFeetState.getValue(net.minecraft.world.level.block.SlabBlock.TYPE) == net.minecraft.world.level.block.state.properties.SlabType.BOTTOM) {
+                    return false; // Auto-step smoothly
+                }
             }
         }
 

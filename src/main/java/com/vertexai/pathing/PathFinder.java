@@ -223,17 +223,25 @@ public class PathFinder {
             // Jump (y+1)
             BlockPos jumpPos = pos.offset(dx, 1, dz);
             if (isWalkable(world, jumpPos) && isAir(world, pos.above(2))) {
-                boolean clear = true;
-                if (isDiag) {
-                    // Check corners for Y=0, Y=1 (body) and Y=2 (head during jump)
-                    if (!isAir(world, pos.offset(dx, 0, 0)) || !isAir(world, pos.offset(0, 0, dz)) ||
-                        !isAir(world, pos.offset(dx, 1, 0)) || !isAir(world, pos.offset(0, 1, dz)) ||
-                        !isAir(world, pos.offset(dx, 2, 0)) || !isAir(world, pos.offset(0, 2, dz))) {
-                        clear = false;
+                double fromSurfaceY = getStandingSurfaceY(world, pos);
+                double toSurfaceY = getStandingSurfaceY(world, jumpPos);
+                double deltaY = toSurfaceY - fromSurfaceY;
+
+                // Max jump height in vanilla without jump boost is 1.25 blocks
+                // Jumping from slab (0.5) to full block (2.0) is 1.5 blocks -> impossible in vanilla!
+                if (deltaY <= 1.25) {
+                    boolean clear = true;
+                    if (isDiag) {
+                        // Check corners for Y=0, Y=1 (body) and Y=2 (head during jump)
+                        if (!isAir(world, pos.offset(dx, 0, 0)) || !isAir(world, pos.offset(0, 0, dz)) ||
+                            !isAir(world, pos.offset(dx, 1, 0)) || !isAir(world, pos.offset(0, 1, dz)) ||
+                            !isAir(world, pos.offset(dx, 2, 0)) || !isAir(world, pos.offset(0, 2, dz))) {
+                            clear = false;
+                        }
                     }
-                }
-                if (clear) {
-                    neighbors.add(new NeighborResult(jumpPos, baseCost + 2.0));
+                    if (clear) {
+                        neighbors.add(new NeighborResult(jumpPos, baseCost + 2.0));
+                    }
                 }
             }
             
@@ -264,6 +272,24 @@ public class PathFinder {
             }
         }
         return neighbors;
+    }
+
+    public static double getStandingSurfaceY(Level world, BlockPos pos) {
+        if (world == null || pos == null) return 0.0;
+        BlockState currentState = world.getBlockState(pos);
+        net.minecraft.world.phys.shapes.VoxelShape currentShape = currentState.getCollisionShape(world, pos);
+        if (!currentShape.isEmpty()) {
+            return pos.getY() + currentShape.max(net.minecraft.core.Direction.Axis.Y);
+        }
+
+        BlockPos below = pos.below();
+        BlockState belowState = world.getBlockState(below);
+        net.minecraft.world.phys.shapes.VoxelShape belowShape = belowState.getCollisionShape(world, below);
+        if (!belowShape.isEmpty()) {
+            return below.getY() + belowShape.max(net.minecraft.core.Direction.Axis.Y);
+        }
+
+        return pos.getY();
     }
 
     private static boolean isWalkable(Level world, BlockPos pos) {

@@ -16,7 +16,7 @@ public class PathfindingState implements AutoMobKillerState {
     private static final double TARGET_DRIFT_REPATH_THRESHOLD_SQ = 6.25; // 2.5 blocks
     private static final int MAX_REPATH_ATTEMPTS = 4;
     private static final long PATHING_TIMEOUT_MS = 10_000L;
-    private static final long REPATH_DELAY_MS = 180L;
+    private static final long REPATH_DELAY_MS = 600L;
 
     private final Minecraft mc = Minecraft.getInstance();
     private final Clock timeout = new Clock();
@@ -35,6 +35,7 @@ public class PathfindingState implements AutoMobKillerState {
         rogueTimer.reset();
         lastQueuedTarget = null;
 
+        Pathfinder.getInstance().setAllowNodeLook(false);
         Pathfinder.getInstance().setSprintState(Vertex.config().commission.dwarvenCommission.mobKillerSprint);
         Pathfinder.getInstance().setInterpolationState(Vertex.config().commission.dwarvenCommission.mobKillerInterpolate);
         queuePathToTarget(mobKiller, true);
@@ -52,6 +53,15 @@ public class PathfindingState implements AutoMobKillerState {
         if (isInKillRange(mobKiller)) {
             Pathfinder.getInstance().stop();
             return new KillState();
+        }
+
+        // Aim smoothly at target mob while approaching
+        if (mc.player.distanceToSqr(target) <= 144.0) {
+            RotationHandler.getInstance().easeTo(new com.vertexai.util.helper.RotationConfiguration(
+                    new com.vertexai.util.helper.Target(target),
+                    100L,
+                    null
+            ));
         }
 
         // Auto Rogue Sword Speed Boost
@@ -86,9 +96,12 @@ public class PathfindingState implements AutoMobKillerState {
             }
         }
 
-        // Dynamic live tracking: Update target position instantly on every tick if mob moves
+        // Throttled target tracking: Only re-plan if mob drifted significantly (>= 3.5 blocks) or path stopped
         BlockPos currentMobPos = target.blockPosition();
-        if (lastQueuedTarget == null || !currentMobPos.equals(lastQueuedTarget)) {
+        boolean mobDriftedFar = lastQueuedTarget == null || lastQueuedTarget.distSqr(currentMobPos) >= 12.0;
+        boolean repathCooldownPassed = !repathDelay.isScheduled() || repathDelay.passed();
+
+        if ((mobDriftedFar || !Pathfinder.getInstance().isRunning() || Pathfinder.getInstance().failed()) && repathCooldownPassed) {
             mobKiller.setTargetMobOriginalPos(target.position());
             queuePathToTarget(mobKiller, true);
         }
@@ -140,7 +153,7 @@ public class PathfindingState implements AutoMobKillerState {
 
     @Override
     public void onEnd(AutoMobKiller mobKiller) {
-        // Pathfinder cleanup handled by transition
+        Pathfinder.getInstance().setAllowNodeLook(true);
     }
 
     private boolean isInKillRange(AutoMobKiller mobKiller) {

@@ -18,7 +18,7 @@ public class KillState implements AutoMobKillerState {
 
     private static final double MELEE_RANGE_SQ = 9.0;
     private static final long LOST_SIGHT_REPATH_DELAY_MS = 150L;
-    private static final long CHASE_REPATH_INTERVAL_MS = 100L;
+    private static final long CHASE_REPATH_INTERVAL_MS = 500L;
     private static final long LAST_SEEN_TIMEOUT_MS = 180L;
     private static final long CLOSE_RANGE_STUCK_TIMEOUT_MS = 900L;
     private static final long REAIM_INTERVAL_MS = 240L;
@@ -41,6 +41,7 @@ public class KillState implements AutoMobKillerState {
     @Override
     public void onStart(AutoMobKiller mobKiller) {
         log("Entering Kill State");
+        Pathfinder.getInstance().setAllowNodeLook(false);
         attackDelay.reset();
         lostSightTimer.reset();
         lastSeenTimer.reset();
@@ -222,6 +223,7 @@ public class KillState implements AutoMobKillerState {
     @Override
     public void onEnd(AutoMobKiller mobKiller) {
         KeyBindUtil.setKeyBindState(mc.options.keyJump, false);
+        Pathfinder.getInstance().setAllowNodeLook(true);
         log("Exiting Kill State");
     }
 
@@ -236,11 +238,12 @@ public class KillState implements AutoMobKillerState {
         }
 
         Pathfinder pathfinder = Pathfinder.getInstance();
-        if (!chaseTarget.equals(lastChaseTarget) || !pathfinder.isRunning()) {
+        boolean movedSignificantly = lastChaseTarget == null || lastChaseTarget.distSqr(chaseTarget) >= 9.0;
+        if ((movedSignificantly || !pathfinder.isRunning() || pathfinder.failed()) && (!pathfinder.isRunning() || !chaseTarget.equals(lastChaseTarget))) {
             pathfinder.stopAndRequeue(chaseTarget);
             lastChaseTarget = chaseTarget;
-        }
-        if (!pathfinder.isRunning()) {
+            pathfinder.start();
+        } else if (!pathfinder.isRunning()) {
             pathfinder.start();
         }
         chaseRepathTimer.schedule(CHASE_REPATH_INTERVAL_MS);
