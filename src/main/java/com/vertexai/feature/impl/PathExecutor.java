@@ -10,6 +10,7 @@ import com.vertexai.pathfinder.helper.BlockStateAccessor;
 import com.vertexai.pathfinder.movement.CalculationContext;
 import com.vertexai.pathfinder.movement.MovementHelper;
 import com.vertexai.pathfinder.util.RaycastPathPlanner;
+import com.vertexai.pathing.PartialBlockHelper;
 import com.vertexai.util.*;
 import com.vertexai.util.helper.Angle;
 import com.vertexai.util.helper.Clock;
@@ -346,15 +347,16 @@ public class PathExecutor {
         Vec3 playerPosVec = mc.player.position();
         
         // --- REAL-TIME NEAREST NODE TRACKING (Floor-Bounded) ---
-        // Locate the nearest node along the immediate path window on the current Y-floor
+        // Locate the nearest node along the immediate path window on the current floor/slab level
         int searchStart = Math.max(0, this.target - 1);
         int searchEnd = Math.min(this.target + 3, this.blockPath.size());
         int nearestIdx = this.target;
         double minDistanceSq = Double.MAX_VALUE;
         for (int i = searchStart; i < searchEnd; i++) {
             BlockPos node = this.blockPath.get(i);
-            if (Math.abs(mc.player.getY() - node.getY()) <= 0.6) {
-                double distSq = playerPosVec.distanceToSqr(node.getX() + 0.5, node.getY(), node.getZ() + 0.5);
+            double expectedSurfaceY = node.getY() + PartialBlockHelper.getStandingHeightOffset(mc.level, node);
+            if (Math.abs(mc.player.getY() - expectedSurfaceY) <= 1.25) {
+                double distSq = playerPosVec.distanceToSqr(node.getX() + 0.5, expectedSurfaceY, node.getZ() + 0.5);
                 if (distSq < minDistanceSq) {
                     minDistanceSq = distSq;
                     nearestIdx = i;
@@ -367,14 +369,15 @@ public class PathExecutor {
             this.target = nearestIdx;
         }
 
-        // --- FUTURE NODE SKIPPING (Catch-up, Same-Floor Only) ---
+        // --- FUTURE NODE SKIPPING (Catch-up, Same-Floor/Slab) ---
         boolean advanced = false;
         for (int i = Math.min(this.target + 2, this.blockPath.size() - 1); i > this.target; i--) {
             BlockPos futureNode = this.blockPath.get(i);
+            double expectedSurfaceY = futureNode.getY() + PartialBlockHelper.getStandingHeightOffset(mc.level, futureNode);
             double hDist = Math.hypot(playerPosVec.x - futureNode.getX() - 0.5, playerPosVec.z - futureNode.getZ() - 0.5);
-            double vDist = Math.abs(mc.player.getY() - futureNode.getY());
+            double vDist = Math.abs(mc.player.getY() - expectedSurfaceY);
             
-            if (hDist <= 0.55 && vDist <= 0.5) {
+            if (hDist <= 0.65 && vDist <= 1.25) {
                 if (nodeSwitchDelay.passed()) {
                     this.previous = i;
                     this.target = Math.min(i + 1, this.blockPath.size() - 1);
@@ -388,11 +391,12 @@ public class PathExecutor {
         
         BlockPos target = this.blockPath.get(Math.min(this.target, this.blockPath.size() - 1));
         if (!advanced) {
+            double expectedSurfaceY = target.getY() + PartialBlockHelper.getStandingHeightOffset(mc.level, target);
             double horizontalDistToCurrent = Math.hypot(playerPosVec.x - target.getX() - 0.5, playerPosVec.z - target.getZ() - 0.5);
-            double verticalDistToCurrent = Math.abs(mc.player.getY() - target.getY());
+            double verticalDistToCurrent = Math.abs(mc.player.getY() - expectedSurfaceY);
 
-            boolean isVerticalTransition = target.getY() != playerPos.getY() 
-                    || (this.previous >= 0 && this.previous < this.blockPath.size() && this.blockPath.get(this.previous).getY() != target.getY());
+            boolean isVerticalTransition = Math.abs(target.getY() - playerPos.getY()) > 1 
+                    || (this.previous >= 0 && this.previous < this.blockPath.size() && Math.abs(this.blockPath.get(this.previous).getY() - target.getY()) > 1);
             
             boolean isTurnTransition = false;
             if (this.target < this.blockPath.size() - 1 && this.previous >= 0 && this.previous < this.blockPath.size()) {
@@ -407,8 +411,8 @@ public class PathExecutor {
                 }
             }
 
-            double reqH = (isVerticalTransition || isTurnTransition) ? 0.50 : NODE_REACHED_HORIZONTAL_DIST;
-            double reqV = isVerticalTransition ? 0.45 : NODE_REACHED_VERTICAL_TOLERANCE;
+            double reqH = (isVerticalTransition || isTurnTransition) ? 0.55 : NODE_REACHED_HORIZONTAL_DIST;
+            double reqV = NODE_REACHED_VERTICAL_TOLERANCE; // Generous 1.35 blocks tolerance so 0.5-height slabs/stairs never stall progress!
 
             boolean closeToCurrentNode = horizontalDistToCurrent <= reqH && verticalDistToCurrent <= reqV;
 
@@ -516,7 +520,8 @@ public class PathExecutor {
         if (ascendingInWater) {
             targetPitch = -30.0f; // Look up toward surface to swim up
         } else {
-            double dy = (lookTargetNode.getY() + 0.6) - mc.player.getEyeY();
+            double nodeSurface = lookTargetNode.getY() + PartialBlockHelper.getStandingHeightOffset(mc.level, lookTargetNode);
+            double dy = (nodeSurface + 0.6) - mc.player.getEyeY();
             double dxz = Math.max(1.0, horizontalDistToTarget);
             float calculatedPitch = (float) -Math.toDegrees(Math.atan2(dy, dxz));
             // Clamp pitch to comfortable human viewing range (-24° up on stairs to +12° down on drops)
@@ -550,7 +555,7 @@ public class PathExecutor {
         // Use immediate node for tight navigation if turning or stairs, or raycast vector if clear
         Vec3 immediateTargetVec = new Vec3(target.getX() + 0.5, mc.player.getY(), target.getZ() + 0.5);
         Vec3 raycastTargetVec = new Vec3(lookTargetNode.getX() + 0.5, mc.player.getY(), lookTargetNode.getZ() + 0.5);
-        boolean isElevationChange = target.getY() != playerPos.getY();
+        boolean isElevationChange = Math.abs(target.getY() - playerPos.getY()) > 1;
         Vec3 targetVec = (yawDiff < 25.0f && !isElevationChange) ? raycastTargetVec : immediateTargetVec;
 
         List<KeyMapping> neededKeys = new ArrayList<>();
