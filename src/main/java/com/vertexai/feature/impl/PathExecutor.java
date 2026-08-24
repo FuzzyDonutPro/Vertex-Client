@@ -102,7 +102,7 @@ public class PathExecutor {
     public boolean isCombatTargetNear() {
         if (com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller.getInstance().isRunning()) {
             net.minecraft.world.entity.LivingEntity target = com.vertexai.feature.impl.AutoMobKiller.AutoMobKiller.getInstance().getTargetMob();
-            if (target != null && target.isAlive() && mc.player != null && mc.player.distanceToSqr(target) <= 256.0) {
+            if (target != null && target.isAlive() && mc.player != null && mc.player.distanceToSqr(target) <= 36.0) {
                 return true;
             }
         }

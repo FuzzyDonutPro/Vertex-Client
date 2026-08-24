@@ -35,7 +35,7 @@ public class PathfindingState implements AutoMobKillerState {
         rogueTimer.reset();
         lastQueuedTarget = null;
 
-        Pathfinder.getInstance().setAllowNodeLook(false);
+        Pathfinder.getInstance().setAllowNodeLook(true);
         Pathfinder.getInstance().setSprintState(Vertex.config().commission.dwarvenCommission.mobKillerSprint);
         Pathfinder.getInstance().setInterpolationState(Vertex.config().commission.dwarvenCommission.mobKillerInterpolate);
         queuePathToTarget(mobKiller, true);
@@ -55,11 +55,14 @@ public class PathfindingState implements AutoMobKillerState {
             return new KillState();
         }
 
-        // Aim smoothly at target mob while approaching
-        if (mc.player.distanceToSqr(target) <= 144.0) {
+        // When within 6 blocks of target mob, disable node look and aim directly at mob
+        boolean isNearTarget = mc.player.distanceToSqr(target) <= 36.0; // 6 blocks
+        Pathfinder.getInstance().setAllowNodeLook(!isNearTarget);
+
+        if (isNearTarget) {
             RotationHandler.getInstance().easeTo(new com.vertexai.util.helper.RotationConfiguration(
                     new com.vertexai.util.helper.Target(target),
-                    100L,
+                    80L,
                     null
             ));
         }
