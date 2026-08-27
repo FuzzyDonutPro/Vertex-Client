@@ -53,12 +53,12 @@ public class ZealotMacro extends AbstractMacro {
             Vec3 targetPos = targetZealot.position().add(0, targetZealot.getEyeHeight() * 0.5, 0);
             RotationHandler.getInstance().easeTo(new RotationConfiguration(new Target(targetPos), 120, null));
 
-            if (mc.player.distanceTo(targetZealot) <= 3.0f) {
+            if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == targetZealot && mc.player.distanceTo(targetZealot) <= 2.9f) {
                 if (mc.gameMode != null) {
                     mc.gameMode.attack(mc.player, targetZealot);
                     mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 }
-                attackClock.schedule(250);
+                attackClock.schedule(150 + (long)(Math.random() * 80));
             }
         }
     }

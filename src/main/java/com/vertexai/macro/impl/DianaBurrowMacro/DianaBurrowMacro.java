@@ -74,10 +74,10 @@ public class DianaBurrowMacro extends AbstractMacro {
             if (weaponSlot == -1) weaponSlot = InventoryUtil.getHotbarSlotOfItem("Sword");
             if (weaponSlot != -1) mc.player.getInventory().setSelectedSlot(weaponSlot);
 
-            if (dist <= 3.5f && mc.gameMode != null) {
+            if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == targetMythicalMob && dist <= 2.9f && mc.gameMode != null) {
                 mc.gameMode.attack(mc.player, targetMythicalMob);
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                actionClock.schedule(200);
+                actionClock.schedule(150 + (long)(Math.random() * 60));
             }
             return;
         }

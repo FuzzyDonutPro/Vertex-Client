@@ -66,10 +66,16 @@ public class AutoMobHunter extends AbstractFeature {
                 null
         ));
 
-        // Attack key trigger
-        if (!attackClock.isScheduled() || attackClock.passed()) {
-            KeyBindUtil.leftClick();
-            attackClock.schedule(150); // ~6.6 CPS towards target
+        // Attack trigger: ONLY attack when crosshair touches the entity and in legit reach
+        if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == currentTarget) {
+            double eyeDistSq = mc.player.getEyePosition().distanceToSqr(currentTarget.position().add(0, currentTarget.getEyeHeight() * 0.5, 0));
+            if (eyeDistSq <= 8.41 && (!attackClock.isScheduled() || attackClock.passed())) {
+                if (mc.gameMode != null) {
+                    mc.gameMode.attack(mc.player, currentTarget);
+                    mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                }
+                attackClock.schedule(120L + (long)(Math.random() * 50));
+            }
         }
     }
 

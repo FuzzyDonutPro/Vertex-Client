@@ -127,11 +127,13 @@ public class BossRoomState implements DungeonMacroState {
         float pitch = AngleUtil.getRotation(target.position().add(0, target.getEyeHeight(), 0)).getPitch();
 
         RotationHandler.getInstance().easeTo(new RotationConfiguration(new Target(new Angle(yaw, pitch)), 100, RotationConfiguration.RotationType.CLIENT, () -> {
-            mc.gameMode.attack(mc.player, target);
-            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == target && mc.player.distanceToSqr(target) <= 8.41) {
+                mc.gameMode.attack(mc.player, target);
+                mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
         }));
 
-        attackClock.schedule(250);
+        attackClock.schedule(200 + (long)(Math.random() * 60));
     }
 
     public void setPhase(BossPhase phase) {

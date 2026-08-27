@@ -191,20 +191,25 @@ public class KillState implements AutoMobKillerState {
             KeyBindUtil.setKeyBindState(mc.options.keyJump, true);
         }
 
-        // Strictly enforce 3.0-block vanilla reach limit (3.0^2 = 9.0)
-        if (distanceSq > 9.0) {
+        // Strictly verify that the crosshair is currently raytracing onto a valid target mob (NEVER players or empty air!)
+        LivingEntity attackTarget = null;
+        if (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() instanceof LivingEntity living) {
+            if (!(living instanceof net.minecraft.world.entity.player.Player) && living.isAlive()) {
+                String hitName = ChatFormatting.stripFormatting(living.getName().getString().toLowerCase(java.util.Locale.ROOT));
+                boolean isValidTarget = mobKiller.getMobsToKill().stream().anyMatch(t -> hitName.contains(t.toLowerCase(java.util.Locale.ROOT)));
+                if (isValidTarget && !mobKiller.getBlacklistedMobs().contains(living)) {
+                    attackTarget = living;
+                }
+            }
+        }
+
+        if (attackTarget == null) {
             return this;
         }
 
-        // Require crosshair/aim alignment on target mob (NEVER players!)
-        boolean aimAlignedOnMob = (mc.hitResult instanceof EntityHitResult hit 
-                && hit.getEntity() instanceof LivingEntity living 
-                && !(living instanceof net.minecraft.world.entity.player.Player) 
-                && living.isAlive()
-                && mobKiller.getMobsToKill().stream().anyMatch(t -> ChatFormatting.stripFormatting(living.getName().getString().toLowerCase(java.util.Locale.ROOT)).contains(t.toLowerCase(java.util.Locale.ROOT))))
-                || (hasLineOfSight && Math.abs(com.vertexai.util.AngleUtil.getNeededYawChange(mc.player.getYRot(), com.vertexai.util.AngleUtil.getRotationYaw(mobKiller.getTargetMob().getEyePosition(1.0f)))) < 25.0f);
-
-        if (!aimAlignedOnMob) {
+        // Strictly enforce 2.9-block vanilla reach limit from eye to target center to prevent reach flags
+        double eyeDistanceSq = mc.player.getEyePosition().distanceToSqr(attackTarget.position().add(0, attackTarget.getEyeHeight() * 0.5, 0));
+        if (eyeDistanceSq > 8.41) { // 2.9^2 = 8.41
             return this;
         }
 
@@ -212,9 +217,13 @@ public class KillState implements AutoMobKillerState {
             return this;
         }
 
-        // Fast & smooth humanized click dispatch (~10-12 CPS)
-        KeyBindUtil.leftClick();
-        attackDelay.schedule(70 + (long)(Math.random() * 35));
+        // Safe vanilla attack execution synchronized with raycast
+        if (mc.gameMode != null) {
+            mc.gameMode.attack(mc.player, attackTarget);
+            mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        }
+        // Humanized randomized delay (7.0 - 9.0 CPS)
+        attackDelay.schedule(110L + (long)(Math.random() * 45));
         closeRangeStuckTimer.reset();
         
         return this;

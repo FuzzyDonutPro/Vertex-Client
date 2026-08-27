@@ -141,11 +141,11 @@ public class PestHunterMacro extends AbstractMacro {
                     KeyBindUtil.setKeyBindState(mc.options.keyUse, true);
                     isVacuuming = true;
                 } else {
-                    // Fallback melee attack if no vacuum found (Survival reach = 3.0 blocks)
-                    if (dist <= 3.0f && mc.gameMode != null && (!attackClock.isScheduled() || attackClock.passed())) {
+                    // Fallback melee attack if no vacuum found (Survival reach <= 2.9 blocks)
+                    if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == targetPest && dist <= 2.9f && mc.gameMode != null && (!attackClock.isScheduled() || attackClock.passed())) {
                         mc.gameMode.attack(mc.player, targetPest);
                         mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                        attackClock.schedule(250);
+                        attackClock.schedule(150 + (long)(Math.random() * 80));
                     }
                 }
             } else {

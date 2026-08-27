@@ -68,11 +68,6 @@ public class AutoClicker extends AbstractFeature {
         executeClicks();
     }
 
-    @Override
-    protected void onWorldRender(WorldRenderContextWrapper context) {
-        executeClicks();
-    }
-
     private void executeClicks() {
         if (mc.screen != null || mc.player == null || mc.level == null) {
             return;
@@ -90,7 +85,7 @@ public class AutoClicker extends AbstractFeature {
             if (now - lastLeftClickTime >= nextLeftDelay) {
                 lastLeftClickTime = now;
                 double targetCps = ThreadLocalRandom.current().nextDouble(minCps, maxCps + 0.999);
-                nextLeftDelay = Math.max(10, (long) (1000.0 / targetCps));
+                nextLeftDelay = Math.max(50, (long) (1000.0 / targetCps));
 
                 ((MinecraftAccessor) mc).setAttackCooldown(0);
                 ((MinecraftAccessor) mc).invokeStartAttack();
@@ -108,7 +103,7 @@ public class AutoClicker extends AbstractFeature {
             if (now - lastRightClickTime >= nextRightDelay) {
                 lastRightClickTime = now;
                 double targetCps = ThreadLocalRandom.current().nextDouble(minCps, maxCps + 0.999);
-                nextRightDelay = Math.max(10, (long) (1000.0 / targetCps));
+                nextRightDelay = Math.max(50, (long) (1000.0 / targetCps));
 
                 ((MinecraftAccessor) mc).setItemUseCooldown(0);
                 ((MinecraftAccessor) mc).invokeStartUseItem();

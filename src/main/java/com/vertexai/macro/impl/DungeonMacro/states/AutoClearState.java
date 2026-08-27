@@ -80,13 +80,11 @@ public class AutoClearState implements DungeonMacroState {
                 ).start();
             }
 
-            // Attack if in range
-            if (distSq <= 16.0 && attackCooldown <= 0) { // 4 block range squared = 16
-                // Verify crosshair is actually on it before clicking?
-                // For simplicity, just simulate click
+            // Attack if crosshair is on target and in legit reach
+            if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit && hit.getEntity() == currentTarget && distSq <= 8.41 && attackCooldown <= 0) {
                 mc.gameMode.attack(mc.player, currentTarget);
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                attackCooldown = 10; // 0.5 sec cooldown
+                attackCooldown = 8 + (int)(Math.random() * 4); // ~0.4 - 0.6 sec randomized cooldown
             }
         }
     }
