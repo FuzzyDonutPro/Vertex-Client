@@ -28,7 +28,7 @@ public class FishingMacro {
     }
 
     public static void init() {
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
             getInstance().onTick();
         });
     }

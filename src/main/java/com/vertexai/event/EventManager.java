@@ -48,7 +48,7 @@ public class EventManager {
     }
 
     private static void registerTickEvents() {
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (client.level == null || client.player == null) return;
 
             // Tick all managers
@@ -102,7 +102,7 @@ public class EventManager {
     }
 
     private static void registerInputEvents() {
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (client.level == null || client.player == null) return;
 
             handleConfigGuiShortcut(client);
