@@ -1,7 +1,7 @@
 package com.vertexai.gui.cef;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
@@ -58,7 +58,7 @@ public class VertexCEFBrowser {
         }
     }
 
-    public boolean render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public boolean render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (browser == null) {
             init();
             if (browser == null) return false;

@@ -6,7 +6,7 @@ import com.vertexai.util.render.VFRenderLayers;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
@@ -284,7 +284,7 @@ public final class RenderUtil {
         }
     }
 
-    public static void drawMultiLineText(GuiGraphics GuiGraphics, List<String> lines, Color color, float scale) {
+    public static void drawMultiLineText(GuiGraphicsExtractor GuiGraphics, List<String> lines, Color color, float scale) {
         if (lines == null || lines.isEmpty()) return;
         Font textRenderer = mc.font;
         int scaledWidth = mc.getWindow().getGuiScaledWidth();
@@ -292,22 +292,22 @@ public final class RenderUtil {
         for (String line : lines) {
             int width = textRenderer.width(line);
             int x = (scaledWidth - width) / 2;
-            // GuiGraphics.drawString(textRenderer, line, x, yOffset, color.getRGB());
+            GuiGraphics.text(textRenderer, line, x, yOffset, color.getRGB(), true);
             yOffset += textRenderer.lineHeight * 2;
         }
     }
 
-    public static void drawCenterTopText(GuiGraphics GuiGraphics, String text, Color color) {
+    public static void drawCenterTopText(GuiGraphicsExtractor GuiGraphics, String text, Color color) {
         drawCenterTopText(GuiGraphics, text, color, 3.0f);
     }
 
-    public static void drawCenterTopText(GuiGraphics GuiGraphics, String text, Color color, float scale) {
+    public static void drawCenterTopText(GuiGraphicsExtractor GuiGraphics, String text, Color color, float scale) {
         if (text == null) return;
         Font textRenderer = mc.font;
         int scaledWidth = mc.getWindow().getGuiScaledWidth();
         int width = textRenderer.width(text);
         int x = (scaledWidth - width) / 2;
-        GuiGraphics.drawString(textRenderer, text, x, 0, color.getRGB());
+        GuiGraphics.text(textRenderer, text, x, 0, color.getRGB(), true);
     }
 
     public static void drawText(String text, double x, double y, double z, float scale) {
@@ -416,7 +416,7 @@ public final class RenderUtil {
                 ;
     }
 
-    public static void renderQueuedLineOverlays(GuiGraphics GuiGraphics) {
+    public static void renderQueuedLineOverlays(GuiGraphicsExtractor GuiGraphics) {
     }
 
     public static Color parseColor(String value, Color fallback) {

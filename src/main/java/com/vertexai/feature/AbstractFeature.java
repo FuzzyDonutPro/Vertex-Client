@@ -10,7 +10,7 @@ import com.vertexai.util.Logger;
 import com.vertexai.util.helper.Clock;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.protocol.Packet;
@@ -147,7 +147,7 @@ public abstract class AbstractFeature {
         this.onWorldRender(context);
     }
 
-    public final void handleHudRender(GuiGraphics GuiGraphics) {
+    public final void handleHudRender(GuiGraphicsExtractor GuiGraphics) {
         if (!this.enabled) {
             return;
         }
@@ -223,7 +223,7 @@ public abstract class AbstractFeature {
     protected void onWorldRender(WorldRenderContextWrapper context) {
     }
 
-    protected void onHudRender(GuiGraphics GuiGraphics) {
+    protected void onHudRender(GuiGraphicsExtractor GuiGraphics) {
     }
 
     protected void onChat(String message) {

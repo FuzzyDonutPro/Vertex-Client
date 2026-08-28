@@ -12,7 +12,7 @@ import com.vertexai.util.helper.route.Route;
 import com.vertexai.util.helper.route.RouteWaypoint;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.Block;
@@ -473,7 +473,7 @@ public class CommissionDebugMode extends AbstractFeature {
     }
 
     @Override
-    protected void onHudRender(GuiGraphics GuiGraphics) {
+    protected void onHudRender(GuiGraphicsExtractor GuiGraphics) {
         if (!this.enabled) {
             return;
         }

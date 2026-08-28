@@ -46,7 +46,7 @@ public class DemonBeaconSolver {
             // 2. Line of Sight & Reach Verification (3.0 blocks max reach)
             if (mc.player.distanceTo(activeBeacon) <= 3.0f && hasLineOfSight(beaconPos)) {
                 if (mc.gameMode != null) {
-                    mc.gameMode.interact(mc.player, activeBeacon, net.minecraft.world.InteractionHand.MAIN_HAND);
+                    mc.gameMode.interact(mc.player, activeBeacon, new net.minecraft.world.phys.EntityHitResult(activeBeacon), net.minecraft.world.InteractionHand.MAIN_HAND);
                 }
                 KeyBindUtil.rightClick();
                 interactClock.schedule(200);

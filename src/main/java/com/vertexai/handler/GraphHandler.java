@@ -13,7 +13,7 @@ import com.vertexai.util.helper.graph.Graph;
 import com.vertexai.util.helper.route.RouteWaypoint;
 import com.vertexai.util.helper.route.WaypointType;
 import com.vertexai.util.WorldRenderContextWrapper;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 
 import java.util.*;
@@ -521,7 +521,7 @@ public class GraphHandler {
     /**
      * Called for HUD rendering.
      */
-    public void onHudRender(GuiGraphics GuiGraphics) {
+    public void onHudRender(GuiGraphicsExtractor GuiGraphics) {
         // Deprecated: moved to RouteBuilderHUD (movable + consistent panel styling).
     }
 

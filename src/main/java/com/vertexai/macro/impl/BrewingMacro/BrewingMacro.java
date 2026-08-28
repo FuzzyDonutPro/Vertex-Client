@@ -69,7 +69,7 @@ public class BrewingMacro extends AbstractMacro {
                 // Shift-click finished potions out
                 for (int slot = 0; slot <= 2; slot++) {
                     if (!brewScreen.getMenu().getSlot(slot).getItem().isEmpty()) {
-                        mc.gameMode.handleInventoryMouseClick(containerId, slot, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
+                        mc.gameMode.handleContainerInput(containerId, slot, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player);
                         delayClock.schedule(200);
                         return;
                     }
@@ -82,7 +82,7 @@ public class BrewingMacro extends AbstractMacro {
 
             for (int slot = 0; slot <= 2; slot++) {
                 if (brewScreen.getMenu().getSlot(slot).getItem().isEmpty() && bottleSlotInInv != -1) {
-                    mc.gameMode.handleInventoryMouseClick(containerId, bottleSlotInInv + 36, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
+                    mc.gameMode.handleContainerInput(containerId, bottleSlotInInv + 36, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player);
                     delayClock.schedule(250);
                     return;
                 }
@@ -92,7 +92,7 @@ public class BrewingMacro extends AbstractMacro {
             if (brewScreen.getMenu().getSlot(3).getItem().isEmpty()) {
                 int wartSlot = InventoryUtil.getSlotOfItemInMainInventory("Nether Wart");
                 if (wartSlot != -1) {
-                    mc.gameMode.handleInventoryMouseClick(containerId, wartSlot + 36, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
+                    mc.gameMode.handleContainerInput(containerId, wartSlot + 36, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player);
                     delayClock.schedule(300);
                     return;
                 }
@@ -102,7 +102,7 @@ public class BrewingMacro extends AbstractMacro {
                 if (sugarSlot == -1) sugarSlot = InventoryUtil.getSlotOfItemInMainInventory("Enchanted Melon");
 
                 if (sugarSlot != -1) {
-                    mc.gameMode.handleInventoryMouseClick(containerId, sugarSlot + 36, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
+                    mc.gameMode.handleContainerInput(containerId, sugarSlot + 36, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player);
                     delayClock.schedule(300);
                     return;
                 }

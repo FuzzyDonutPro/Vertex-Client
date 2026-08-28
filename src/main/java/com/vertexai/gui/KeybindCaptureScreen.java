@@ -4,7 +4,7 @@ import com.vertexai.Vertex;
 import com.vertexai.VertexClient;
 import com.vertexai.gui.web.WebDashboardScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -23,7 +23,8 @@ public class KeybindCaptureScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
         // Render sleek dark backdrop overlay
         context.fill(0, 0, this.width, this.height, 0xDD0F172A);
 
@@ -33,9 +34,9 @@ public class KeybindCaptureScreen extends Screen {
 
         int centerY = this.height / 2;
 
-        context.drawString(this.font, title, (this.width - this.font.width(title)) / 2, centerY - 25, 0xFF38BDF8, true);
-        context.drawString(this.font, prompt, (this.width - this.font.width(prompt)) / 2, centerY, 0xFFFFFFFF, true);
-        context.drawString(this.font, cancel, (this.width - this.font.width(cancel)) / 2, centerY + 25, 0xFF94A3B8, true);
+        context.centeredText(this.font, title, this.width / 2, centerY - 25, 0xFF38BDF8);
+        context.centeredText(this.font, prompt, this.width / 2, centerY, 0xFFFFFFFF);
+        context.centeredText(this.font, cancel, this.width / 2, centerY + 25, 0xFF94A3B8);
     }
 
     @Override

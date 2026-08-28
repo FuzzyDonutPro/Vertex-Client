@@ -8,7 +8,7 @@ import com.vertexai.util.Logger;
 import com.vertexai.util.helper.Clock;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -173,7 +173,7 @@ public abstract class AbstractMacro {
     public void onTablistUpdate(UpdateTablistEvent event) {
     }
 
-    public void onOverlayRender(GuiGraphics GuiGraphics) {
+    public void onOverlayRender(GuiGraphicsExtractor GuiGraphics) {
     }
 
     public void onReceivePacket(PacketEvent.Received event) {

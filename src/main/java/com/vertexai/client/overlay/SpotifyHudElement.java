@@ -2,7 +2,7 @@ package com.vertexai.client.overlay;
 
 import com.vertexai.VertexClient;
 import com.vertexai.integration.spotify.SpotifyManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 
 public class SpotifyHudElement extends AbstractHUDElement {
@@ -26,7 +26,7 @@ public class SpotifyHudElement extends AbstractHUDElement {
     }
 
     @Override
-    public void render(GuiGraphics context, float tickDelta) {
+    public void render(GuiGraphicsExtractor context, float tickDelta) {
         if (!isEnabled()) return;
         if (VertexClient.config != null && VertexClient.config.hud != null && VertexClient.config.hud.spotifyHUD != null) {
             this.x = VertexClient.config.hud.spotifyHUD.x;
@@ -38,8 +38,8 @@ public class SpotifyHudElement extends AbstractHUDElement {
         SpotifyManager spotify = SpotifyManager.getInstance();
         if (!spotify.isAuthenticated()) return;
 
-        int renderX = (int) getActualX();
-        int renderY = (int) getActualY();
+        int renderX = (int) getActualX(getWidth());
+        int renderY = (int) getActualY(getHeight());
 
         context.pose().pushMatrix();
         context.pose().translate((float) renderX, (float) renderY);
@@ -56,7 +56,7 @@ public class SpotifyHudElement extends AbstractHUDElement {
 
         if (showArt && artLoc != null) {
             // Draw 34x34 Album Art
-            context.blit(artLoc, 8, 6, 0, 0, 34, 34, 34, 34);
+            context.blit(artLoc, 8, 6, 34, 34, 0.0F, 1.0F, 0.0F, 1.0F);
             contentX = 48;
         }
 
@@ -65,18 +65,18 @@ public class SpotifyHudElement extends AbstractHUDElement {
         if (title.length() > 20) {
             title = title.substring(0, 18) + "..";
         }
-        context.drawString(mc.font, "§f" + title, contentX, 6, 0xFFFFFFFF, true);
+        context.text(mc.font, "§f" + title, contentX, 6, 0xFFFFFFFF, true);
 
         // Artist Name
         String artist = spotify.getArtistName();
         if (artist.length() > 24) {
             artist = artist.substring(0, 22) + "..";
         }
-        context.drawString(mc.font, "§7" + artist, contentX, 18, 0xAAAAAA, true);
+        context.text(mc.font, "§7" + artist, contentX, 18, 0xAAAAAA, true);
 
         // Play / Pause status badge
         String statusIcon = spotify.isPlaying() ? "§a▶" : "§c❚❚";
-        context.drawString(mc.font, statusIcon, WIDTH - 16, 6, 0xFFFFFFFF, true);
+        context.text(mc.font, statusIcon, WIDTH - 16, 6, 0xFFFFFFFF, true);
 
         // Progress Bar
         if (VertexClient.config.spotify.hudShowProgressBar && spotify.getDurationMs() > 0) {

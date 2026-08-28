@@ -58,7 +58,7 @@ public class ChatAIHandler {
     private static void generateReply(String contextMessage) {
         String apiKey = VertexAIConfig.getInstance().apiKey;
         if (apiKey == null || apiKey.isEmpty()) {
-            Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[Vertex AI] API Key is missing in config!"), false);
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("§c[Vertex AI] API Key is missing in config!"));
             return;
         }
 
@@ -104,7 +104,7 @@ public class ChatAIHandler {
                         });
                     }
                 } else {
-                    Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[Vertex AI] API Error: " + response.statusCode()), false);
+                    Minecraft.getInstance().player.sendSystemMessage(Component.literal("§c[Vertex AI] API Error: " + response.statusCode()));
                 }
             } catch (Exception e) {
                 e.printStackTrace();

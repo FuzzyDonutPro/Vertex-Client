@@ -51,7 +51,7 @@ public class FarmBuilderMacro extends AbstractMacro {
     }
 
     @Override
-    public void onOverlayRender(net.minecraft.client.gui.GuiGraphics graphics) {
+    public void onOverlayRender(net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
         if (!isEnabled()) return;
         getStateMachine().onOverlayRender(graphics);
     }

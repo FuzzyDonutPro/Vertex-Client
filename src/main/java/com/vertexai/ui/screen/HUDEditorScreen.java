@@ -3,9 +3,8 @@ package com.vertexai.ui.screen;
 import com.vertexai.client.overlay.AbstractHUDElement;
 import com.vertexai.ui.hud.HUDManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -64,7 +63,7 @@ public class HUDEditorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Avoid vanilla blurred background here; calling blur more than once per frame throws.
         context.fill(0, 0, this.width, this.height, 0xB0000000);
 
@@ -91,7 +90,8 @@ public class HUDEditorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
         List<AbstractHUDElement> elements = HUDManager.getInstance().getEditableElements();
         for (AbstractHUDElement element : elements) {
             int w = element.getEditorWidth();
@@ -120,7 +120,7 @@ public class HUDEditorScreen extends Screen {
                 case 3 -> "BR";
                 default -> "TL";
             };
-            context.drawString(font, anchorLabel, x0 + 2, y0 + 2, 0xD0FFFFFF);
+            context.text(font, anchorLabel, x0 + 2, y0 + 2, 0xD0FFFFFF, false);
 
             if (hovered || isSelected || isDragging) {
                 // Corner handles (only when interacting to keep editor light)
@@ -142,7 +142,7 @@ public class HUDEditorScreen extends Screen {
 
                 String label = element.getClass().getSimpleName() + "  " + w + "x" + h + "  " + Math.round(element.getScale() * 100.0f) + "%";
                 int labelY = Math.max(2, y0 - 10);
-                context.drawString(font, label, x0, labelY, 0xE0FFFFFF);
+                context.text(font, label, x0, labelY, 0xE0FFFFFF, false);
             }
         }
 
@@ -156,15 +156,15 @@ public class HUDEditorScreen extends Screen {
         int saveBorder = saveHover ? 0xFF22D3EE : 0x60FFFFFF;
         context.fill(saveX, resetY, saveX + SAVE_BTN_W, resetY + RESET_BTN_H, saveBg);
         context.fill(saveX, resetY, saveX + SAVE_BTN_W, resetY + RESET_BTN_H, saveBorder);
-        context.drawString(font, "Save layout", saveX + 8, resetY + 4, 0xE0FFFFFF);
+        context.text(font, "Save layout", saveX + 8, resetY + 4, 0xE0FFFFFF, false);
 
         int resetBg = resetHover ? 0xC0222A30 : 0xA014161A;
         int resetBorder = resetHover ? 0xFF22D3EE : 0x60FFFFFF;
         context.fill(resetX, resetY, resetX + RESET_BTN_W, resetY + RESET_BTN_H, resetBg);
         context.fill(resetX, resetY, resetX + RESET_BTN_W, resetY + RESET_BTN_H, resetBorder);
-        context.drawString(font, "Reset layout", resetX + 6, resetY + 4, 0xE0FFFFFF);
+        context.text(font, "Reset layout", resetX + 6, resetY + 4, 0xE0FFFFFF, false);
 
-        context.drawString(font, "Click select | Drag move | Scroll resize | Arrows nudge (Shift=10) | Right click anchor", 5, height - 15, 0xFFFFFF);
+        context.text(font, "Click select | Drag move | Scroll resize | Arrows nudge (Shift=10) | Right click anchor", 5, height - 15, 0xFFFFFF, false);
     }
 
     @Override

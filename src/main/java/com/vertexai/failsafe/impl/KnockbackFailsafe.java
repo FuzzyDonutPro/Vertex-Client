@@ -30,11 +30,10 @@ public class KnockbackFailsafe extends AbstractFailsafe {
 
     @Override
     public boolean onPacketReceive(Packet<?> packet) {
-        if (!(packet instanceof ClientboundSetEntityMotionPacket)) return false;
-ClientboundSetEntityMotionPacket motionPacket = (ClientboundSetEntityMotionPacket) packet;
-int id = motionPacket.getId();
-net.minecraft.world.phys.Vec3 movement = new net.minecraft.world.phys.Vec3(motionPacket.getMovement().x, motionPacket.getMovement().y, motionPacket.getMovement().z);
-        if (id != mc.player.getId()) return false;
+        if (!(packet instanceof ClientboundSetEntityMotionPacket motionPacket)) return false;
+        int id = motionPacket.id();
+        net.minecraft.world.phys.Vec3 movement = motionPacket.movement();
+        if (mc.player == null || id != mc.player.getId()) return false;
         return movement.y >= Vertex.config().failsafe.verticalKnockbackThreshold;
     }
 

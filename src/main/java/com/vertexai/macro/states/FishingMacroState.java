@@ -18,7 +18,7 @@ public interface FishingMacroState {
 
     default void send(String message) {
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(Component.literal("§a[" + this.getClass().getSimpleName() + "] " + message), false);
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[" + this.getClass().getSimpleName() + "] " + message));
         }
     }
 }

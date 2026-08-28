@@ -15,7 +15,7 @@ import com.vertexai.util.KeyPressUtil;
 import com.vertexai.util.Logger;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
  * Manages macro lifecycle and event dispatch.
@@ -236,7 +236,7 @@ public class MacroManager {
     /**
      * Called for HUD rendering.
      */
-    public void onHudRender(GuiGraphics GuiGraphics) {
+    public void onHudRender(GuiGraphicsExtractor GuiGraphics) {
         if (this.currentMacro == null) {
             return;
         }

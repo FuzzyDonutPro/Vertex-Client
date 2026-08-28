@@ -1,8 +1,6 @@
 package com.vertexai.gui.particle;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.Identifier;
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +60,7 @@ public class PlexusRenderer {
         }
     }
 
-    public void render(GuiGraphics context, float delta) {
+    public void render(GuiGraphicsExtractor context, float delta) {
         if (!initialized) return;
 
         // Draw solid dark blue background (covers the panorama)
@@ -98,7 +96,7 @@ public class PlexusRenderer {
         }
     }
 
-    private void drawLine(GuiGraphics context, float x1, float y1, float x2, float y2, float dist, int color) {
+    private void drawLine(GuiGraphicsExtractor context, float x1, float y1, float x2, float y2, float dist, int color) {
         float angle = (float) Math.atan2(y2 - y1, x2 - x1);
         
         // Drastically reduce line opacity to make them appear much thinner and softer (anti-aliasing illusion)
@@ -116,7 +114,7 @@ public class PlexusRenderer {
         context.pose().popMatrix();
     }
 
-    private void drawRoundDot(GuiGraphics context, float fx, float fy, int coreColor, int glowColor) {
+    private void drawRoundDot(GuiGraphicsExtractor context, float fx, float fy, int coreColor, int glowColor) {
         int ix = (int) fx;
         int iy = (int) fy;
         
@@ -131,7 +129,7 @@ public class PlexusRenderer {
         drawCircleStrips(context, ix, iy, 2, coreColor);
     }
 
-    private void drawCircleStrips(GuiGraphics context, int x, int y, int radius, int color) {
+    private void drawCircleStrips(GuiGraphicsExtractor context, int x, int y, int radius, int color) {
         for (int i = -radius; i <= radius; i++) {
             int dx = (int) Math.round(Math.sqrt(radius * radius - i * i));
             context.fill(x - dx, y + i, x + dx, y + i + 1, color);

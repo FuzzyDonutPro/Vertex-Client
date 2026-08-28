@@ -63,8 +63,8 @@ public class PestHunterMacro extends AbstractMacro {
         // Only send the swap packet when the player inventory screen is actually open server-side
         int invSlot = InventoryUtil.getSlotOfItemInMainInventory("Vacuum");
         if (invSlot != -1 && mc.gameMode != null && mc.screen instanceof net.minecraft.client.gui.screens.inventory.InventoryScreen) {
-            mc.gameMode.handleInventoryMouseClick(
-                mc.player.inventoryMenu.containerId, invSlot, 8, net.minecraft.world.inventory.ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(
+                mc.player.inventoryMenu.containerId, invSlot, 8, net.minecraft.world.inventory.ContainerInput.SWAP, mc.player);
             return 8;
         }
 

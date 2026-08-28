@@ -84,22 +84,27 @@ public class EventManager {
 
         // HUD rendering
         try {
-            net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((guiGraphics, tickCounter) -> {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.level == null || mc.player == null) return;
+            net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+                    net.minecraft.resources.Identifier.parse("vertexai:hud"),
+                    (extractor, deltaTracker) -> {
+                        Minecraft mc = Minecraft.getInstance();
+                        if (mc.level == null || mc.player == null) return;
 
-                // Render high-res Svelte Chromium web overlay (StatusHUD, HUD widgets) only when macro is running
-                if (mc.screen == null && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
-                    com.vertexai.gui.cef.VertexCEFBrowser.getInstance().render(guiGraphics, 0, 0, 0);
-                }
+                        // Render high-res Svelte Chromium web overlay (StatusHUD, HUD widgets) only when macro is running
+                        if (mc.screen == null && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
+                            com.vertexai.gui.cef.VertexCEFBrowser.getInstance().render(extractor, 0, 0, 0);
+                        }
 
-                HUDManager.getInstance().onHudRender(guiGraphics);
-                MacroManager.getInstance().onHudRender(guiGraphics);
-                FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));
+                        HUDManager.getInstance().onHudRender(extractor);
+                        MacroManager.getInstance().onHudRender(extractor);
+                        FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(extractor));
 
-                RenderUtil.renderQueuedLineOverlays(guiGraphics);
-            });
-        } catch (Throwable ignored) {}
+                        RenderUtil.renderQueuedLineOverlays(extractor);
+                    }
+            );
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     public static void registerLevelRenderEventSafe(java.util.function.Consumer<Object> listener) {

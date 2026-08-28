@@ -197,7 +197,7 @@ public class FishingMacro {
     private void warn(String message) {
         Minecraft client = Minecraft.getInstance();
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[" + getName() + "] " + message), false);
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("§c[" + getName() + "] " + message));
         }
         System.err.println("[" + getName() + "] WARNING: " + message);
     }

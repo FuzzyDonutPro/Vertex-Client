@@ -3,7 +3,7 @@ package com.vertexai.client.overlay;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public abstract class AbstractHUDElement {
 
@@ -25,13 +25,13 @@ public abstract class AbstractHUDElement {
     public int getAnchor() { return anchor; }
     public void setAnchor(int anchor) { this.anchor = anchor; }
 
-    public abstract void render(GuiGraphics context, float tickDelta);
+    public abstract void render(GuiGraphicsExtractor context, float tickDelta);
 
     /**
      * Render variant used by the HUD editor.
      * Defaults to normal rendering.
      */
-    public void renderForEditor(GuiGraphics context, float tickDelta) {
+    public void renderForEditor(GuiGraphicsExtractor context, float tickDelta) {
         render(context, tickDelta);
     }
 

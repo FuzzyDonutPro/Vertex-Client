@@ -10,7 +10,7 @@ import com.vertexai.ui.hud.ColorPalette;
 import com.vertexai.util.helper.location.Location;
 import com.vertexai.util.tablist.TabListParser;
 import com.vertexai.util.tablist.WidgetType;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ public class CommissionHUD extends TextHud {
     }
 
     @Override
-    protected void postRender(GuiGraphics context, int panelW, int panelH, float scale) {
+    protected void postRender(GuiGraphicsExtractor context, int panelW, int panelH, float scale) {
         if (!commissionMacro.isEnabled() || currentProgress <= 0) return;
 
         int padding = getPaddingPx();

@@ -54,11 +54,11 @@ public class ExperimentationSolver extends AbstractFeature {
             Slot targetSlot = containerScreen.getMenu().getSlot(targetSlotId);
 
             if (targetSlot != null && !targetSlot.getItem().isEmpty()) {
-                mc.gameMode.handleInventoryMouseClick(
+                mc.gameMode.handleContainerInput(
                         containerScreen.getMenu().containerId,
                         targetSlotId,
                         0,
-                        ClickType.PICKUP,
+                        net.minecraft.world.inventory.ContainerInput.PICKUP,
                         mc.player
                 );
                 currentClickIndex++;

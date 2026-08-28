@@ -235,14 +235,14 @@ public class InventoryUtil {
             return;
         }
 
-        net.minecraft.world.inventory.ClickType actionType = net.minecraft.world.inventory.ClickType.PICKUP;
+        net.minecraft.world.inventory.ContainerInput actionType = net.minecraft.world.inventory.ContainerInput.PICKUP;
         if (clickMode == 1) {
-            actionType = net.minecraft.world.inventory.ClickType.QUICK_MOVE;
+            actionType = net.minecraft.world.inventory.ContainerInput.QUICK_MOVE;
         } else if (clickMode == 2) {
-            actionType = net.minecraft.world.inventory.ClickType.SWAP;
+            actionType = net.minecraft.world.inventory.ContainerInput.SWAP;
         }
 
-        mc.gameMode.handleInventoryMouseClick(
+        mc.gameMode.handleContainerInput(
                 containerId,
                 slot,
                 mouseButton,
@@ -261,11 +261,11 @@ public class InventoryUtil {
             return;
         }
 
-        mc.gameMode.handleInventoryMouseClick(
+        mc.gameMode.handleContainerInput(
                 containerId,
                 slot,
                 hotbarSlot,
-                net.minecraft.world.inventory.ClickType.SWAP,
+                net.minecraft.world.inventory.ContainerInput.SWAP,
                 mc.player
         );
     }

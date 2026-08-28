@@ -1,7 +1,7 @@
 plugins {
     id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     
-    id 'io.freefair.lombok' version '8.6'
+    id 'io.freefair.lombok' version '8.12.1'
     id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm' version '2.0.21'
 }
@@ -25,6 +25,9 @@ repositories {
 }
 
 dependencies {
+	compileOnly files("C:/Users/jerem/AppData/Roaming/ModrinthApp/meta/versions/26.1-0.19.3/26.1-0.19.3.jar")
+	compileOnly fileTree(dir: 'libs/fabric-api-26.1', include: ['*.jar'])
+
 	modImplementation "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"
 	include "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"
 
@@ -35,8 +38,8 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	compileOnly 'org.projectlombok:lombok:1.18.30'
-	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+	compileOnly 'org.projectlombok:lombok:1.18.38'
+	annotationProcessor 'org.projectlombok:lombok:1.18.38'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	modImplementation "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
 	include "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
@@ -72,7 +75,10 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
+	it.javaCompiler = javaToolchains.compilerFor {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
 }
 
 java {
@@ -81,8 +87,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {

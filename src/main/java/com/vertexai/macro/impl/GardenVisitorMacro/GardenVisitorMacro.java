@@ -65,7 +65,7 @@ public class GardenVisitorMacro extends AbstractMacro {
                     if (!stack.isEmpty()) {
                         String name = stack.getHoverName().getString().toLowerCase();
                         if (name.contains("accept") || name.contains("accept offer") || name.contains("exchange") || name.contains("claim")) {
-                            mc.gameMode.handleInventoryMouseClick(containerId, slot, 0, net.minecraft.world.inventory.ClickType.PICKUP, mc.player);
+                            mc.gameMode.handleContainerInput(containerId, slot, 0, net.minecraft.world.inventory.ContainerInput.PICKUP, mc.player);
                             interactionClock.schedule(600);
                             return;
                         }
@@ -83,7 +83,7 @@ public class GardenVisitorMacro extends AbstractMacro {
             RotationHandler.getInstance().easeTo(new RotationConfiguration(new Target(pos), 120, null));
 
             if (dist <= 4.0f && mc.gameMode != null) {
-                mc.gameMode.interact(mc.player, targetVisitor, net.minecraft.world.InteractionHand.MAIN_HAND);
+                mc.gameMode.interact(mc.player, targetVisitor, new net.minecraft.world.phys.EntityHitResult(targetVisitor), net.minecraft.world.InteractionHand.MAIN_HAND);
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 interactionClock.schedule(1000);
             }

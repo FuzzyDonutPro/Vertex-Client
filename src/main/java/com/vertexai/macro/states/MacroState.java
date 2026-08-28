@@ -26,5 +26,5 @@ public interface MacroState {
 
     default void onWorldRender(AbstractMacro macro, com.vertexai.util.WorldRenderContextWrapper context) {}
     
-    default void onOverlayRender(AbstractMacro macro, net.minecraft.client.gui.GuiGraphics graphics) {}
+    default void onOverlayRender(AbstractMacro macro, net.minecraft.client.gui.GuiGraphicsExtractor graphics) {}
 }

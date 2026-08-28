@@ -5,7 +5,7 @@ import com.vertexai.macro.AbstractMacro;
 import com.vertexai.util.Logger;
 import com.vertexai.util.RenderUtil;
 import com.vertexai.util.WorldRenderContextWrapper;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 import org.lwjgl.glfw.GLFW;
@@ -61,7 +61,7 @@ public class PreviewState extends FarmBuilderState {
     }
 
     @Override
-    public void onOverlayRender(AbstractMacro macro, GuiGraphics graphics) {
+    public void onOverlayRender(AbstractMacro macro, GuiGraphicsExtractor graphics) {
         RenderUtil.drawCenterTopText(graphics, "Press X to set the hologram to the right spot", new Color(255, 255, 0, 255));
     }
 }

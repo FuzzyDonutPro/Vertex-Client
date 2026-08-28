@@ -168,10 +168,10 @@ public class SlayerQoL extends AbstractFeature {
             int invAbiphone = InventoryUtil.getSlotOfItemInMainInventory("Abiphone");
 
             if (invBatphone != -1 && mc.gameMode != null) {
-                mc.gameMode.handleInventoryMouseClick(mc.player.inventoryMenu.containerId, invBatphone, 8, ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, invBatphone, 8, net.minecraft.world.inventory.ContainerInput.SWAP, mc.player);
                 UseItemAbility.useItemAbility("Maddox Batphone", 8);
             } else if (invAbiphone != -1 && mc.gameMode != null) {
-                mc.gameMode.handleInventoryMouseClick(mc.player.inventoryMenu.containerId, invAbiphone, 8, ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, invAbiphone, 8, net.minecraft.world.inventory.ContainerInput.SWAP, mc.player);
                 UseItemAbility.useItemAbility("Abiphone", 8);
             } else {
                 // Fallback to /slayer command
@@ -286,7 +286,7 @@ public class SlayerQoL extends AbstractFeature {
 
     private void clickSlot(int containerId, int slotIndex) {
         if (mc.gameMode != null && mc.player != null) {
-            mc.gameMode.handleInventoryMouseClick(containerId, slotIndex, 0, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(containerId, slotIndex, 0, net.minecraft.world.inventory.ContainerInput.PICKUP, mc.player);
         }
     }
 

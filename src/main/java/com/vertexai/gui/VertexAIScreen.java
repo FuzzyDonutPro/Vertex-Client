@@ -1,7 +1,7 @@
 package com.vertexai.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -33,15 +33,17 @@ public class VertexAIScreen extends Screen {
         }
     }
 
-    public void resize(Minecraft client, int width, int height) {
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
         if (cefBrowser != null) {
             cefBrowser.resize(width, height);
         }
-        super.rebuildWidgets();
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
         context.fill(0, 0, this.width, this.height, 0x99000000); // 60% opacity black
 
         boolean rendered = false;
@@ -56,15 +58,11 @@ public class VertexAIScreen extends Screen {
             String subtext = "Initializing Chromium Embedded Framework...";
             String hint = "Press ESC to return to game";
             
-            int titleWidth = this.font.width(title);
-            int subtextWidth = this.font.width(subtext);
-            int hintWidth = this.font.width(hint);
-
             int centerY = this.height / 2;
 
-            context.drawString(this.font, title, (this.width - titleWidth) / 2, centerY - 25, 0xFF38BDF8, true);
-            context.drawString(this.font, subtext, (this.width - subtextWidth) / 2, centerY, 0xFF94A3B8, true);
-            context.drawString(this.font, hint, (this.width - hintWidth) / 2, centerY + 25, 0xFF64748B, true);
+            context.centeredText(this.font, title, this.width / 2, centerY - 25, 0xFF38BDF8);
+            context.centeredText(this.font, subtext, this.width / 2, centerY, 0xFF94A3B8);
+            context.centeredText(this.font, hint, this.width / 2, centerY + 25, 0xFF64748B);
         }
     }
 
@@ -146,7 +144,7 @@ public class VertexAIScreen extends Screen {
     @Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
         if (cefBrowser != null) {
-            cefBrowser.injectCharTyped((char) event.codepoint(), event.modifiers());
+            cefBrowser.injectCharTyped((char) event.codepoint(), 0);
             return true;
         }
         return super.charTyped(event);

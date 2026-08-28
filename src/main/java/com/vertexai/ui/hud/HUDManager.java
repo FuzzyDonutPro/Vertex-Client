@@ -5,7 +5,7 @@ import com.vertexai.client.overlay.AbstractHUDElement;
 import com.vertexai.config.Categorie.HUD;
 import com.vertexai.config.VertexConfig;
 import com.vertexai.ui.hud.elements.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class HUDManager {
         positionsLoaded = true;
     }
 
-    public void onHudRender(GuiGraphics context) {
+    public void onHudRender(GuiGraphicsExtractor context) {
         if (net.minecraft.client.Minecraft.getInstance().options.hideGui) return;
         ensurePositionsLoaded();
 

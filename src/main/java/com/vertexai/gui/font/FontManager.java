@@ -2,7 +2,7 @@ package com.vertexai.gui.font;
 
 import com.vertexai.Vertex;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -62,8 +62,8 @@ public class FontManager {
         return Math.max(1, w);
     }
 
-    public static void drawString(GuiGraphics context, String text, int x, int y, int color) {
+    public static void drawString(GuiGraphicsExtractor context, String text, int x, int y, int color) {
         // High-performance, zero-bleed text rendering
-        context.drawString(Minecraft.getInstance().font, text, x, y, color, true);
+        context.text(Minecraft.getInstance().font, text, x, y, color, true);
     }
 }

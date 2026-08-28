@@ -2,7 +2,7 @@ package com.vertexai.ui.hud.elements;
 
 import lombok.Getter;
 import com.vertexai.client.overlay.AbstractHUDElement;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -23,8 +23,8 @@ public class InventoryHUD extends AbstractHUDElement {
 
     public InventoryHUD() {
         super();
-        this.x = 0;
-        this.y = 52; // 52px above bottom screen (top of hotbar)
+        this.x = 5;
+        this.y = 5;
         this.anchor = 2; // Bottom-Left / Bottom-Center
         this.enabled = true;
     }
@@ -54,16 +54,16 @@ public class InventoryHUD extends AbstractHUDElement {
     }
 
     @Override
-    public void render(GuiGraphics context, float tickDelta) {
+    public void render(GuiGraphicsExtractor context, float tickDelta) {
         renderInternal(context, false);
     }
 
     @Override
-    public void renderForEditor(GuiGraphics context, float tickDelta) {
+    public void renderForEditor(GuiGraphicsExtractor context, float tickDelta) {
         renderInternal(context, true);
     }
 
-    private void renderInternal(GuiGraphics context, boolean example) {
+    private void renderInternal(GuiGraphicsExtractor context, boolean example) {
         if (!enabled) return;
         if (!example && (mc.player == null || mc.level == null || !com.vertexai.macro.MacroManager.getInstance().isRunning())) return;
 
@@ -98,8 +98,8 @@ public class InventoryHUD extends AbstractHUDElement {
                 }
 
                 if (!stack.isEmpty()) {
-                    context.renderItem(stack, slotX, slotY);
-                    context.renderItemDecorations(mc.font, stack, slotX, slotY);
+                    context.item(stack, slotX, slotY);
+                    context.itemDecorations(mc.font, stack, slotX, slotY);
                 }
             }
         }

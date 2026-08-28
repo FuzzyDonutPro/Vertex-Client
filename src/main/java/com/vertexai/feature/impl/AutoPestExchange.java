@@ -36,7 +36,7 @@ public class AutoPestExchange extends AbstractFeature {
         if (phillip != null) {
             log("AutoPestExchange: Found Phillip NPC! Exchanging pests...");
             if (mc.gameMode != null) {
-                mc.gameMode.interact(mc.player, phillip, net.minecraft.world.InteractionHand.MAIN_HAND);
+                mc.gameMode.interact(mc.player, phillip, new net.minecraft.world.phys.EntityHitResult(phillip), net.minecraft.world.InteractionHand.MAIN_HAND);
             }
             cooldown.schedule(10000); // 10s cooldown
         }

@@ -20,7 +20,7 @@ public abstract class Logger {
             // Always defer chat writes to avoid rendering-phase violations.
             mc.execute(() -> {
                 if (mc.player != null && mc.level != null) {
-                    mc.gui.getChat().addMessage(Component.nullToEmpty(text));
+                    mc.gui.getChat().addClientSystemMessage(Component.nullToEmpty(text));
                 } else {
                     Vertex.LOGGER.info("{}", ChatFormatting.stripFormatting(text));
                 }

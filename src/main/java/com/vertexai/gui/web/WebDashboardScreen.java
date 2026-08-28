@@ -1,9 +1,7 @@
 package com.vertexai.gui.web;
 
 import com.vertexai.gui.VertexAIScreen;
-import net.minecraft.client.gui.GuiGraphics;
 
-import java.lang.reflect.Method;
 
 /**
  * WebDashboardScreen — Embedded MCEF Chromium Web Screen for Vertex Client.

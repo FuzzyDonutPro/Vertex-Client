@@ -46,7 +46,7 @@ public class BuilderToolUtil {
         int invSlot = InventoryUtil.getSlotOfItemInMainInventory(toolName);
         if (invSlot != -1 && mc.gameMode != null && mc.screen instanceof net.minecraft.client.gui.screens.inventory.InventoryScreen) {
             // Swap to hotbar slot 0 for builder tools
-            mc.gameMode.handleInventoryMouseClick(mc.player.inventoryMenu.containerId, invSlot, 0, net.minecraft.world.inventory.ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, invSlot, 0, net.minecraft.world.inventory.ContainerInput.SWAP, mc.player);
             mc.player.getInventory().setSelectedSlot(0);
             return true;
         } else if (invSlot != -1) {

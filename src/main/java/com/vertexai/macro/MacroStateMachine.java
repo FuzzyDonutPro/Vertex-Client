@@ -38,7 +38,7 @@ public class MacroStateMachine {
         }
     }
 
-    public void onOverlayRender(net.minecraft.client.gui.GuiGraphics graphics) {
+    public void onOverlayRender(net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
         if (this.currentState != null) {
             this.currentState.onOverlayRender(macro, graphics);
         }
