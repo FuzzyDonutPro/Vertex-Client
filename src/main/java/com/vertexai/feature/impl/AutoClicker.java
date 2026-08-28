@@ -2,8 +2,11 @@ package com.vertexai.feature.impl;
 
 import com.vertexai.Vertex;
 import com.vertexai.feature.AbstractFeature;
-import com.vertexai.mixin.client.MinecraftAccessor;
 import com.vertexai.util.WorldRenderContextWrapper;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -87,8 +90,16 @@ public class AutoClicker extends AbstractFeature {
                 double targetCps = ThreadLocalRandom.current().nextDouble(minCps, maxCps + 0.999);
                 nextLeftDelay = Math.max(50, (long) (1000.0 / targetCps));
 
-                ((MinecraftAccessor) mc).setAttackCooldown(0);
-                ((MinecraftAccessor) mc).invokeStartAttack();
+                if (mc.hitResult != null && mc.gameMode != null) {
+                    if (mc.hitResult.getType() == HitResult.Type.ENTITY) {
+                        EntityHitResult eHit = (EntityHitResult) mc.hitResult;
+                        mc.gameMode.attack(mc.player, eHit.getEntity());
+                    } else if (mc.hitResult.getType() == HitResult.Type.BLOCK) {
+                        BlockHitResult bHit = (BlockHitResult) mc.hitResult;
+                        mc.gameMode.continueDestroyBlock(bHit.getBlockPos(), bHit.getDirection());
+                    }
+                }
+                mc.player.swing(InteractionHand.MAIN_HAND);
             }
         } else {
             lastLeftClickTime = 0;
@@ -105,8 +116,9 @@ public class AutoClicker extends AbstractFeature {
                 double targetCps = ThreadLocalRandom.current().nextDouble(minCps, maxCps + 0.999);
                 nextRightDelay = Math.max(50, (long) (1000.0 / targetCps));
 
-                ((MinecraftAccessor) mc).setItemUseCooldown(0);
-                ((MinecraftAccessor) mc).invokeStartUseItem();
+                if (mc.gameMode != null) {
+                    mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+                }
             }
         } else {
             lastRightClickTime = 0;

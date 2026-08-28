@@ -5,17 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "KeyMappingAccessor",
-    "MixinCamera",
-    "MixinLocalPlayer",
-    "MixinMouse",
-    "MixinEntity",
-    "MinecraftAccessor",
-    "MixinItemInHandRenderer",
-    "MixinLivingEntity",
-    "MixinChatComponent",
-    "MixinFont",
-    "MixinPlayerTabOverlay",
-    "MixinPlayerTeam"
+    "MixinPlayerTabOverlay"
   ],
   "injectors": {
     "defaultRequire": 1
