@@ -53,7 +53,7 @@ public class PartialBlockHelper {
         // Non-obstructing decorative / utility blocks
         if (block instanceof LadderBlock || block instanceof VineBlock ||
             block instanceof FlowerBlock || block instanceof TallGrassBlock ||
-            block instanceof BushBlock || state.is(Blocks.TRIPWIRE)) {
+            block instanceof BushBlock || block == Blocks.TRIPWIRE) {
             return true;
         }
 

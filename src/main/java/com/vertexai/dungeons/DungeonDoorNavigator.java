@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -181,13 +182,14 @@ public class DungeonDoorNavigator {
     }
 
     private boolean isDoorBlock(BlockState state) {
-        return state.is(Blocks.COAL_BLOCK) || state.is(Blocks.RED_TERRACOTTA) || state.is(Blocks.IRON_DOOR) || state.is(Blocks.OAK_DOOR);
+        Block block = state.getBlock();
+        return block == Blocks.COAL_BLOCK || block == Blocks.RED_TERRACOTTA || block == Blocks.IRON_DOOR || block == Blocks.OAK_DOOR;
     }
 
     private boolean isDoorLocked(BlockPos pos) {
         if (mc.level == null) return false;
-        BlockState state = mc.level.getBlockState(pos);
-        return state.is(Blocks.COAL_BLOCK) || state.is(Blocks.RED_TERRACOTTA);
+        Block block = mc.level.getBlockState(pos).getBlock();
+        return block == Blocks.COAL_BLOCK || block == Blocks.RED_TERRACOTTA;
     }
 
     private BlockPos calculateAdjacentRoomCenter(RoomTracker.DungeonRoom currentRoom, BlockPos doorPos) {

@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -123,14 +124,15 @@ public class RaycastPathPlanner {
         if (state.isAir()) return false;
 
         // Passable elements
-        if (state.is(Blocks.TRIPWIRE) || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.SEAGRASS) || state.is(Blocks.FERN)) {
+        Block block = state.getBlock();
+        if (block == Blocks.TRIPWIRE || block == Blocks.SHORT_GRASS || block == Blocks.TALL_GRASS || block == Blocks.SEAGRASS || block == Blocks.FERN) {
             return false;
         }
 
-        if (state.getBlock() instanceof DoorBlock) {
+        if (block instanceof DoorBlock) {
             return !state.getValue(DoorBlock.OPEN);
         }
-        if (state.getBlock() instanceof FenceGateBlock) {
+        if (block instanceof FenceGateBlock) {
             return !state.getValue(FenceGateBlock.OPEN);
         }
 
@@ -142,7 +144,8 @@ public class RaycastPathPlanner {
         BlockState state = level.getBlockState(pos);
         if (state.isAir()) return false;
 
-        if (state.is(Blocks.LAVA) || state.is(Blocks.FIRE) || state.is(Blocks.CACTUS)) {
+        Block block = state.getBlock();
+        if (block == Blocks.LAVA || block == Blocks.FIRE || block == Blocks.CACTUS) {
             return false;
         }
 

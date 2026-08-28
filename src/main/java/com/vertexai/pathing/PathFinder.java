@@ -315,7 +315,7 @@ public class PathFinder {
             return false;
         }
         
-        if ((belowState.is(net.minecraft.tags.BlockTags.FENCES) || belowState.is(net.minecraft.tags.BlockTags.WALLS)) &&
+        if ((belowState.getBlock() instanceof net.minecraft.world.level.block.FenceBlock || belowState.getBlock() instanceof net.minecraft.world.level.block.WallBlock || belowState.getBlock() instanceof net.minecraft.world.level.block.FenceGateBlock) &&
             !PartialBlockHelper.isPassablePartialBlock(world, below)) {
             return false;
         }
@@ -337,24 +337,24 @@ public class PathFinder {
     }
 
     private static boolean isHazard(Level world, BlockPos pos) {
-        BlockState state = world.getBlockState(pos);
-        return state.is(Blocks.LAVA) || state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) 
-            || state.is(Blocks.CACTUS) || state.is(Blocks.MAGMA_BLOCK) 
-            || state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)
-            || state.is(Blocks.SWEET_BERRY_BUSH) || state.is(Blocks.COBWEB)
-            || state.is(Blocks.POWDER_SNOW);
+        net.minecraft.world.level.block.Block block = world.getBlockState(pos).getBlock();
+        return block == Blocks.LAVA || block == Blocks.FIRE || block == Blocks.SOUL_FIRE 
+            || block == Blocks.CACTUS || block == Blocks.MAGMA_BLOCK 
+            || block == Blocks.CAMPFIRE || block == Blocks.SOUL_CAMPFIRE
+            || block == Blocks.SWEET_BERRY_BUSH || block == Blocks.COBWEB
+            || block == Blocks.POWDER_SNOW;
     }
 
     private static double calculateHazardCost(Level world, BlockPos pos) {
         double penalty = 0.0;
         BlockState state = world.getBlockState(pos);
-        if (state.is(Blocks.WATER)) penalty += 5.0;
+        if (state.getBlock() == Blocks.WATER) penalty += 5.0;
 
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    BlockState adj = world.getBlockState(pos.offset(dx, dy, dz));
-                    if (adj.is(Blocks.LAVA) || adj.is(Blocks.FIRE) || adj.is(Blocks.MAGMA_BLOCK)) {
+                    net.minecraft.world.level.block.Block adj = world.getBlockState(pos.offset(dx, dy, dz)).getBlock();
+                    if (adj == Blocks.LAVA || adj == Blocks.FIRE || adj == Blocks.MAGMA_BLOCK) {
                         penalty += 15.0;
                     }
                 }

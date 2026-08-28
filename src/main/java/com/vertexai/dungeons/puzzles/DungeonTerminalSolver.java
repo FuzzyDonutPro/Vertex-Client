@@ -93,7 +93,7 @@ public class DungeonTerminalSolver {
             
             if (number == this.currentNumberTarget || name.trim().equals(String.valueOf(this.currentNumberTarget))) {
                 // If it's a red/unclicked pane
-                if (stack.is(Items.RED_STAINED_GLASS_PANE) || !stack.is(Items.LIME_STAINED_GLASS_PANE)) {
+                if (stack.getItem() == Items.RED_STAINED_GLASS_PANE || stack.getItem() != Items.LIME_STAINED_GLASS_PANE) {
                     targetSlot = i;
                     break;
                 }
@@ -128,7 +128,7 @@ public class DungeonTerminalSolver {
 
             if (name.toLowerCase().startsWith(letter)) {
                 // Check if already clicked (glow/enchanted or green pane)
-                if (!stack.isEnchanted() && !stack.is(Items.LIME_STAINED_GLASS_PANE)) {
+                if (!stack.isEnchanted() && stack.getItem() != Items.LIME_STAINED_GLASS_PANE) {
                     clickSlot(i);
                     this.clickClock.schedule(Vertex.config().dungeons.terminalClickDelay);
                     return;
@@ -155,7 +155,7 @@ public class DungeonTerminalSolver {
             String name = stack.getHoverName().getString().toLowerCase().replaceAll("§[0-9a-fk-or]", "");
             boolean matchesColor = name.contains(targetColor);
 
-            if (matchesColor && !stack.isEnchanted() && !stack.is(Items.LIME_STAINED_GLASS_PANE)) {
+            if (matchesColor && !stack.isEnchanted() && stack.getItem() != Items.LIME_STAINED_GLASS_PANE) {
                 clickSlot(i);
                 this.clickClock.schedule(Vertex.config().dungeons.terminalClickDelay);
                 return;
@@ -173,7 +173,7 @@ public class DungeonTerminalSolver {
             if (stack.isEmpty()) continue;
 
             // Click non-green panes until they turn lime/green
-            if (!stack.is(Items.LIME_STAINED_GLASS_PANE) && (stack.is(Items.RED_STAINED_GLASS_PANE) || stack.is(Items.ORANGE_STAINED_GLASS_PANE))) {
+            if (stack.getItem() != Items.LIME_STAINED_GLASS_PANE && (stack.getItem() == Items.RED_STAINED_GLASS_PANE || stack.getItem() == Items.ORANGE_STAINED_GLASS_PANE)) {
                 clickSlot(i);
                 this.clickClock.schedule(Vertex.config().dungeons.terminalClickDelay);
                 return;

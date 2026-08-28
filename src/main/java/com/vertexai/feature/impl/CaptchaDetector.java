@@ -43,7 +43,7 @@ public class CaptchaDetector extends AbstractFeature {
 
             boolean hasMapItem = false;
             for (ItemStack stack : containerScreen.getMenu().getItems()) {
-                if (stack.is(Items.FILLED_MAP) || stack.is(Items.MAP)) {
+                if (stack.getItem() == Items.FILLED_MAP || stack.getItem() == Items.MAP) {
                     hasMapItem = true;
                     break;
                 }

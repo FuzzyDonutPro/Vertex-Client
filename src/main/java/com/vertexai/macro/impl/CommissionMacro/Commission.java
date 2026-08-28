@@ -242,7 +242,7 @@ public enum Commission {
         }
 
         return (int) mc.level.players().stream()
-                .filter(player -> !player.is(mc.player))
+                .filter(player -> player != mc.player)
                 .filter(Player::isAlive)
                 .filter(player -> !EntityUtil.isNpc(player))
                 .filter(player -> player.position().distanceToSqr(target) <= radiusSq)

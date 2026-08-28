@@ -144,7 +144,7 @@ public class AutoStunSnake {
 
     private void handleBlockUpdate(BlockPos pos, BlockState state) {
         SnakeTrail trail;
-        if (!isAnyStainedGlass(state) && !state.is(Blocks.LAPIS_BLOCK)) {
+        if (!isAnyStainedGlass(state) && state.getBlock() != Blocks.LAPIS_BLOCK) {
             trail = findTrailContaining(pos);
             if (trail == null) {
                 return;
@@ -159,7 +159,7 @@ public class AutoStunSnake {
             return;
         }
 
-        if (state.is(Blocks.LAPIS_BLOCK)) {
+        if (state.getBlock() == Blocks.LAPIS_BLOCK) {
             if (pendingGlass == null) {
                 pendingLapis = pos;
                 return;
@@ -208,13 +208,13 @@ public class AutoStunSnake {
     }
 
     private boolean isStunBlock(BlockState state) {
-        if (state.is(Blocks.LAPIS_BLOCK)) {
+        if (state.getBlock() == Blocks.LAPIS_BLOCK) {
             return true;
         }
         if (!isAnyStainedGlass(state)) {
             return false;
         }
-        return state.is(Blocks.BLUE_STAINED_GLASS) || state.is(Blocks.LIGHT_BLUE_STAINED_GLASS);
+        return state.getBlock() == Blocks.BLUE_STAINED_GLASS || state.getBlock() == Blocks.LIGHT_BLUE_STAINED_GLASS;
     }
 
     private int findHotbarSlotById(String itemId) {

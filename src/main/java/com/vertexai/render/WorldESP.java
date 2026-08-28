@@ -78,7 +78,7 @@ public class WorldESP extends AbstractFeature {
                     BlockPos pos = playerPos.offset(x, y, z);
                     BlockState state = mc.level.getBlockState(pos);
 
-                    if (state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST) || state.is(Blocks.ENDER_CHEST)) {
+                    if (state.getBlock() == Blocks.CHEST || state.getBlock() == Blocks.TRAPPED_CHEST || state.getBlock() == Blocks.ENDER_CHEST) {
                         chestBlocks.add(pos);
                     }
                 }
