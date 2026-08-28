@@ -18,7 +18,6 @@ import com.vertexai.util.ScoreboardUtil;
 import com.vertexai.util.TablistUtil;
 import com.vertexai.util.tablist.TabListParser;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 
 /**
@@ -69,7 +68,7 @@ public class EventManager {
     }
 
     private static void registerRenderEvents() {
-        WorldRenderEvents.END_MAIN.register(ctx -> {
+        registerLevelRenderEventSafe(ctx -> {
             com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
@@ -84,21 +83,70 @@ public class EventManager {
         });
 
         // HUD rendering
-        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((guiGraphics, tickCounter) -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null || mc.player == null) return;
+        try {
+            net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((guiGraphics, tickCounter) -> {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.level == null || mc.player == null) return;
 
-            // Render high-res Svelte Chromium web overlay (StatusHUD, HUD widgets) only when macro is running
-            if (mc.screen == null && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
-                com.vertexai.gui.cef.VertexCEFBrowser.getInstance().render(guiGraphics, 0, 0, 0);
-            }
+                // Render high-res Svelte Chromium web overlay (StatusHUD, HUD widgets) only when macro is running
+                if (mc.screen == null && com.vertexai.macro.MacroManager.getInstance().isRunning()) {
+                    com.vertexai.gui.cef.VertexCEFBrowser.getInstance().render(guiGraphics, 0, 0, 0);
+                }
 
-            HUDManager.getInstance().onHudRender(guiGraphics);
-            MacroManager.getInstance().onHudRender(guiGraphics);
-            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));
+                HUDManager.getInstance().onHudRender(guiGraphics);
+                MacroManager.getInstance().onHudRender(guiGraphics);
+                FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleHudRender(guiGraphics));
 
-            RenderUtil.renderQueuedLineOverlays(guiGraphics);
-        });
+                RenderUtil.renderQueuedLineOverlays(guiGraphics);
+            });
+        } catch (Throwable ignored) {}
+    }
+
+    public static void registerLevelRenderEventSafe(java.util.function.Consumer<Object> listener) {
+        // 1. Try modern 26.1+ LevelRenderEvents.END_MAIN
+        try {
+            Class<?> eventsClass = Class.forName("net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents");
+            java.lang.reflect.Field endMainField = eventsClass.getField("END_MAIN");
+            Object event = endMainField.get(null);
+            Class<?> listenerInterface = Class.forName("net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents$EndMain");
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    listenerInterface.getClassLoader(),
+                    new Class<?>[]{listenerInterface},
+                    (p, method, args) -> {
+                        if (args != null && args.length > 0) {
+                            listener.accept(args[0]);
+                        }
+                        return null;
+                    }
+            );
+
+            java.lang.reflect.Method registerMethod = event.getClass().getMethod("register", Object.class);
+            registerMethod.invoke(event, proxy);
+            return;
+        } catch (Throwable ignored) {}
+
+        // 2. Try legacy WorldRenderEvents.END_MAIN
+        try {
+            Class<?> eventsClass = Class.forName("net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents");
+            java.lang.reflect.Field endMainField = eventsClass.getField("END_MAIN");
+            Object event = endMainField.get(null);
+            Class<?> listenerInterface = Class.forName("net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents$EndMain");
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    listenerInterface.getClassLoader(),
+                    new Class<?>[]{listenerInterface},
+                    (p, method, args) -> {
+                        if (args != null && args.length > 0) {
+                            listener.accept(args[0]);
+                        }
+                        return null;
+                    }
+            );
+
+            java.lang.reflect.Method registerMethod = event.getClass().getMethod("register", Object.class);
+            registerMethod.invoke(event, proxy);
+        } catch (Throwable ignored) {}
     }
 
     private static void registerInputEvents() {

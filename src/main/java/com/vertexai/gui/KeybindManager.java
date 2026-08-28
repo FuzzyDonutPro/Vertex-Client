@@ -4,8 +4,8 @@ import com.vertexai.gui.cef.VertexUIServer;
 import com.vertexai.gui.web.WebDashboardScreen;
 import com.vertexai.util.Logger;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 
@@ -15,12 +15,14 @@ public class KeybindManager {
     public static void init() {
         if (openGuiKey != null) return;
         
-        openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        openGuiKey = new KeyMapping(
                 "key.vertexai.opengui",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
                 KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("vertexai", "general"))
-        ));
+        );
+
+        registerKeyMappingSafe(openGuiKey);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openGuiKey.consumeClick()) {
@@ -32,6 +34,36 @@ public class KeybindManager {
         });
         
         Logger.sendLog("[KeybindManager] Registered openGuiKey (RIGHT SHIFT)");
+    }
+
+    private static void registerKeyMappingSafe(KeyMapping keyMapping) {
+        try {
+            Class<?> helperClass = Class.forName("net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper");
+            java.lang.reflect.Method method = helperClass.getMethod("registerKeyMapping", KeyMapping.class);
+            method.invoke(null, keyMapping);
+            return;
+        } catch (Throwable ignored) {}
+
+        try {
+            Class<?> helperClass = Class.forName("net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper");
+            java.lang.reflect.Method method = helperClass.getMethod("registerKeyBinding", KeyMapping.class);
+            method.invoke(null, keyMapping);
+            return;
+        } catch (Throwable ignored) {}
+
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc != null && mc.options != null) {
+                java.lang.reflect.Field field = mc.options.getClass().getField("keyMappings");
+                field.setAccessible(true);
+                KeyMapping[] current = (KeyMapping[]) field.get(mc.options);
+                if (current != null) {
+                    KeyMapping[] newMappings = java.util.Arrays.copyOf(current, current.length + 1);
+                    newMappings[current.length] = keyMapping;
+                    field.set(mc.options, newMappings);
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 }
 

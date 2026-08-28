@@ -1,7 +1,7 @@
 package com.vertexai.pathing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import com.vertexai.event.EventManager;
 import com.vertexai.util.WorldRenderContextWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -10,8 +10,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -26,7 +24,7 @@ public class PathRenderer {
     public static List<BlockPos> currentPath = new ArrayList<>();
 
     public static void init() {
-        WorldRenderEvents.END_MAIN.register(ctx -> PathRenderer.render(new com.vertexai.util.WorldRenderContextWrapper(ctx)));
+        EventManager.registerLevelRenderEventSafe(ctx -> PathRenderer.render(new com.vertexai.util.WorldRenderContextWrapper(ctx)));
     }
 
     private static void render(WorldRenderContextWrapper context) {
