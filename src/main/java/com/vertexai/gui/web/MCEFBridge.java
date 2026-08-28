@@ -1,15 +1,15 @@
 package com.vertexai.gui.web;
 
-import com.cinemamod.mcef.MCEF;
-import com.cinemamod.mcef.MCEFBrowser;
+import de.keksuccino.rinku.Rinku;
+import de.keksuccino.rinku.RinkuBrowser;
 import com.vertexai.macro.MacroManager;
 import com.vertexai.util.Logger;
 import com.vertexai.config.ConfigSerializer;
 import com.vertexai.VertexClient;
 
 /**
- * MCEFBridge — Bridge for Minecraft Chromium Embedded Framework (MCEF 2.2.0).
- * Detects MCEF at runtime, manages browser instances, and provides
+ * MCEFBridge — Bridge for Minecraft Chromium Embedded Framework / Rinku (MC 26.1).
+ * Detects Rinku at runtime, manages browser instances, and provides
  * bidirectional JavaScript <-> Java IPC bindings.
  */
 public class MCEFBridge {
@@ -18,20 +18,20 @@ public class MCEFBridge {
 
     public static boolean isMcefAvailable() {
         try {
-            return MCEF.isInitialized();
+            return Rinku.isInitialized();
         } catch (Throwable e) {
             return false;
         }
     }
 
-    public static MCEFBrowser createBrowser(String url, boolean transparent) {
+    public static RinkuBrowser createBrowser(String url, boolean transparent) {
         try {
-            if (!MCEF.isInitialized()) {
-                MCEF.initialize();
+            if (!Rinku.isInitialized()) {
+                Rinku.initialize();
             }
-            return MCEF.createBrowser(url, transparent);
+            return Rinku.createBrowser(url, transparent);
         } catch (Throwable e) {
-            Logger.sendLog("Failed to create MCEF browser: " + e.getMessage());
+            Logger.sendLog("Failed to create Rinku browser: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

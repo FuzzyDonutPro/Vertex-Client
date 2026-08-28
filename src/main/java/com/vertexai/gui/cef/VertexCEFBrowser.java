@@ -3,8 +3,8 @@ package com.vertexai.gui.cef;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
-import com.cinemamod.mcef.MCEF;
-import com.cinemamod.mcef.MCEFBrowser;
+import de.keksuccino.rinku.Rinku;
+import de.keksuccino.rinku.RinkuBrowser;
 import com.vertexai.util.Logger;
 
 import java.io.InputStream;
@@ -12,7 +12,7 @@ import java.io.InputStream;
 public class VertexCEFBrowser {
 
     private static VertexCEFBrowser instance;
-    private MCEFBrowser browser;
+    private RinkuBrowser browser;
     private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html?v=" + System.currentTimeMillis();
 
     public static synchronized VertexCEFBrowser getInstance() {
@@ -29,18 +29,18 @@ public class VertexCEFBrowser {
         VertexUIServer.start();
 
         try {
-            if (!MCEF.isInitialized()) {
-                MCEF.initialize();
+            if (!Rinku.isInitialized()) {
+                Rinku.initialize();
             }
-            browser = MCEF.createBrowser(url, true);
+            browser = Rinku.createBrowser(url, true);
             if (browser != null) {
                 double scale = Minecraft.getInstance().getWindow().getGuiScale();
                 int width = (int) (Minecraft.getInstance().getWindow().getGuiScaledWidth() * scale);
                 int height = (int) (Minecraft.getInstance().getWindow().getGuiScaledHeight() * scale);
                 browser.resize(width, height);
-                Logger.sendLog("[VertexCEFBrowser] Initialized MCEF Browser instance at " + url + " with HDPI scale: " + scale);
+                Logger.sendLog("[VertexCEFBrowser] Initialized Rinku Browser instance at " + url + " with HDPI scale: " + scale);
             } else {
-                Logger.sendLog("[VertexCEFBrowser] MCEF.createBrowser returned null (CEF initializing or unavailable).");
+                Logger.sendLog("[VertexCEFBrowser] Rinku.createBrowser returned null (CEF initializing or unavailable).");
             }
         } catch (Throwable t) {
             Logger.sendLog("[VertexCEFBrowser] Error initializing CEF browser: " + t.getMessage());
@@ -140,7 +140,7 @@ public class VertexCEFBrowser {
         }
     }
 
-    public MCEFBrowser getBrowser() {
+    public RinkuBrowser getBrowser() {
         return browser;
     }
 }
