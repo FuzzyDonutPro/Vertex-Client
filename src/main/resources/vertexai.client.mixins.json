@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "KeyMappingAccessor",
-    "MixinTitleScreen",
     "MixinCamera",
     "MixinLocalPlayer",
     "MixinMouse",
