@@ -6,7 +6,7 @@ import com.vertexai.handler.RouteHandler;
 import com.vertexai.util.Logger;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static com.vertexai.command.CommandManager.literal;
 
 public class RouteAutoRecorderCommand {
 

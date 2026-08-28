@@ -19,10 +19,15 @@ import net.minecraft.client.Minecraft;
 
 import java.util.concurrent.CompletableFuture;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
-
 public class CommandManager {
+
+    public static com.mojang.brigadier.builder.LiteralArgumentBuilder<FabricClientCommandSource> literal(String name) {
+        return com.mojang.brigadier.builder.LiteralArgumentBuilder.literal(name);
+    }
+
+    public static <T> com.mojang.brigadier.builder.RequiredArgumentBuilder<FabricClientCommandSource, T> argument(String name, com.mojang.brigadier.arguments.ArgumentType<T> type) {
+        return com.mojang.brigadier.builder.RequiredArgumentBuilder.argument(name, type);
+    }
 
     private final DebugCommand debugCommand = new DebugCommand();
     private final GraphCommand graphCommand = new GraphCommand();

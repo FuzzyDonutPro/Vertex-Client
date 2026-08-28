@@ -26,7 +26,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static com.vertexai.command.CommandManager.literal;
 
 
 public class VertexClient implements ClientModInitializer {
