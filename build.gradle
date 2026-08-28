@@ -24,10 +24,6 @@ repositories {
 	mavenCentral()
 }
 
-loom {
-    accessWidenerPath = file("src/main/resources/vertexai.accesswidener")
-}
-
 dependencies {
 	modImplementation "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"
 	include "maven.modrinth:bQhBuv7x:2.2.0-1.21.11-fabric"

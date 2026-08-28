@@ -34,6 +34,5 @@
         "minecraft": "*",
         "java": ">=21",
         "fabric-api": "*"
-    },
-    "accessWidener": "vertexai.accesswidener"
+    }
 }
