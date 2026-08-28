@@ -86,12 +86,26 @@ java {
 }
 
 jar {
+	archiveClassifier = ''
 	def projectName = project.name
 	inputs.property "projectName", projectName
 
 	from("LICENSE") {
 		rename { "${it}_$projectName"}
 	}
+}
+
+remapJar {
+	enabled = false
+}
+
+tasks.register('copyOfficialJar', Copy) {
+	from "build/devlibs/Vertex-Client-${project.mod_version}.jar"
+	into "build/libs"
+}
+
+tasks.named('build') {
+	finalizedBy 'copyOfficialJar'
 }
 
 // configure the maven publication
