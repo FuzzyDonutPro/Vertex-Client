@@ -46,9 +46,6 @@ dependencies {
 	include "net.fabricmc:fabric-language-kotlin:1.12.1+kotlin.2.0.20"
 
 	modCompileOnly "maven.modrinth:modmenu:11.0.2"
-
-	modImplementation "org.notenoughupdates.moulconfig:modern:3.3.0"
-	include "org.notenoughupdates.moulconfig:modern:3.3.0"
 	
 	implementation "com.typesafe.akka:akka-actor_2.13:2.6.20"
 }

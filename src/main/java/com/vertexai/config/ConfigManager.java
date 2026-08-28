@@ -1,9 +1,6 @@
 package com.vertexai.config;
 
 import com.google.gson.*;
-import io.github.notenoughupdates.moulconfig.processor.BuiltinMoulConfigGuis;
-import io.github.notenoughupdates.moulconfig.processor.ConfigProcessorDriver;
-import io.github.notenoughupdates.moulconfig.processor.MoulConfigProcessor;
 import com.vertexai.Vertex;
 import com.vertexai.VertexClient;
 import net.fabricmc.loader.api.FabricLoader;
@@ -25,7 +22,6 @@ public class ConfigManager {
             .setPrettyPrinting()
             .create();
     private final Object ioLock = new Object();
-    public MoulConfigProcessor<VertexConfig> processor;
 
     /**
      * MoulConfig's colour editor expects `speed:alpha:r:g:b`. Older Vertex configs stored
@@ -199,7 +195,6 @@ public class ConfigManager {
         if (normalizeColourOptions(VertexClient.config)) {
             saveConfig();
         }
-        recreateProcessor();
     }
 
     public void saveConfig() {
@@ -233,14 +228,5 @@ public class ConfigManager {
                 }
             }
         }
-    }
-
-    public void recreateProcessor() {
-        processor = new MoulConfigProcessor<>(VertexClient.config);
-        BuiltinMoulConfigGuis.addProcessors(processor);
-        ConfigProcessorDriver driver = new ConfigProcessorDriver(processor);
-        // driver.warnForPrivateFields = false;
-        driver.checkExpose = false;
-        driver.processConfig(VertexClient.config);
     }
 }

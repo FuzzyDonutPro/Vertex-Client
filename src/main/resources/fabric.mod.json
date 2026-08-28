@@ -24,7 +24,6 @@
         ]
     },
     "mixins": [
-        "vertexai.mixins.json",
         {
             "config": "vertexai.client.mixins.json",
             "environment": "client"
