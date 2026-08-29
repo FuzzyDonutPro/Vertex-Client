@@ -41,6 +41,11 @@ public class VertexAIScreen extends Screen {
         cefBrowser = VertexCEFBrowser.getInstance();
         if (cefBrowser != null) {
             cefBrowser.resize(this.width, this.height);
+            if (cefBrowser.getBrowser() != null) {
+                try {
+                    cefBrowser.getBrowser().executeJavaScript("if(window.setConfigState) window.setConfigState(true);", "", 0);
+                } catch (Throwable ignored) {}
+            }
         }
         MCEFBridge.isConfigScreenOpen = true;
     }

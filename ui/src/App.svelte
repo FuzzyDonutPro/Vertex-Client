@@ -5,7 +5,7 @@
     import MiningHUD from './lib/components/MiningHUD.svelte';
     import StatusHUD from './lib/components/StatusHUD.svelte';
 
-    let isConfigOpen = false;
+    let isConfigOpen = true;
     let miningTarget = 'Searching...';
     let miningSpeed = 2000;
     let miningHudEnabled = false;
