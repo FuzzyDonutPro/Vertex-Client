@@ -23,7 +23,7 @@ public class Render {
 
     @ConfigOption(name = "Path ESP", desc = "Render path lines to target block")
     @ConfigEditorBoolean
-    public boolean pathESP = false;
+    public boolean pathESP = true;
 
     @ConfigOption(name = "Target Block ESP", desc = "Render bounding box on target block")
     @ConfigEditorBoolean
