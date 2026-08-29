@@ -37,8 +37,6 @@ public final class RenderUtil {
     public static void beginWorldRender(WorldRenderContextWrapper context) {
         activeMultiBufferSource = context != null ? context.consumers() : null;
         activePoseStack = new PoseStack();
-        Vec3 cam = mc.gameRenderer.getMainCamera().position();
-        activePoseStack.translate(-cam.x, -cam.y, -cam.z);
     }
 
     public static void endWorldRender() {
@@ -225,10 +223,10 @@ public final class RenderUtil {
                 Vec3 right = p.subtract(offset);
 
                 if (prevLeft != null && prevRight != null) {
-                    consumer.addVertex(activePoseStack.last().pose(), (float) prevLeft.x, (float) prevLeft.y, (float) prevLeft.z).setColor(r, g, b, a);
-                    consumer.addVertex(activePoseStack.last().pose(), (float) prevRight.x, (float) prevRight.y, (float) prevRight.z).setColor(r, g, b, a);
-                    consumer.addVertex(activePoseStack.last().pose(), (float) right.x, (float) right.y, (float) right.z).setColor(r, g, b, a);
-                    consumer.addVertex(activePoseStack.last().pose(), (float) left.x, (float) left.y, (float) left.z).setColor(r, g, b, a);
+                    consumer.addVertex(activePoseStack.last().pose(), (float) (prevLeft.x - cam.x), (float) (prevLeft.y - cam.y), (float) (prevLeft.z - cam.z)).setColor(r, g, b, a);
+                    consumer.addVertex(activePoseStack.last().pose(), (float) (prevRight.x - cam.x), (float) (prevRight.y - cam.y), (float) (prevRight.z - cam.z)).setColor(r, g, b, a);
+                    consumer.addVertex(activePoseStack.last().pose(), (float) (right.x - cam.x), (float) (right.y - cam.y), (float) (right.z - cam.z)).setColor(r, g, b, a);
+                    consumer.addVertex(activePoseStack.last().pose(), (float) (left.x - cam.x), (float) (left.y - cam.y), (float) (left.z - cam.z)).setColor(r, g, b, a);
                 }
 
                 prevLeft = left;
@@ -314,12 +312,13 @@ public final class RenderUtil {
         if (mc.level == null || mc.player == null || text == null || text.isEmpty()) return;
         if (activePoseStack == null || activeMultiBufferSource == null) return;
 
+        Vec3 cam = mc.gameRenderer.getMainCamera().position();
         Font font = mc.font;
         int textWidth = font.width(text);
 
         activePoseStack.pushPose();
 
-        activePoseStack.translate(x, y, z);
+        activePoseStack.translate(x - cam.x, y - cam.y, z - cam.z);
 
         float textScale = scale * 0.025f;
         activePoseStack.scale(-textScale, -textScale, textScale);
@@ -344,12 +343,13 @@ public final class RenderUtil {
     }
 
     private static void addFilledAABBVertices(VertexConsumer buffer, PoseStack.Pose entry, AABB box, int r, int g, int b, int a) {
-        double minX = box.minX;
-        double minY = box.minY;
-        double minZ = box.minZ;
-        double maxX = box.maxX;
-        double maxY = box.maxY;
-        double maxZ = box.maxZ;
+        Vec3 cam = mc.gameRenderer.getMainCamera().position();
+        double minX = box.minX - cam.x;
+        double minY = box.minY - cam.y;
+        double minZ = box.minZ - cam.z;
+        double maxX = box.maxX - cam.x;
+        double maxY = box.maxY - cam.y;
+        double maxZ = box.maxZ - cam.z;
 
         addQuad(buffer, entry, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, r, g, b, a);
         addQuad(buffer, entry, minX, maxY, minZ, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, r, g, b, a);
@@ -360,12 +360,13 @@ public final class RenderUtil {
     }
 
     private static void addOutlineAABBVertices(VertexConsumer buffer, PoseStack.Pose entry, AABB box, int r, int g, int b, int a) {
-        double minX = box.minX;
-        double minY = box.minY;
-        double minZ = box.minZ;
-        double maxX = box.maxX;
-        double maxY = box.maxY;
-        double maxZ = box.maxZ;
+        Vec3 cam = mc.gameRenderer.getMainCamera().position();
+        double minX = box.minX - cam.x;
+        double minY = box.minY - cam.y;
+        double minZ = box.minZ - cam.z;
+        double maxX = box.maxX - cam.x;
+        double maxY = box.maxY - cam.y;
+        double maxZ = box.maxZ - cam.z;
 
         addLine(buffer, entry, minX, minY, minZ, maxX, minY, minZ, r, g, b, a);
         addLine(buffer, entry, maxX, minY, minZ, maxX, minY, maxZ, r, g, b, a);

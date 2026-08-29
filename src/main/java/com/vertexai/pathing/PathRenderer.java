@@ -57,11 +57,15 @@ public class PathRenderer {
             java.awt.Color pathColor = new java.awt.Color((theme >> 16) & 0xFF, (theme >> 8) & 0xFF, theme & 0xFF, 240);
             
             List<Vec3> points = new ArrayList<>();
-            points.add(Minecraft.getInstance().player.position().add(0, 0.8, 0));
+            points.add(Minecraft.getInstance().player.position().add(0, 0.4, 0));
             for (BlockPos pos : currentPath) {
-                points.add(new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+                points.add(new Vec3(pos.getX() + 0.5, pos.getY() + 0.4, pos.getZ() + 0.5));
             }
-            points.add(exactTarget);
+            if (exactTarget != null) {
+                points.add(exactTarget);
+            } else if (targetBlock != null) {
+                points.add(new Vec3(targetBlock.getX() + 0.5, targetBlock.getY() + 0.5, targetBlock.getZ() + 0.5));
+            }
             RenderUtil.drawPolyline(points, pathColor, true);
         }
     }
