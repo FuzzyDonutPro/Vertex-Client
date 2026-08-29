@@ -36,17 +36,9 @@ public final class RenderUtil {
 
     public static void beginWorldRender(WorldRenderContextWrapper context) {
         activeMultiBufferSource = context != null ? context.consumers() : null;
-        PoseStack ctxPose = context != null ? context.matrixStack() : null;
-        if (ctxPose != null && ctxPose.last() != null) {
-            activePoseStack = new PoseStack();
-            activePoseStack.last().pose().set(ctxPose.last().pose());
-            activePoseStack.last().normal().set(ctxPose.last().normal());
-        } else {
-            activePoseStack = new PoseStack();
-            net.minecraft.client.Camera camera = mc.gameRenderer.getMainCamera();
-            activePoseStack.mulPose(camera.rotation());
-            activePoseStack.translate(-camera.position().x, -camera.position().y, -camera.position().z);
-        }
+        activePoseStack = new PoseStack();
+        Vec3 cam = mc.gameRenderer.getMainCamera().position();
+        activePoseStack.translate(-cam.x, -cam.y, -cam.z);
     }
 
     public static void endWorldRender() {
