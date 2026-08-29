@@ -126,14 +126,18 @@ public class RotationHandler {
     }
 
     public void onTick() {
-        // Called from EventManager
+        updateClientRotation();
     }
 
-    // Called manually from EventManager now (needs to be added there)
     public void onWorldRender(WorldRenderContextWrapper context) {
+        updateClientRotation();
+    }
+
+    private void updateClientRotation() {
         if (!enabled || this.configuration == null || this.configuration.rotationType() != RotationConfiguration.RotationType.CLIENT) {
             return;
         }
+        if (mc.player == null) return;
 
         long now = System.currentTimeMillis();
         float dtSec = (now - lastUpdateMs) / 1000f;
@@ -148,8 +152,8 @@ public class RotationHandler {
         float dPitch = targetAngle.getPitch() - currentPitch;
 
         // Exponential smoothing for organic humanized camera glide
-        float yawSpeed = 10.5f;
-        float pitchSpeed = 8.5f;
+        float yawSpeed = 12.0f;
+        float pitchSpeed = 10.0f;
 
         float yawFactor = 1.0f - (float) Math.exp(-yawSpeed * dtSec);
         float pitchFactor = 1.0f - (float) Math.exp(-pitchSpeed * dtSec);

@@ -68,19 +68,37 @@ public class EventManager {
     }
 
     private static void registerRenderEvents() {
-        registerLevelRenderEventSafe(ctx -> {
-            com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null || mc.player == null) return;
+        try {
+            net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.END_MAIN.register(ctx -> {
+                com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.level == null || mc.player == null) return;
 
-            RenderUtil.beginWorldRender(context);
-            RotationHandler.getInstance().onWorldRender(context);
-            RouteHandler.getInstance().onWorldRender(context);
-            GraphHandler.instance.onWorldRender(context);
-            MacroManager.getInstance().onWorldRender(context);
-            FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
-            RenderUtil.endWorldRender();
-        });
+                RenderUtil.beginWorldRender(context);
+                RotationHandler.getInstance().onWorldRender(context);
+                RouteHandler.getInstance().onWorldRender(context);
+                GraphHandler.instance.onWorldRender(context);
+                MacroManager.getInstance().onWorldRender(context);
+                FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+                RenderUtil.endWorldRender();
+            });
+            com.vertexai.util.Logger.sendLog("[EventManager] Successfully registered LevelRenderEvents.END_MAIN directly!");
+        } catch (Throwable t) {
+            com.vertexai.util.Logger.sendLog("[EventManager] Direct LevelRenderEvents registration failed: " + t.getMessage() + ", falling back to safe registration");
+            registerLevelRenderEventSafe(ctx -> {
+                com.vertexai.util.WorldRenderContextWrapper context = new com.vertexai.util.WorldRenderContextWrapper(ctx);
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.level == null || mc.player == null) return;
+
+                RenderUtil.beginWorldRender(context);
+                RotationHandler.getInstance().onWorldRender(context);
+                RouteHandler.getInstance().onWorldRender(context);
+                GraphHandler.instance.onWorldRender(context);
+                MacroManager.getInstance().onWorldRender(context);
+                FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+                RenderUtil.endWorldRender();
+            });
+        }
 
         // HUD rendering
         try {
@@ -126,9 +144,13 @@ public class EventManager {
                     }
             );
 
-            java.lang.reflect.Method registerMethod = event.getClass().getMethod("register", Object.class);
-            registerMethod.invoke(event, proxy);
-            return;
+            for (java.lang.reflect.Method m : event.getClass().getMethods()) {
+                if (m.getName().equals("register") && m.getParameterCount() == 1) {
+                    m.invoke(event, proxy);
+                    com.vertexai.util.Logger.sendLog("[EventManager] Registered LevelRenderEvents.END_MAIN via reflection!");
+                    return;
+                }
+            }
         } catch (Throwable ignored) {}
 
         // 2. Try legacy WorldRenderEvents.END_MAIN
@@ -149,8 +171,13 @@ public class EventManager {
                     }
             );
 
-            java.lang.reflect.Method registerMethod = event.getClass().getMethod("register", Object.class);
-            registerMethod.invoke(event, proxy);
+            for (java.lang.reflect.Method m : event.getClass().getMethods()) {
+                if (m.getName().equals("register") && m.getParameterCount() == 1) {
+                    m.invoke(event, proxy);
+                    com.vertexai.util.Logger.sendLog("[EventManager] Registered WorldRenderEvents.END_MAIN via reflection!");
+                    return;
+                }
+            }
         } catch (Throwable ignored) {}
     }
 
