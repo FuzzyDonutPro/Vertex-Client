@@ -133,16 +133,42 @@ public class VertexUIServer {
                 }
 
                 // Serve Static Web Assets (Vite build)
-                if (path.equals("/")) {
+                if (path == null || path.equals("/") || path.isEmpty()) {
                     path = "/index.html";
                 }
 
-                String resourcePath = "assets/vertexai/gui/dist" + path;
-                InputStream is = VertexUIServer.class.getClassLoader().getResourceAsStream(resourcePath);
+                InputStream is = null;
+                
+                // 1. Try Fabric ModContainer path (most reliable for packaged mod jars)
+                try {
+                    final String finalPath = path.startsWith("/") ? path.substring(1) : path;
+                    var modContainer = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("vertexai");
+                    if (modContainer.isPresent()) {
+                        var assetPath = modContainer.get().findPath("assets/vertexai/gui/dist/" + finalPath);
+                        if (assetPath.isPresent()) {
+                            is = java.nio.file.Files.newInputStream(assetPath.get());
+                        }
+                    }
+                } catch (Throwable t) {
+                    Logger.sendLog("[VertexUIServer] ModContainer asset lookup error: " + t.getMessage());
+                }
 
+                // 2. Try ClassLoader getResourceAsStream
+                if (is == null) {
+                    String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+                    is = VertexUIServer.class.getClassLoader().getResourceAsStream("assets/vertexai/gui/dist/" + cleanPath);
+                }
+
+                // 3. Try Class getResourceAsStream
+                if (is == null) {
+                    is = VertexUIServer.class.getResourceAsStream("/assets/vertexai/gui/dist" + (path.startsWith("/") ? path : "/" + path));
+                }
+
+                // 4. Try Minecraft ResourceManager
                 if (is == null) {
                     try {
-                        Identifier id = Identifier.parse("vertexai:gui/dist" + path);
+                        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+                        Identifier id = Identifier.parse("vertexai:gui/dist/" + cleanPath);
                         var resource = Minecraft.getInstance().getResourceManager().getResource(id);
                         if (resource.isPresent()) {
                             is = resource.get().open();
@@ -151,7 +177,8 @@ public class VertexUIServer {
                 }
 
                 if (is == null) {
-                    String notFound = "404 Not Found";
+                    Logger.sendLog("[VertexUIServer] 404 Not Found: " + path);
+                    String notFound = "404 Not Found: " + path;
                     exchange.sendResponseHeaders(404, notFound.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(notFound.getBytes(StandardCharsets.UTF_8));
@@ -180,12 +207,16 @@ public class VertexUIServer {
                 byte[] content = is.readAllBytes();
                 is.close();
 
+                Logger.sendLog("[VertexUIServer] Served " + path + " (" + content.length + " bytes, " + contentType + ")");
+
                 exchange.sendResponseHeaders(200, content.length);
                 try (OutputStream os = exchange.getResponseBody()) {
                     os.write(content);
                 }
 
             } catch (Exception e) {
+                Logger.sendLog("[VertexUIServer] Exception handling request: " + e.getMessage());
+                e.printStackTrace();
                 try {
                     exchange.sendResponseHeaders(500, -1);
                 } catch (Exception ignored) {}

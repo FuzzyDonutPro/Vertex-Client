@@ -13,7 +13,8 @@ public class VertexCEFBrowser {
 
     private static VertexCEFBrowser instance;
     private RinkuBrowser browser;
-    private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html?v=" + System.currentTimeMillis();
+    private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html";
+    private long lastErrorReload = 0;
 
     public static synchronized VertexCEFBrowser getInstance() {
         if (instance == null) {
@@ -24,7 +25,10 @@ public class VertexCEFBrowser {
     }
 
     public void init() {
-        if (browser != null) return;
+        if (browser != null) {
+            checkAndReloadIfError();
+            return;
+        }
         
         VertexUIServer.start();
 
@@ -50,6 +54,21 @@ public class VertexCEFBrowser {
         }
     }
 
+    public void checkAndReloadIfError() {
+        if (browser == null) return;
+        try {
+            String currentUrl = browser.getURL();
+            if (currentUrl == null || currentUrl.isEmpty() || currentUrl.contains("error") || currentUrl.contains("chromewebdata") || currentUrl.equals("about:blank")) {
+                long now = System.currentTimeMillis();
+                if (now - lastErrorReload > 1000) {
+                    lastErrorReload = now;
+                    Logger.sendLog("[VertexCEFBrowser] Page was in error state (" + currentUrl + "), reloading: " + url);
+                    browser.loadURL(url);
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
     public void resize(int width, int height) {
         if (browser != null) {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();
@@ -65,6 +84,8 @@ public class VertexCEFBrowser {
             init();
             if (browser == null) return false;
         }
+
+        checkAndReloadIfError();
         
         if (!browser.isTextureReady()) {
             return false;
