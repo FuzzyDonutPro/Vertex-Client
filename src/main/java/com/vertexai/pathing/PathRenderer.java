@@ -25,10 +25,11 @@ public class PathRenderer {
     public static List<BlockPos> currentPath = new ArrayList<>();
 
     public static void init() {
-        EventManager.registerLevelRenderEventSafe(ctx -> PathRenderer.render(new com.vertexai.util.WorldRenderContextWrapper(ctx)));
+        // PathRenderer is now called directly from EventManager's main render callback
+        // inside the beginWorldRender/endWorldRender window
     }
 
-    private static void render(WorldRenderContextWrapper context) {
+    public static void render(WorldRenderContextWrapper context) {
         if (targetBlock == null || exactTarget == null) return;
         if (Minecraft.getInstance().player == null) return;
 

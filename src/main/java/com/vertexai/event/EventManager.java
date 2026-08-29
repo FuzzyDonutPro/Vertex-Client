@@ -80,6 +80,7 @@ public class EventManager {
                 GraphHandler.instance.onWorldRender(context);
                 MacroManager.getInstance().onWorldRender(context);
                 FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+                com.vertexai.pathing.PathRenderer.render(context);
                 RenderUtil.endWorldRender();
             });
             com.vertexai.util.Logger.sendLog("[EventManager] Successfully registered LevelRenderEvents.END_MAIN directly!");
@@ -96,6 +97,7 @@ public class EventManager {
                 GraphHandler.instance.onWorldRender(context);
                 MacroManager.getInstance().onWorldRender(context);
                 FeatureManager.getInstance().allFeatures.forEach(feature -> feature.handleWorldRender(context));
+                com.vertexai.pathing.PathRenderer.render(context);
                 RenderUtil.endWorldRender();
             });
         }
