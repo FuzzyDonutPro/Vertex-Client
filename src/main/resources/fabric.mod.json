@@ -34,5 +34,10 @@
         "minecraft": "*",
         "java": ">=21",
         "fabric-api": "*"
-    }
+    },
+    "jars": [
+        {
+            "file": "META-INF/jars/rinku_fabric_3.0.4_MC_26.1.2.jar"
+        }
+    ]
 }
