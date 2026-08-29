@@ -13,7 +13,6 @@ public class VertexCEFBrowser {
 
     private static VertexCEFBrowser instance;
     private RinkuBrowser browser;
-    private boolean initFailed = false;
     private final String url = "http://127.0.0.1:" + VertexUIServer.PORT + "/index.html?v=" + System.currentTimeMillis();
 
     public static synchronized VertexCEFBrowser getInstance() {
@@ -25,11 +24,16 @@ public class VertexCEFBrowser {
     }
 
     public void init() {
-        if (browser != null || initFailed) return;
+        if (browser != null) return;
         
         VertexUIServer.start();
 
         try {
+            if (!Rinku.isInitialized()) {
+                if (Rinku.isInitializationAllowed()) {
+                    Rinku.initialize();
+                }
+            }
             if (Rinku.isInitialized()) {
                 browser = Rinku.createBrowser(url, true);
                 if (browser != null) {
@@ -39,11 +43,10 @@ public class VertexCEFBrowser {
                     browser.resize(width, height);
                     Logger.sendLog("[VertexCEFBrowser] Initialized Rinku Browser instance at " + url + " with HDPI scale: " + scale);
                 }
-            } else {
-                initFailed = true;
             }
         } catch (Throwable t) {
-            initFailed = true;
+            Logger.sendLog("[VertexCEFBrowser] Error initializing CEF browser: " + t.getMessage());
+            t.printStackTrace();
         }
     }
 
@@ -59,7 +62,7 @@ public class VertexCEFBrowser {
 
     public boolean render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (browser == null) {
-            if (!initFailed) init();
+            init();
             if (browser == null) return false;
         }
         

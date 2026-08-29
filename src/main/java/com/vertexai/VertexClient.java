@@ -57,14 +57,6 @@ public class VertexClient implements ClientModInitializer {
         com.vertexai.gui.KeybindManager.init();
         com.vertexai.gui.cef.VertexUIServer.start();
 
-        // Pre-load CEF Web GUI on game launch so it is instantly ready when opened
-        ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
-            client.execute(() -> {
-                Logger.sendLog("[Vertex] Pre-loading CEF Web GUI on game launch...");
-                com.vertexai.gui.cef.VertexCEFBrowser.getInstance();
-            });
-        });
-
         initializeConfig();
 
         // Initialize managers (will be registered to events later)

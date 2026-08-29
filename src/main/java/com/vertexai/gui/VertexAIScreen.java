@@ -254,6 +254,11 @@ public class VertexAIScreen extends Screen {
         int mouseX = (int) event.x();
         int mouseY = (int) event.y();
 
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectMouseButton(mouseX, mouseY, 0, event.button(), true, 1);
+            return super.mouseClicked(event, isAction);
+        }
+
         int panelW = Math.min(560, this.width - 40);
         int panelH = Math.min(360, this.height - 40);
         int startX = (this.width - panelW) / 2;
@@ -314,14 +319,31 @@ public class VertexAIScreen extends Screen {
             itemY += 50;
         }
 
-        if (cefBrowser != null) {
-            cefBrowser.injectMouseButton(mouseX, mouseY, 0, event.button(), true, 1);
-        }
         return super.mouseClicked(event, isAction);
     }
 
     @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectMouseButton((int) event.x(), (int) event.y(), 0, event.button(), false, 1);
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectMouseMove((int) mouseX, (int) mouseY, 0, false);
+        }
+        super.mouseMoved(mouseX, mouseY);
+    }
+
+    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectMouseWheel((int) mouseX, (int) mouseY, 0, (int) (verticalAmount * 3), 0);
+            return true;
+        }
         if (verticalAmount != 0) {
             this.scrollOffset = Math.max(0, this.scrollOffset - (int) (verticalAmount * 20));
         }
@@ -331,6 +353,11 @@ public class VertexAIScreen extends Screen {
     @Override
     public void onClose() {
         MCEFBridge.isConfigScreenOpen = false;
+        if (cefBrowser != null && cefBrowser.getBrowser() != null) {
+            try {
+                cefBrowser.getBrowser().executeJavaScript("if(window.setConfigState) window.setConfigState(false);", "", 0);
+            } catch (Throwable t) {}
+        }
         super.onClose();
     }
 
@@ -340,7 +367,27 @@ public class VertexAIScreen extends Screen {
             this.onClose();
             return true;
         }
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectKeyPressed((char) 0, event.key(), event.modifiers());
+        }
         return super.keyPressed(event);
+    }
+
+    @Override
+    public boolean keyReleased(net.minecraft.client.input.KeyEvent event) {
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectKeyReleased((char) 0, event.key(), event.modifiers());
+        }
+        return super.keyReleased(event);
+    }
+
+    @Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (cefBrowser != null && cefBrowser.getBrowser() != null && cefBrowser.getBrowser().isTextureReady()) {
+            cefBrowser.injectCharTyped((char) event.codepoint(), 0);
+            return true;
+        }
+        return super.charTyped(event);
     }
 
     private static class MacroControlItem {
