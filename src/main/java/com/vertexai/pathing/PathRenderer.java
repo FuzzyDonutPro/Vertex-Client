@@ -33,20 +33,26 @@ public class PathRenderer {
         if (targetBlock == null || exactTarget == null) return;
         if (Minecraft.getInstance().player == null) return;
 
+        com.vertexai.config.Categorie.Render renderConfig = com.vertexai.Vertex.config().render;
+
         // 1. Draw bounding box around target block (Red)
-        AABB blockAABB = new AABB(targetBlock).inflate(0.01);
-        RenderUtil.drawAABB(blockAABB, new java.awt.Color(255, 60, 60, 200), true);
+        if (renderConfig.targetBlockESP) {
+            AABB blockAABB = new AABB(targetBlock).inflate(0.01);
+            RenderUtil.drawAABB(blockAABB, new java.awt.Color(255, 60, 60, 200), true);
+        }
 
         // 2. Draw 1/16th blue box at random sub-coordinate target
-        double s = 1.0 / 16.0 / 2.0; // half size
-        AABB smallAABB = new AABB(
-                exactTarget.x() - s, exactTarget.y() - s, exactTarget.z() - s,
-                exactTarget.x() + s, exactTarget.y() + s, exactTarget.z() + s
-        );
-        RenderUtil.drawAABB(smallAABB, new java.awt.Color(56, 189, 248, 255), true);
+        if (renderConfig.targetPointESP) {
+            double s = 1.0 / 16.0 / 2.0; // half size
+            AABB smallAABB = new AABB(
+                    exactTarget.x() - s, exactTarget.y() - s, exactTarget.z() - s,
+                    exactTarget.x() + s, exactTarget.y() + s, exactTarget.z() + s
+            );
+            RenderUtil.drawAABB(smallAABB, new java.awt.Color(56, 189, 248, 255), true);
+        }
 
         // 3. Draw path line (Theme Color)
-        if (!currentPath.isEmpty()) {
+        if (renderConfig.pathESP && !currentPath.isEmpty()) {
             int theme = com.vertexai.Vertex.config().gui.getThemeColorInt();
             java.awt.Color pathColor = new java.awt.Color((theme >> 16) & 0xFF, (theme >> 8) & 0xFF, theme & 0xFF, 240);
             

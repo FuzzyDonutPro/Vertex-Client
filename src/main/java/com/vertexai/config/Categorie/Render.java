@@ -20,4 +20,16 @@ public class Render {
             "Dinnerbone", "Wobble", "Orbit", "Breathing"
     })
     public int spinMode = 0;
+
+    @ConfigOption(name = "Path ESP", desc = "Render path lines to target block")
+    @ConfigEditorBoolean
+    public boolean pathESP = false;
+
+    @ConfigOption(name = "Target Block ESP", desc = "Render bounding box on target block")
+    @ConfigEditorBoolean
+    public boolean targetBlockESP = false;
+
+    @ConfigOption(name = "Target Point ESP", desc = "Render precision point marker on exact target")
+    @ConfigEditorBoolean
+    public boolean targetPointESP = false;
 }
